@@ -300,9 +300,9 @@ namespace BeaverBuddies.Events
             finally { readingHere = false; }
         }
 
-        static void Postfix(string keyName, ref bool __result)
+        static void Postfix(string keyId, ref bool __result)
         {
-            if (readingHere || keyName != DontRecoverGoodsKey || IO.EventIO.IsNull) return;
+            if (readingHere || keyId != DontRecoverGoodsKey || IO.EventIO.IsNull) return;
             __result = BuildingsDeconstructedEvent.DontRecoverOverride ?? false;
         }
     }
