@@ -426,6 +426,13 @@ namespace BeaverBuddies
             }
         }
 
+        // The day clock in one number: the day and the ticks into it. The game compares times against it, and a tick's difference moves when a job ends
+        private int DayClock()
+        {
+            var cycle = this.GetSingleton<Timberborn.TimeSystem.IDayNightCycle>() as Timberborn.TimeSystem.DayNightCycle;
+            return cycle == null ? 0 : unchecked(cycle.DayNumber * 100003 + cycle._ticksPassedToday);
+        }
+
         public void HandleDesync()
         {
             if (IsDesynced) return;
@@ -726,7 +733,7 @@ namespace BeaverBuddies
             // Log from IO
             io?.Update();
 
-            DesyncDetecterService.RecordHashes(ticksSinceLoad, TEBPatcher.EntityUpdateHash, TEBPatcher.PositionHash, UnityEngine.Random.state.s0);
+            DesyncDetecterService.RecordHashes(ticksSinceLoad, TEBPatcher.EntityUpdateHash, TEBPatcher.PositionHash, UnityEngine.Random.state.s0, DayClock());
 
             // IO Complete for Tick
             Plugin.Log($"Tick {ticksSinceLoad:D5} IO done; " +

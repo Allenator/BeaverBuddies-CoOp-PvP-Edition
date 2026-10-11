@@ -663,6 +663,13 @@ namespace BeaverBuddies.DevTools
                     Plugin.Log($"[Test] orders: {all.Count} entities, {all.Distinct().Count()} distinct, {all.Count(o => o == 0)} zero; first {string.Join(",", all.Take(6))}");
                     break;
                 }
+                case "daytime":
+                {
+                    // The day clock exactly, for comparing two copies at the same tick
+                    var cycle = Get<Timberborn.TimeSystem.IDayNightCycle>() as Timberborn.TimeSystem.DayNightCycle;
+                    Plugin.Log($"[Test] daytime: day {cycle.DayNumber}, ticks today {cycle._ticksPassedToday}, partial {cycle.PartialDayNumber:R}, progress {cycle.DayProgress:R}, tick {SingletonManager.GetSingleton<ReplayService>()?.TicksSinceLoad}");
+                    break;
+                }
                 case "has":
                 {
                     // has id: whether the entity is there, and how it looks to the block service

@@ -77,14 +77,14 @@ namespace BeaverBuddies.DesyncDetecter
         // other machine's when they disagree
         private static readonly SortedDictionary<int, int[]> tickHashes = new SortedDictionary<int, int[]>();
         private const int maxHashTicks = 40;
-        private static readonly string[] hashNames = { "order", "move", "random" };
+        private static readonly string[] hashNames = { "order", "move", "random", "clock" };
 
         /** The hashes the tick starts with, logged in ReplayService after its IO. */
         public static int CurrentTick => currentTick;
 
-        public static void RecordHashes(int tick, int orderHash, int moveHash, int randomS0)
+        public static void RecordHashes(int tick, int orderHash, int moveHash, int randomS0, int clock)
         {
-            tickHashes[tick] = new[] { orderHash, moveHash, randomS0 };
+            tickHashes[tick] = new[] { orderHash, moveHash, randomS0, clock };
             while (tickHashes.Count > maxHashTicks) tickHashes.Remove(tickHashes.Keys.First());
         }
 
