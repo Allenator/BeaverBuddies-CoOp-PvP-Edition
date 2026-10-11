@@ -272,10 +272,7 @@ namespace BeaverBuddies.Events
                 {
                     var entity = GetEntityComponent(context, entityID);
                     if (entity == null) continue;
-                    // Gone at once for everyone's next turn (see ImmediateDestroyFix)
-                    Fixes.ImmediateDestroyFix.Immediate = true;
-                    try { entityService.Delete(entity); }
-                    finally { Fixes.ImmediateDestroyFix.Immediate = false; }
+                    entityService.Delete(entity);
                 }
             }
             finally { DontRecoverOverride = null; }

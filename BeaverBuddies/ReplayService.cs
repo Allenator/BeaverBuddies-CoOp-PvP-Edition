@@ -258,6 +258,7 @@ namespace BeaverBuddies
             // (a new game before it's hosted), and a running total from it never matches the others'
             TEBPatcher.SetHashes(0, 0);
             Plugin.Log("PostLoad");
+            Fixes.DeferredDestroyFix.Reset();
             if (DevTools.TestHarness.Active) Util.ObjectCensus.Log("after loading");
             Performance.ActionLatency.Hook();
             _determinismService.UnityThread = Thread.CurrentThread;
@@ -405,6 +406,8 @@ namespace BeaverBuddies
                         {
                             replayEvent.Replay(this);
                         }
+                        // What it deleted is gone before the next event, on every machine alike
+                        Fixes.DeferredDestroyFix.Flush();
                         // Only send the event if it played successfully and
                         // the IO says we shouldn't skip recording
                         if (!EventIO.SkipRecording)
@@ -422,6 +425,8 @@ namespace BeaverBuddies
             }
             finally
             {
+                // Also when an event threw halfway
+                Fixes.DeferredDestroyFix.Flush();
                 IsReplayingEvents = false;
             }
         }
