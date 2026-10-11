@@ -14,9 +14,11 @@ namespace BeaverBuddies.Fixes
      * (one finished the site, the other saw it gone). Destroyed on the spot,
      * it's gone for everyone's next turn.
      *
-     * Only for what a player's action deletes. One the game deletes while
-     * ticking (a tree that was cut) is still in use by the code that deleted
-     * it, which then fails on a GameObject that is already gone.
+     * Only for what a player's demolition deletes, asked for outright (see
+     * BuildingsDeconstructedEvent). A deletion the game makes in the middle
+     * of something else (a tree that was cut, a tree a new building stands
+     * on) goes on using the entity afterwards, and fails on a GameObject
+     * that is already gone: the placement then throws halfway.
      */
     [HarmonyPatch(typeof(EntityService), nameof(EntityService.Delete))]
     public class ImmediateDestroyFix
@@ -26,9 +28,12 @@ namespace BeaverBuddies.Fixes
             __state = entity ? entity.GameObject : null;
         }
 
+        // Set while a player's demolition deletes what it was asked to
+        internal static bool Immediate;
+
         static void Postfix(GameObject __state)
         {
-            if (!__state || IO.EventIO.IsNull || !ReplayService.IsReplayingEvents) return;
+            if (!__state || !Immediate || IO.EventIO.IsNull) return;
             Object.DestroyImmediate(__state);
         }
     }

@@ -155,7 +155,9 @@ namespace BeaverBuddies.Events
                 Plugin.LogWarning($"Placement refused for {playerID}");
                 isValid = false;
             }
-            UnityEngine.Object.Destroy(gameObject);
+            // On the spot: the preview is in the block service until it's gone, and
+            // at the end of the frame is too late for the next placement of this tick
+            UnityEngine.Object.DestroyImmediate(gameObject);
             return isValid;
         }
 
@@ -240,7 +242,10 @@ namespace BeaverBuddies.Events
                 {
                     var entity = GetEntityComponent(context, entityID);
                     if (entity == null) continue;
-                    entityService.Delete(entity);
+                    // Gone at once for everyone's next turn (see ImmediateDestroyFix)
+                    Fixes.ImmediateDestroyFix.Immediate = true;
+                    try { entityService.Delete(entity); }
+                    finally { Fixes.ImmediateDestroyFix.Immediate = false; }
                 }
             }
             finally { DontRecoverOverride = null; }
