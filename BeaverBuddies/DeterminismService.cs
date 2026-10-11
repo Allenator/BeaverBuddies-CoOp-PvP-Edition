@@ -216,7 +216,11 @@ namespace BeaverBuddies
 
                 // If we're ticking, it's likely game code, and hopefully
                 // we've caught any non-game code that can run during a tick!
-                if (IsTicking)
+                // Events replay inside a running tick or, with the game paused or
+                // a pause landing mid-batch, outside it: which one depends on
+                // when this machine got there, so both are one thing here, or
+                // the traces of one tick would differ with the timing
+                if (IsTicking || ReplayService.IsReplayingEvents)
                 {
                     var entity = TickableEntityTickPatcher.currentlyTickingEntity;
                     if (Settings.Debug)
