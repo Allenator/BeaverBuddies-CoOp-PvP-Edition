@@ -655,6 +655,14 @@ namespace BeaverBuddies.DevTools
                 case "noresync":
                     NoResync = a.Length < 2 || a[1] != "off";
                     break;
+                case "orders":
+                {
+                    // How many different instantiation orders the entities got: all the same would break every tie
+                    var all = Get<Timberborn.EntitySystem.EntityRegistry>().Entities.Where(e => e)
+                        .Select(e => e.GetComponent<Timberborn.TemplateSystem.InstantiatedTemplate>()).Where(t => t).Select(t => t.InstantiationOrder).ToList();
+                    Plugin.Log($"[Test] orders: {all.Count} entities, {all.Distinct().Count()} distinct, {all.Count(o => o == 0)} zero; first {string.Join(",", all.Take(6))}");
+                    break;
+                }
                 case "has":
                 {
                     // has id: whether the entity is there, and how it looks to the block service
