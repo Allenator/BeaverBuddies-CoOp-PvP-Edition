@@ -204,6 +204,7 @@ namespace BeaverBuddies.DesyncDetecter
             traces.Add(new List<Trace>());
             tracing = Settings.Debug;
             tickHashes.Clear();
+            sentTraces.Clear();
             StateDigest.Reset();
             firstDifference = null;
             digestDiffers = false;
@@ -229,6 +230,27 @@ namespace BeaverBuddies.DesyncDetecter
             Plugin.Log($"Tracing from tick {tick}");
         }
 
+        // What this machine sent of its traces for the last ticks, for the host to look at what it logged
+        private static readonly SortedDictionary<int, List<Trace>> sentTraces = new();
+
+        /** The last lines of the last ticks' traces that mention this (entity id), oldest first, "tick: line". */
+        public static List<string> TraceLinesAbout(string id, int max)
+        {
+            var found = new List<string>();
+            foreach (var pair in sentTraces)
+            {
+                foreach (Trace t in pair.Value) if (t.message.Contains(id)) found.Add($"{pair.Key}: {FirstLine(t.message)}");
+            }
+            // The ticks still being collected
+            for (int i = 0; i < traces.Count; i++)
+            {
+                int tick = currentTick - (traces.Count - 1 - i);
+                if (sentTraces.ContainsKey(tick)) continue;
+                foreach (Trace t in traces[i]) if (t.message.Contains(id)) found.Add($"{tick}: {FirstLine(t.message)}");
+            }
+            return found.Skip(Math.Max(0, found.Count - max)).ToList();
+        }
+
         public static IEnumerable<ReplayEvent> CreateReplayEventsAndClear()
         {
             // Turned on mid-tick: nothing whole to send until the next tick starts
@@ -238,6 +260,8 @@ namespace BeaverBuddies.DesyncDetecter
             while (traces.Count > 0)
             {
                 Plugin.Log($"Sending {tick}: {traces[0].FirstOrDefault().message}");
+                sentTraces[tick] = traces[0];
+                while (sentTraces.Count > 14) sentTraces.Remove(sentTraces.Keys.First());
                 yield return new TraceLoggedForTickEvent()
                 {
                     tick = tick,
@@ -342,13 +366,21 @@ namespace BeaverBuddies.DesyncDetecter
         private static bool digestDiffers;
 
         /** Our side of the first difference found, to send to the host, and forgotten. */
-        public static (int tick, int[] entityBuckets, int[] waterAreas, string[] entities, string[] water) TakeDetail()
+        public static (int tick, int[] entityBuckets, int[] waterAreas, string[] entities, string[] water, string[] history, string[] traceLines) TakeDetail()
         {
             var diff = firstDifference;
             firstDifference = null;
-            if (diff == null) return (0, null, null, null, null);
+            if (diff == null) return (0, null, null, null, null, null, null);
             var (entities, water) = StateDigest.Detail(diff);
-            return (diff.Tick, diff.EntityBuckets.ToArray(), diff.WaterAreas.ToArray(), entities, water);
+            // What this machine logged about the first of them, for the host to set beside its own
+            var lines = new List<string>();
+            foreach (string e in entities.Take(400))
+            {
+                string id = e.Split('|')[0];
+                lines.AddRange(TraceLinesAbout(id, 20));
+                if (lines.Count > 900) break;
+            }
+            return (diff.Tick, diff.EntityBuckets.ToArray(), diff.WaterAreas.ToArray(), entities, water, StateDigest.PositionHistory(diff), lines.ToArray());
         }
 
         public static bool VerifyTraces(int tick, List<Trace> otherTraces, int[] otherHashes = null, int[] otherBuckets = null, int[] otherAreas = null)

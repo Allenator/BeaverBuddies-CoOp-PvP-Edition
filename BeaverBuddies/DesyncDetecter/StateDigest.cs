@@ -191,6 +191,22 @@ namespace BeaverBuddies.DesyncDetecter
         private static string Line(Record r) =>
             $"{r.Id}|{Describe(r.Id)}|{(r.HasPosition ? $"{r.X:R}|{r.Y:R}|{r.Z:R}" : "-|-|-")}";
 
+        /** Where the entities in those buckets were over the ticks kept: "id|tick|x|y|z". */
+        public static string[] PositionHistory(Difference diff)
+        {
+            var lines = new List<string>();
+            var wanted = new HashSet<int>(diff.EntityBuckets);
+            foreach (var pair in ticks)
+            {
+                foreach (Record r in pair.Value.Records)
+                {
+                    if (r.HasPosition && wanted.Contains(BucketOf(r.Id))) lines.Add($"{r.Id}|{pair.Key}|{r.X:R}|{r.Y:R}|{r.Z:R}");
+                }
+                if (lines.Count > 12000) break;
+            }
+            return lines.ToArray();
+        }
+
         /** Our side of a difference: the entities in its buckets and the columns in its squares. */
         public static (string[] entities, string[] water) Detail(Difference diff)
         {
@@ -230,6 +246,46 @@ namespace BeaverBuddies.DesyncDetecter
             return (entities.ToArray(), water.ToArray());
         }
 
+        // The first few entities that differ, tick by tick: where each was on both machines, and what each logged about it
+        private static void AppendHistories(StringBuilder sb, int tick, int[] entityBuckets, string[] theirEntities, string[] theirHistory, string[] theirTraces)
+        {
+            if (entityBuckets == null || entityBuckets.Length == 0 || !ticks.TryGetValue(tick, out TickRecord mine)) return;
+            var wanted = new HashSet<int>(entityBuckets);
+            var theirs = new Dictionary<Guid, string>();
+            foreach (string line in theirEntities ?? new string[0])
+            {
+                if (Guid.TryParse(line.Split('|')[0], out Guid id)) theirs[id] = line;
+            }
+            var differing = mine.Records.Where(r => wanted.Contains(BucketOf(r.Id)) && theirs.TryGetValue(r.Id, out string l) && l != Line(r))
+                .Select(r => r.Id).Take(3).ToList();
+            foreach (Guid id in differing)
+            {
+                sb.AppendLine($"  ---- {id} {Describe(id)}, position by tick (here | there) ----");
+                var there = new Dictionary<int, string>();
+                foreach (string line in theirHistory ?? new string[0])
+                {
+                    string[] p = line.Split('|');
+                    if (p.Length == 5 && p[0] == id.ToString() && int.TryParse(p[1], out int t)) there[t] = $"{p[2]} {p[3]} {p[4]}";
+                }
+                bool split = false;
+                foreach (var pair in ticks)
+                {
+                    Record r = pair.Value.Records.FirstOrDefault(x => x.Id == id);
+                    if (!r.HasPosition) continue;
+                    string here = $"{r.X:R} {r.Y:R} {r.Z:R}";
+                    there.TryGetValue(pair.Key, out string other);
+                    bool differs = other != null && other != here;
+                    sb.AppendLine($"    tick {pair.Key}: {here} | {other ?? "-"}{(differs && !split ? "   <- first difference" : "")}");
+                    if (differs) split = true;
+                }
+                string key = id.ToString();
+                sb.AppendLine($"  what the traces say about it, here:");
+                foreach (string line in DesyncDetecterService.TraceLinesAbout(key, 30)) sb.AppendLine("    " + line);
+                sb.AppendLine($"  and there:");
+                foreach (string line in (theirTraces ?? new string[0]).Where(l => l.Contains(key)).TakeLast(30)) sb.AppendLine("    " + line);
+            }
+        }
+
         private static string WaterLine(int x, int y, int z, ReadOnlyWaterColumn c) =>
             $"{x},{y},{z}|floor {c.Floor:R}|ceiling {c.Ceiling:R}|depth {c.WaterDepth:R}|contamination {c.Contamination:R}|overflow {c.Overflow:R}";
 
@@ -237,7 +293,8 @@ namespace BeaverBuddies.DesyncDetecter
          * On the host: what differs between the other machine's lines and
          * ours for the same tick, entity by entity and tile by tile.
          */
-        public static string Analyze(int tick, string who, int[] entityBuckets, string[] theirEntities, int[] waterAreas, string[] theirWater)
+        public static string Analyze(int tick, string who, int[] entityBuckets, string[] theirEntities, int[] waterAreas, string[] theirWater,
+            string[] theirHistory = null, string[] theirTraces = null)
         {
             var sb = new StringBuilder();
             sb.AppendLine($"========== What differs at tick {tick}, {who}'s state against ours ==========");
@@ -302,6 +359,7 @@ namespace BeaverBuddies.DesyncDetecter
                 }
                 if (shown == 0) sb.AppendLine("  water: the squares' columns agree (a column came and went)");
             }
+            AppendHistories(sb, tick, entityBuckets, theirEntities, theirHistory, theirTraces);
             sb.AppendLine("========== End of what differs ==========");
             return sb.ToString();
         }

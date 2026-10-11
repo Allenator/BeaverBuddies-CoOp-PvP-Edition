@@ -94,6 +94,9 @@ namespace BeaverBuddies.Events
         public int[] detailWaterAreas;
         public string[] detailEntities;
         public string[] detailWater;
+        // Where those entities were over the last ticks, and what the traces said about them
+        public string[] detailHistory;
+        public string[] detailTraces;
         // Only for the host to say what differs, in the test harness, which keeps a desync as it is
         public bool analyzeOnly;
 
@@ -139,7 +142,7 @@ namespace BeaverBuddies.Events
                 // The host still has the tick it happened at: which entities and tiles differ
                 if (detailTick > 0)
                 {
-                    string analysis = DesyncDetecter.StateDigest.Analyze(detailTick, playerID, detailEntityBuckets, detailEntities, detailWaterAreas, detailWater);
+                    string analysis = DesyncDetecter.StateDigest.Analyze(detailTick, playerID, detailEntityBuckets, detailEntities, detailWaterAreas, detailWater, detailHistory, detailTraces);
                     Plugin.LogError(analysis);
                     desyncTrace = (desyncTrace ?? "") + analysis;
                 }

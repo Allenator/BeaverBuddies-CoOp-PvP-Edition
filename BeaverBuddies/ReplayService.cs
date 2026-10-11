@@ -448,6 +448,8 @@ namespace BeaverBuddies
                         detailWaterAreas = kept.waterAreas,
                         detailEntities = kept.entities,
                         detailWater = kept.water,
+                        detailHistory = kept.history,
+                        detailTraces = kept.traceLines,
                     });
                     SendEvents();
                 }
@@ -465,6 +467,8 @@ namespace BeaverBuddies
                 detailWaterAreas = detail.waterAreas,
                 detailEntities = detail.entities,
                 detailWater = detail.water,
+                detailHistory = detail.history,
+                detailTraces = detail.traceLines,
             };
             // Nothing more plays here: the host resyncs everyone, sending its
             // save over this same connection
