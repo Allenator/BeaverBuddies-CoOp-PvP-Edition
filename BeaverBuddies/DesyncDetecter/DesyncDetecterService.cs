@@ -541,7 +541,7 @@ namespace BeaverBuddies.DesyncDetecter
         {
             int end = message.IndexOf('\n');
             string line = end < 0 ? message : message.Substring(0, end);
-            return line.Length > 300 ? line.Substring(0, 300) + "..." : line;
+            return line.Length > 900 ? line.Substring(0, 900) + "..." : line;
         }
 
         private static void PrintTracesAt(StringBuilder sb, List<Trace> traces, int startIndex, int maxToPrint = 10)

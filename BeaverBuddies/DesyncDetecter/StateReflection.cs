@@ -17,7 +17,31 @@ namespace BeaverBuddies.DesyncDetecter
     public static class StateReflection
     {
         private static readonly Dictionary<Type, FieldInfo[]> fieldsOf = new();
-        private const int MaxChars = 400;
+        private const int MaxChars = 700;
+
+        private static string Bonuses(Timberborn.BonusSystem.BonusManager manager)
+        {
+            var sb = new StringBuilder();
+            try
+            {
+                var dictionary = (System.Collections.IDictionary)typeof(Timberborn.BonusSystem.BonusManager)
+                    .GetField("_bonuses", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(manager);
+                var keys = new List<string>();
+                foreach (object key in dictionary.Keys) keys.Add((string)key);
+                keys.Sort(StringComparer.Ordinal);
+                foreach (string key in keys)
+                {
+                    object bonus = dictionary[key];
+                    var value = bonus.GetType().GetField("_value", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(bonus);
+                    sb.Append(key).Append('=').Append(((float)value).ToString("R")).Append(' ');
+                }
+            }
+            catch (Exception e)
+            {
+                sb.Append($"(bonuses: {e.GetType().Name}) ");
+            }
+            return sb.ToString();
+        }
 
         private static FieldInfo[] FieldsOf(Type type)
         {
@@ -42,8 +66,21 @@ namespace BeaverBuddies.DesyncDetecter
             var sb = new StringBuilder();
             try
             {
+                // The entity's own working speed and bonuses first: they're sums that two machines can add up in
+                // another order, and a difference in the last digit moves when a job ends by a whole tick
+                if (o is BaseComponent owner && owner)
+                {
+                    var worker = owner.GetComponent<Timberborn.WorkSystem.Worker>();
+                    if (worker) sb.Append("speed=").Append(worker.WorkingSpeedMultiplier.ToString("R")).Append(' ');
+                    var bonuses = owner.GetComponent<Timberborn.BonusSystem.BonusManager>();
+                    if (bonuses) sb.Append(Bonuses(bonuses));
+                }
+                string self = o is BaseComponent b && b ? b.GetComponent<EntityComponent>()?.EntityId.ToString().Substring(0, 8) : null;
+                // Plain values before references, which are many and say less
+                foreach (bool references in new[] { false, true })
                 foreach (FieldInfo f in FieldsOf(o.GetType()))
                 {
+                    if (typeof(BaseComponent).IsAssignableFrom(f.FieldType) != references) continue;
                     object v = f.GetValue(o);
                     string text;
                     if (v is BaseComponent component)
@@ -51,7 +88,10 @@ namespace BeaverBuddies.DesyncDetecter
                         // A destroyed one reads as null
                         if (!component) continue;
                         var entity = component.GetComponent<EntityComponent>();
-                        text = entity ? $"{entity.EntityId.ToString().Substring(0, 8)}:{component.GetType().Name}" : component.GetType().Name;
+                        string id = entity ? entity.EntityId.ToString().Substring(0, 8) : null;
+                        // Its own components say nothing: what it points at elsewhere does
+                        if (id != null && id == self) continue;
+                        text = id != null ? $"{id}:{component.GetType().Name}" : component.GetType().Name;
                     }
                     else if (v is float x) text = x.ToString("R");
                     else if (v is double d) text = d.ToString("R");
