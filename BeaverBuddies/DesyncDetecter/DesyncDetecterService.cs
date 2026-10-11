@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using Timberborn.Versioning;
 
 namespace BeaverBuddies.DesyncDetecter
 {
@@ -22,12 +23,15 @@ namespace BeaverBuddies.DesyncDetecter
         // event was actually sent, which is usually 1 tick later
         public int tick;
         public List<Trace> traces;
+        // The sender's order, move and random hashes at the start of that
+        // tick (see DesyncDetecterService.RecordHashes); null when it has none
+        public int[] hashes;
 
         // This should only occur on the client side, and the
         // event should only be sent (manually) on the Server side
         public override void Replay(IReplayContext context)
         {
-            if (!DesyncDetecterService.VerifyTraces(tick, traces))
+            if (!DesyncDetecterService.VerifyTraces(tick, traces, hashes))
             {
                 var replayService = context.GetSingleton<ReplayService>();
                 replayService.HandleDesync();
@@ -64,6 +68,42 @@ namespace BeaverBuddies.DesyncDetecter
 
         private static string lastDesyncTrace = null;
 
+        // The last ticks' order, move and random hashes, to put next to the
+        // other machine's when they disagree
+        private static readonly SortedDictionary<int, int[]> tickHashes = new SortedDictionary<int, int[]>();
+        private const int maxHashTicks = 40;
+        private static readonly string[] hashNames = { "order", "move", "random" };
+
+        /** The hashes the tick starts with, logged in ReplayService after its IO. */
+        public static void RecordHashes(int tick, int orderHash, int moveHash, int randomS0)
+        {
+            tickHashes[tick] = new[] { orderHash, moveHash, randomS0 };
+            while (tickHashes.Count > maxHashTicks) tickHashes.Remove(tickHashes.Keys.First());
+        }
+
+        // The first tick whose hashes the two machines disagreed on, seen
+        // as the other's traces arrive, which can be well before a trace
+        // line differs
+        private static int firstHashSplit = -1;
+        private static string firstHashSplitWhat;
+
+        private static void CheckHashes(int tick, int[] otherHashes)
+        {
+            int[] mine = HashesOf(tick);
+            if (firstHashSplit >= 0 || mine == null || otherHashes == null) return;
+            var differing = new List<string>();
+            for (int i = 0; i < hashNames.Length; i++)
+            {
+                if (mine[i] != otherHashes[i]) differing.Add(hashNames[i]);
+            }
+            if (differing.Count == 0) return;
+            firstHashSplit = tick;
+            firstHashSplitWhat = string.Join(" and ", differing);
+            Plugin.LogWarning($"State differs from the other machine's since tick {tick}: {firstHashSplitWhat} hash");
+        }
+
+        private static int[] HashesOf(int tick) => tickHashes.TryGetValue(tick, out int[] h) ? h : null;
+
         // Whether this tick's traces were recorded from its start: tracing
         // turned on mid-game begins with the next whole tick
         private static bool tracing;
@@ -80,6 +120,8 @@ namespace BeaverBuddies.DesyncDetecter
             traces.Clear();
             traces.Add(new List<Trace>());
             tracing = Settings.Debug;
+            tickHashes.Clear();
+            firstHashSplit = -1;
             if (Settings.Debug)
             {
                 Trace("Start Preload");
@@ -110,6 +152,7 @@ namespace BeaverBuddies.DesyncDetecter
                 {
                     tick = tick,
                     traces = traces[0],
+                    hashes = HashesOf(tick),
                 };
                 traces.RemoveAt(0);
                 tick++;
@@ -201,7 +244,7 @@ namespace BeaverBuddies.DesyncDetecter
             return $"{TimberNet.TimberNetBase.GetHashCode(System.Text.Encoding.UTF8.GetBytes(lastDesyncTrace)):X8}";
         }
 
-        public static bool VerifyTraces(int tick, List<Trace> otherTraces)
+        public static bool VerifyTraces(int tick, List<Trace> otherTraces, int[] otherHashes = null)
         {
             if (!Settings.Debug)
             {
@@ -215,6 +258,8 @@ namespace BeaverBuddies.DesyncDetecter
                 Plugin.LogError($"Verifying future tick! {tick} > {currentTick}");
                 return false;
             }
+
+            CheckHashes(tick, otherHashes);
 
             // Tick 0 is the lobby before the game starts: the host traces what
             // it plays there from the moment it loads, and a player joining
@@ -268,6 +313,7 @@ namespace BeaverBuddies.DesyncDetecter
             StringBuilder sb = new StringBuilder();
 
             sb.AppendLine($"Desync detected for tick {tick}!");
+            AppendSummary(sb, tick, errorIndex, myTraces, otherTraces, otherHashes);
             sb.AppendLine("========== Trace history ==========");
             for (int i = 0; i < index; i++)
             {
@@ -294,6 +340,40 @@ namespace BeaverBuddies.DesyncDetecter
             Plugin.LogError(lastDesyncTrace);
 
             return false;
+        }
+
+        /**
+         * What a reader wants first: the line the two traces split on and,
+         * from the other machine's hashes, the first tick its state differed
+         * and which of order, move and random it was.
+         */
+        private static void AppendSummary(StringBuilder sb, int tick, int errorIndex, List<Trace> mine, List<Trace> other, int[] otherHashes)
+        {
+            sb.AppendLine("========== Summary ==========");
+            sb.AppendLine($"BeaverBuddies {Plugin.Version}; Timberborn {GameVersions.CurrentVersion}; {ReplayHooks.AddOnList}");
+            if (firstHashSplit >= 0) sb.AppendLine($"The {firstHashSplitWhat} hash first differed at tick {firstHashSplit}, {tick - firstHashSplit} ticks before this one");
+            sb.AppendLine($"The traces agree for {errorIndex} lines of tick {tick}, then:");
+            sb.AppendLine("  mine:  " + (errorIndex < mine.Count ? FirstLine(mine[errorIndex].message) : "(nothing more)"));
+            sb.AppendLine("  other: " + (errorIndex < other.Count ? FirstLine(other[errorIndex].message) : "(nothing more)"));
+            if (mine.Count != other.Count) sb.AppendLine($"  {mine.Count} lines here, {other.Count} there");
+            int[] myHashes = HashesOf(tick);
+            if (myHashes == null || otherHashes == null)
+            {
+                sb.AppendLine("Hashes: not recorded on both sides for this tick");
+                return;
+            }
+            sb.AppendLine($"Hashes at the start of tick {tick}:");
+            for (int i = 0; i < hashNames.Length; i++)
+            {
+                sb.AppendLine($"  {hashNames[i],-6} mine {myHashes[i]:X8}, other {otherHashes[i]:X8}{(myHashes[i] == otherHashes[i] ? "" : "  <- differs")}");
+            }
+        }
+
+        private static string FirstLine(string message)
+        {
+            int end = message.IndexOf('\n');
+            string line = end < 0 ? message : message.Substring(0, end);
+            return line.Length > 300 ? line.Substring(0, 300) + "..." : line;
         }
 
         private static void PrintTracesAt(StringBuilder sb, List<Trace> traces, int startIndex, int maxToPrint = 10)

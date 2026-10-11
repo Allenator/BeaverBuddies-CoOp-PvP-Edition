@@ -689,6 +689,8 @@ namespace BeaverBuddies
             // Log from IO
             io?.Update();
 
+            DesyncDetecterService.RecordHashes(ticksSinceLoad, TEBPatcher.EntityUpdateHash, TEBPatcher.PositionHash, UnityEngine.Random.state.s0);
+
             // IO Complete for Tick
             Plugin.Log($"Tick {ticksSinceLoad:D5} IO done; " +
                 $"Order hash: {TEBPatcher.EntityUpdateHash:X8}; " +

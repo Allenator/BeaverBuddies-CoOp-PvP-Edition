@@ -484,4 +484,30 @@ namespace BeaverBuddies.DesyncDetecter
             DesyncDetecterService.Trace($"Finished {__instance.Name} {__instance.GetComponent<EntityComponent>()?.EntityId} at {__instance.Coordinates}", true, true);
         }
     }
+
+    /**
+     * An entity whose tick throws is cut short on this machine only, so
+     * the trace says so: the other machines' traces run on where this one
+     * stops, and the summary then names the exception.
+     */
+    [HarmonyPatch(typeof(TickableEntity), nameof(TickableEntity.Tick))]
+    public class TickableEntityTickExceptionPatcher
+    {
+        static Exception Finalizer(TickableEntity __instance, Exception __exception)
+        {
+            if (__exception == null || !Settings.Debug) return __exception;
+            try
+            {
+                Exception inner = __exception;
+                while (inner.InnerException != null) inner = inner.InnerException;
+                var entity = __instance._entityComponent;
+                var where = new System.Diagnostics.StackTrace(inner).GetFrame(0)?.GetMethod();
+                DesyncDetecterService.Trace(
+                    $"Exception ticking entity {entity?.EntityId} {entity?.GameObject?.name}: {inner.GetType().Name}: {inner.Message} in {where?.DeclaringType?.Name}.{where?.Name}",
+                    true, true);
+            }
+            catch { }
+            return __exception;
+        }
+    }
 }
