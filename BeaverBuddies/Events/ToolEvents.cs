@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using Timberborn.InputSystem;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -216,16 +217,25 @@ namespace BeaverBuddies.Events
         public List<string> entityIDs = new List<string>();
         // Only the dev mode deletion tool removes terrain
         public List<Vector3Int> terrainCoordinates = new List<Vector3Int>();
+        // The demolisher held the key that leaves the goods behind
+        public bool dontRecoverGoods;
+
+        internal static bool? DontRecoverOverride;
 
         public override void Replay(IReplayContext context)
         {
             var entityService = context.GetSingleton<EntityService>();
-            foreach (string entityID in entityIDs)
+            DontRecoverOverride = dontRecoverGoods;
+            try
             {
-                var entity = GetEntityComponent(context, entityID);
-                if (entity == null) continue;
-                entityService.Delete(entity);
+                foreach (string entityID in entityIDs)
+                {
+                    var entity = GetEntityComponent(context, entityID);
+                    if (entity == null) continue;
+                    entityService.Delete(entity);
+                }
             }
+            finally { DontRecoverOverride = null; }
             if (terrainCoordinates == null || terrainCoordinates.Count == 0) return;
             var terrainDestroyer = context.GetSingleton<DevTools.DevToolsService>().TerrainDestroyer;
             foreach (Vector3Int coordinates in terrainCoordinates)
@@ -258,6 +268,7 @@ namespace BeaverBuddies.Events
                 {
                     entityIDs = entityIDs,
                     terrainCoordinates = __instance._temporaryTerrainCoords.ToList(),
+                    dontRecoverGoods = ReplayEvent.ActingPlayerID == null && RecoveredGoodsKeyPatcher.HeldHere(),
                 };
             });
 
@@ -269,6 +280,30 @@ namespace BeaverBuddies.Events
             }
 
             return result;
+        }
+    }
+
+    // The game leaves a demolished building's goods behind when a key is held
+    // where the building is demolished, which it asks of whichever machine
+    // plays the deletion. Every machine plays it as its demolisher held the
+    // key (or not at all, for a building the game takes down by itself).
+    [HarmonyPatch(typeof(InputService), nameof(InputService.IsKeyHeld), typeof(string))]
+    class RecoveredGoodsKeyPatcher
+    {
+        const string DontRecoverGoodsKey = "DontRecoverGoods";
+        static bool readingHere;
+
+        public static bool HeldHere()
+        {
+            readingHere = true;
+            try { return SingletonManager.GetSingleton<InputService>().IsKeyHeld(DontRecoverGoodsKey); }
+            finally { readingHere = false; }
+        }
+
+        static void Postfix(string keyName, ref bool __result)
+        {
+            if (readingHere || keyName != DontRecoverGoodsKey || IO.EventIO.IsNull) return;
+            __result = BuildingsDeconstructedEvent.DontRecoverOverride ?? false;
         }
     }
 
