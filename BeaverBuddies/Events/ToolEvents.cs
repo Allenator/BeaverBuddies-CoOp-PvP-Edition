@@ -57,9 +57,11 @@ namespace BeaverBuddies.Events
                 ? context.GetSingleton<BlockValidator>().BlocksValid(blockObjectSpec, placement)
                     && PlacementHooks.AllowOn(Footprint(blockObjectSpec, placement), playerID)
                 : IsPlacementValid(context, placement, buildingSpec, playerID);
+            // Each machine's verdict and what it saw on the tiles, to set beside the others when they differ
+            if (Settings.Debug && !isDistrictCenter) Plugin.Log($"[Placement] {prefabName} at {coordinates} {orientation}: {(valid ? "valid" : "invalid")}; on its tiles: {ThereAtLastCheck}");
             if (!valid)
             {
-                Plugin.LogWarning($"Invalid placement for {prefabName} at {coordinates}");
+                Plugin.LogWarning($"Invalid placement for {prefabName} at {coordinates}: {InvalidBecause}");
                 PlacementHooks.NotifyRefused(buildingSpec, placement, playerID);
                 return;
             }
@@ -134,6 +136,30 @@ namespace BeaverBuddies.Events
             }
         }
 
+        // Why the last check found the placement invalid, for the log: two machines that disagree on it need to say what each saw
+        internal static string InvalidBecause = "";
+        internal static string ThereAtLastCheck = "";
+
+        private static string WhatIsThere(IReplayContext context, BlockObject preview)
+        {
+            try
+            {
+                var blocks = context.GetSingleton<IBlockService>();
+                var parts = new System.Collections.Generic.List<string>();
+                foreach (Vector3Int c in preview.PositionedBlocks.GetAllCoordinates())
+                {
+                    foreach (BlockObject o in blocks.GetObjectsAt(c))
+                    {
+                        if (!o || o == preview) continue;
+                        var entity = o.GetComponent<Timberborn.EntitySystem.EntityComponent>();
+                        parts.Add($"{c.x},{c.y},{c.z}: {(o.GameObject ? o.GameObject.name : "(no GameObject)")} {(entity ? entity.EntityId.ToString().Substring(0, 8) : "no entity")}{(o.IsPreview ? " preview" : "")}{(o.IsFinished ? "" : " unfinished")}");
+                    }
+                }
+                return parts.Count == 0 ? "nothing else on its tiles" : string.Join("; ", parts.Take(12));
+            }
+            catch (Exception e) { return $"couldn't say ({e.Message})"; }
+        }
+
         private static bool IsPlacementValidWithPreview(IReplayContext context, Placement placement, BuildingSpec spec, string playerID)
         {
             var templateInstantiator = context.GetSingleton<TemplateInstantiator>();
@@ -150,9 +176,13 @@ namespace BeaverBuddies.Events
             blockObject.MarkAsPreviewAndInitialize();
             blockObject.Reposition(placement);
             bool isValid = blockObject.IsValid();
+            string there = Settings.Debug ? WhatIsThere(context, blockObject) : "";
+            InvalidBecause = isValid ? "" : "the game's block check failed; there: " + there;
+            ThereAtLastCheck = there;
             if (isValid && !PlacementHooks.AllowOn(blockObject.PositionedBlocks.GetAllCoordinates(), playerID))
             {
                 Plugin.LogWarning($"Placement refused for {playerID}");
+                InvalidBecause = "refused by a mod's rule (land claims)";
                 isValid = false;
             }
             // On the spot: the preview is in the block service until it's gone, and
