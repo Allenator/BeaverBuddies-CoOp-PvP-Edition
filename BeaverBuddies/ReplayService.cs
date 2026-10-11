@@ -436,15 +436,35 @@ namespace BeaverBuddies
                 {
                     _desyncKept = true;
                     Plugin.LogError($"[Test] Desync kept, not resyncing:\n{DesyncDetecter.DesyncDetecterService.GetLastDesyncTrace()}");
+                    // The host says what differs, and nobody resyncs
+                    var kept = DesyncDetecter.DesyncDetecterService.TakeDetail();
+                    eventsToSend.Enqueue(new ClientDesyncedEvent()
+                    {
+                        analyzeOnly = true,
+                        playerID = Players.PlayerIdentity.LocalID,
+                        desyncTrace = "",
+                        detailTick = kept.tick,
+                        detailEntityBuckets = kept.entityBuckets,
+                        detailWaterAreas = kept.waterAreas,
+                        detailEntities = kept.entities,
+                        detailWater = kept.water,
+                    });
+                    SendEvents();
                 }
                 return;
             }
 
+            var detail = DesyncDetecterService.TakeDetail();
             ClientDesyncedEvent e = new ClientDesyncedEvent()
             {
                 desyncID = DesyncDetecterService.GetLastDesyncID(),
                 desyncTrace = DesyncDetecterService.GetLastDesyncTrace(),
                 playerID = Players.PlayerIdentity.LocalID,
+                detailTick = detail.tick,
+                detailEntityBuckets = detail.entityBuckets,
+                detailWaterAreas = detail.waterAreas,
+                detailEntities = detail.entities,
+                detailWater = detail.water,
             };
             // Nothing more plays here: the host resyncs everyone, sending its
             // save over this same connection

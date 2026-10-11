@@ -942,6 +942,7 @@ namespace BeaverBuddies
             {
                 var entity = __instance._tickableEntities.Values[i];
                 EntityUpdateHash = TimberNetBase.CombineHash(EntityUpdateHash, entity.EntityId.GetHashCode());
+                bool recorded = false;
 
                 var entityComponent = entity._entityComponent;
                 var pathFollower = entityComponent.GetComponent<Walker>()?.PathFollower;
@@ -954,6 +955,11 @@ namespace BeaverBuddies
                     var targetPos = pathFollower._transform.position;
                     animatedPathFollower.CurrentPosition = targetPos;
                     PositionHash = TimberNetBase.CombineHash(PositionHash, targetPos.GetHashCode());
+                    if (Settings.Debug)
+                    {
+                        DesyncDetecter.StateDigest.Add(DesyncDetecter.DesyncDetecterService.CurrentTick, entity.EntityId, entityComponent.GameObject.name, true, targetPos);
+                        recorded = true;
+                    }
 
                     // Between ticks, MovementAnimator.Update() runs every
                     // frame and may change the group ID at different times
@@ -969,6 +975,10 @@ namespace BeaverBuddies
                             movementAnimator.NotifyGroupIdUpdated();
                         }
                     }
+                }
+                if (!recorded && Settings.Debug)
+                {
+                    DesyncDetecter.StateDigest.Add(DesyncDetecter.DesyncDetecterService.CurrentTick, entity.EntityId, entityComponent.GameObject.name, false, default);
                 }
                 // Make sure it updates the model's position as well
                 try

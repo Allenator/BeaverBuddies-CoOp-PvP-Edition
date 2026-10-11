@@ -262,6 +262,7 @@ namespace BeaverBuddies.DesyncDetecter
                 hash = (hash * 7) + GetHashCode(level);
             }
             DesyncDetecterService.Trace($"Updating water map columns with hash {hash:X8}");
+            StateDigest.RecordWater(DesyncDetecterService.CurrentTick, __instance);
             TraceAreas(__instance);
             
             hash = 13;
@@ -405,7 +406,9 @@ namespace BeaverBuddies.DesyncDetecter
             // Which unit, and for what, so a desync here names who went another way
             var entityID = __instance.GetComponent<EntityComponent>()?.EntityId;
             var behavior = __instance._runningBehavior?.GetType().Name;
-            DesyncDetecterService.Trace($"BehaviorManager ticking executor {runningExecutorType} of {entityID} ({behavior}) with last elapsed time {elapsedTime}", true, true);
+            // And what the executor holds: two machines' executors that differ show it here
+            string state = StateReflection.Describe(__instance._runningExecutor);
+            DesyncDetecterService.Trace($"BehaviorManager ticking executor {runningExecutorType} of {entityID} ({behavior}) with last elapsed time {elapsedTime} [{state}]", true, true);
         }
     }
 

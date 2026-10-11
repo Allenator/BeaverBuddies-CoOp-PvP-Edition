@@ -26,12 +26,16 @@ namespace BeaverBuddies.DesyncDetecter
         // The sender's order, move and random hashes at the start of that
         // tick (see DesyncDetecterService.RecordHashes); null when it has none
         public int[] hashes;
+        // The sender's hash of each bucket of entities and each square of water
+        // at that tick (see StateDigest), to find which differ
+        public int[] entityBuckets;
+        public int[] waterAreas;
 
         // This should only occur on the client side, and the
         // event should only be sent (manually) on the Server side
         public override void Replay(IReplayContext context)
         {
-            bool match = DesyncDetecterService.VerifyTraces(tick, traces, hashes);
+            bool match = DesyncDetecterService.VerifyTraces(tick, traces, hashes, entityBuckets, waterAreas);
             if (DesyncDetecterService.ShouldResync(tick, match, hashes))
             {
                 var replayService = context.GetSingleton<ReplayService>();
@@ -76,6 +80,8 @@ namespace BeaverBuddies.DesyncDetecter
         private static readonly string[] hashNames = { "order", "move", "random" };
 
         /** The hashes the tick starts with, logged in ReplayService after its IO. */
+        public static int CurrentTick => currentTick;
+
         public static void RecordHashes(int tick, int orderHash, int moveHash, int randomS0)
         {
             tickHashes[tick] = new[] { orderHash, moveHash, randomS0 };
@@ -128,7 +134,9 @@ namespace BeaverBuddies.DesyncDetecter
         {
             int[] mine = HashesOf(tick);
             bool known = mine != null && otherHashes != null;
-            bool hashesMatch = known && mine.SequenceEqual(otherHashes);
+            bool hashesMatch = known && mine.SequenceEqual(otherHashes) && !digestDiffers;
+            // The entities or the water differing is as good as the hashes
+            if (digestDiffers) known = true;
             if (known)
             {
                 if (hashesMatch)
@@ -196,6 +204,9 @@ namespace BeaverBuddies.DesyncDetecter
             traces.Add(new List<Trace>());
             tracing = Settings.Debug;
             tickHashes.Clear();
+            StateDigest.Reset();
+            firstDifference = null;
+            digestDiffers = false;
             firstHashSplit = -1;
             suspectTick = -1;
             splitStart = -1;
@@ -232,6 +243,8 @@ namespace BeaverBuddies.DesyncDetecter
                     tick = tick,
                     traces = traces[0],
                     hashes = HashesOf(tick),
+                    entityBuckets = StateDigest.EntityBucketsOf(tick),
+                    waterAreas = StateDigest.WaterAreasOf(tick),
                 };
                 traces.RemoveAt(0);
                 tick++;
@@ -323,8 +336,37 @@ namespace BeaverBuddies.DesyncDetecter
             return $"{TimberNet.TimberNetBase.GetHashCode(System.Text.Encoding.UTF8.GetBytes(lastDesyncTrace)):X8}";
         }
 
-        public static bool VerifyTraces(int tick, List<Trace> otherTraces, int[] otherHashes = null)
+        // The first tick the entities or the water differed on, with what's needed to say which
+        private static StateDigest.Difference firstDifference;
+        // Whether the tick last verified had a difference
+        private static bool digestDiffers;
+
+        /** Our side of the first difference found, to send to the host, and forgotten. */
+        public static (int tick, int[] entityBuckets, int[] waterAreas, string[] entities, string[] water) TakeDetail()
         {
+            var diff = firstDifference;
+            firstDifference = null;
+            if (diff == null) return (0, null, null, null, null);
+            var (entities, water) = StateDigest.Detail(diff);
+            return (diff.Tick, diff.EntityBuckets.ToArray(), diff.WaterAreas.ToArray(), entities, water);
+        }
+
+        public static bool VerifyTraces(int tick, List<Trace> otherTraces, int[] otherHashes = null, int[] otherBuckets = null, int[] otherAreas = null)
+        {
+            if (Settings.Debug)
+            {
+                var diff = StateDigest.Compare(tick, otherBuckets, otherAreas);
+                digestDiffers = diff.Any;
+                if (diff.Any && firstDifference == null)
+                {
+                    firstDifference = diff;
+                    Plugin.LogWarning($"Tick {tick}: {diff.EntityBuckets.Count} buckets of entities and {diff.WaterAreas.Count} squares of water differ from the other machine's");
+                }
+            }
+            else digestDiffers = false;
+            // Agreeing again for a few ticks: the earlier difference was a blip
+            if (!digestDiffers && firstDifference != null && tick > firstDifference.Tick + 3) firstDifference = null;
+
             if (!Settings.Debug)
             {
                 Plugin.LogWarning("DesyncDetectorService.VerifyTraces called not in debug mode");

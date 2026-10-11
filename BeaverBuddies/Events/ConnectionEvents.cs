@@ -87,6 +87,15 @@ namespace BeaverBuddies.Events
     {
         public string desyncID;
         public string desyncTrace;
+        // Which entities and water tiles differed, on the first tick they did
+        // (see StateDigest): the buckets and squares, and our side of them
+        public int detailTick;
+        public int[] detailEntityBuckets;
+        public int[] detailWaterAreas;
+        public string[] detailEntities;
+        public string[] detailWater;
+        // Only for the host to say what differs, in the test harness, which keeps a desync as it is
+        public bool analyzeOnly;
 
         /**
          * The trace of the desync in a file next to the game's log, and the
@@ -120,12 +129,21 @@ namespace BeaverBuddies.Events
 
         public override void Replay(IReplayContext context)
         {
+            if (analyzeOnly && !(EventIO.Get() is ServerEventIO)) return;
             context.GetSingleton<ReplayService>().SetTargetSpeed(0);
             ResyncService resyncService = context.GetSingleton<ResyncService>();
             // The host reloads everyone's game from its save, and the report
             // is offered once it's back (see ShowResynced)
             if (EventIO.Get() is ServerEventIO)
             {
+                // The host still has the tick it happened at: which entities and tiles differ
+                if (detailTick > 0)
+                {
+                    string analysis = DesyncDetecter.StateDigest.Analyze(detailTick, playerID, detailEntityBuckets, detailEntities, detailWaterAreas, detailWater);
+                    Plugin.LogError(analysis);
+                    desyncTrace = (desyncTrace ?? "") + analysis;
+                }
+                if (analyzeOnly) return;
                 resyncService.StartAsHost(this);
                 return;
             }

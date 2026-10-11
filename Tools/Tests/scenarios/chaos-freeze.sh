@@ -36,6 +36,7 @@ if ! grep -aq "Desync kept, not resyncing" "$(bb_log client)"; then pass "no des
 dump_dir="${BB_TEST_DIR:-/tmp}/entities"; mkdir -p "$dump_dir"; rm -f "$dump_dir"/host.txt "$dump_dir"/client.txt
 send host "dumpentities $dump_dir/host.txt"; send client "dumpentities $dump_dir/client.txt"; sleep 4
 echo "  the desync (client):"; grep -a -A8 "Desync kept, not resyncing" "$(bb_log client)" | grep -a "Summary\|first differed\|mine \|other\|order\|move\|random" | head -8 | sed 's/^/    /'
+echo "  what the host says differs:"; grep -a -A40 "What differs at tick" "$(bb_log host)" | grep -av "^\s*at \|Skipped" | head -45 | cut -c1-260 | sed 's/^/    /'
 echo "  last tick: host $(grep -a 'IO done' "$(bb_log host)" | tail -1 | cut -c1-60) client $(grep -a 'IO done' "$(bb_log client)" | tail -1 | cut -c1-60)"
 diff "$dump_dir/host.txt" "$dump_dir/client.txt" | grep '^[<>]' > "$dump_dir/diff.txt"
 echo "  entities that differ (< host, > client): $(wc -l < "$dump_dir/diff.txt" | tr -d ' ') lines"; head -20 "$dump_dir/diff.txt" | sed 's/^/    /'
