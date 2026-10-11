@@ -261,7 +261,8 @@ namespace BeaverBuddies.DevTools
                 {
                     var spec = Get<Timberborn.Buildings.BuildingService>().GetBuildingTemplate(a[1]) ?? throw new Exception($"no building {a[1]}");
                     Orientation orientation = a.Length > 5 ? a[5] switch { "90" => Orientation.Cw90, "180" => Orientation.Cw180, "270" => Orientation.Cw270, _ => Orientation.Cw0 } : Orientation.Cw0;
-                    BuildingPlacedEvent.InstantOverride = true;
+                    // buildnow Name x y z [rotation] [site]: finished, unless it's to be a site the builders build
+                    BuildingPlacedEvent.InstantOverride = !(a.Length > 6 && a[6] == "site");
                     try
                     {
                         Get<Timberborn.BlockObjectTools.BlockObjectPlacerService>().GetMatchingPlacer(spec.GetSpec<BlockObjectSpec>())
