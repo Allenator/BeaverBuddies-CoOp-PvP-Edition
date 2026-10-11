@@ -31,7 +31,8 @@ namespace BeaverBuddies.DesyncDetecter
         // event should only be sent (manually) on the Server side
         public override void Replay(IReplayContext context)
         {
-            if (!DesyncDetecterService.VerifyTraces(tick, traces, hashes))
+            bool match = DesyncDetecterService.VerifyTraces(tick, traces, hashes);
+            if (DesyncDetecterService.ShouldResync(tick, match, hashes))
             {
                 var replayService = context.GetSingleton<ReplayService>();
                 replayService.HandleDesync();
@@ -102,6 +103,47 @@ namespace BeaverBuddies.DesyncDetecter
             Plugin.LogWarning($"State differs from the other machine's since tick {tick}: {firstHashSplitWhat} hash");
         }
 
+        // A tick whose traces differed while the order, move and random
+        // hashes still agreed: a difference in what was logged, or one that
+        // changed nothing the hashes cover. It waits for the next ticks' hashes
+        private static int suspectTick = -1;
+        private const int suspectTicks = 2;
+
+        /**
+         * Whether a tick's traces and hashes call for resyncing everyone.
+         * Traces that differ with the hashes still the same don't, yet: the
+         * game goes on, and resyncs once the hashes split or the traces
+         * differ again in the next ticks. Without hashes to go by, any
+         * difference does.
+         */
+        public static bool ShouldResync(int tick, bool tracesMatch, int[] otherHashes)
+        {
+            int[] mine = HashesOf(tick);
+            bool known = mine != null && otherHashes != null;
+            bool hashesMatch = known && mine.SequenceEqual(otherHashes);
+            if (suspectTick >= 0 && tick > suspectTick)
+            {
+                if (!tracesMatch || (known && !hashesMatch))
+                {
+                    Plugin.LogWarning($"Resyncing: the traces differed at tick {suspectTick} and {(tracesMatch ? "the state differs" : "they differ again")} at tick {tick}");
+                    suspectTick = -1;
+                    return true;
+                }
+                if (tick >= suspectTick + suspectTicks)
+                {
+                    Plugin.LogWarning($"The traces differed at tick {suspectTick} but the state matched since: not resyncing");
+                    suspectTick = -1;
+                    lastDesyncTrace = null;
+                }
+                return false;
+            }
+            if (tracesMatch) return false;
+            if (!known || !hashesMatch) return true;
+            Plugin.LogWarning($"The traces differ at tick {tick} but the hashes match: watching the next {suspectTicks} ticks before resyncing");
+            suspectTick = tick;
+            return false;
+        }
+
         private static int[] HashesOf(int tick) => tickHashes.TryGetValue(tick, out int[] h) ? h : null;
 
         // Whether this tick's traces were recorded from its start: tracing
@@ -122,6 +164,7 @@ namespace BeaverBuddies.DesyncDetecter
             tracing = Settings.Debug;
             tickHashes.Clear();
             firstHashSplit = -1;
+            suspectTick = -1;
             if (Settings.Debug)
             {
                 Trace("Start Preload");
