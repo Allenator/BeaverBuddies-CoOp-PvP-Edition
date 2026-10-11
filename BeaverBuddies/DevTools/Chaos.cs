@@ -18,7 +18,7 @@ namespace BeaverBuddies.DevTools
      * so the same seed does the same things (though not at the same instants).
      *
      *   chaos off
-     *   chaos seed level [prefab,prefab,... x y z radius]
+     *   chaos seed level [prefab,prefab,... x y z radius] [nospeed] [nodelete] [notroops] [noplace] [nonet] [nostall]
      *
      * level is 1 (mild) to 3. The places are around x y z (grid), of the
      * prefabs given; without them it only changes speeds and timing.
@@ -32,6 +32,8 @@ namespace BeaverBuddies.DevTools
         private static string[] _prefabs = new string[0];
         private static Vector3Int _around;
         private static int _radius;
+        // Parts to leave out, to see which one a desync goes with
+        private static HashSet<string> _off = new();
         private static readonly List<(string prefab, Vector3Int at)> _placed = new();
         public static int Actions { get; private set; }
 
@@ -56,6 +58,7 @@ namespace BeaverBuddies.DevTools
                 _around = new Vector3Int(int.Parse(a[4]), int.Parse(a[5]), int.Parse(a[6]));
                 _radius = int.Parse(a[7]);
             }
+            _off = new HashSet<string>(a.Skip(8));
             QualitySettings.vSyncCount = 0;
             _nextAction = Time.unscaledTime + 2;
             _nextRate = 0;
@@ -63,7 +66,7 @@ namespace BeaverBuddies.DevTools
             // Only the connection's reading thread calls this
             TimberNetBase.BeforeReceive = () =>
             {
-                if (_network.NextDouble() < 0.12 * _level) Thread.Sleep(_network.Next(5, 80 * _level));
+                if (!_off.Contains("nonet") && _network.NextDouble() < 0.12 * _level) Thread.Sleep(_network.Next(5, 80 * _level));
             };
             _on = true;
             Plugin.Log($"[Chaos] on: seed {seed}, level {_level}, {_prefabs.Length} prefabs");
@@ -80,7 +83,7 @@ namespace BeaverBuddies.DevTools
                 Application.targetFrameRate = rates[_frames.Next(rates.Length)];
                 _nextRate = now + 3 + (float)_frames.NextDouble() * 7;
             }
-            if (_frames.NextDouble() < 0.015 * _level) Thread.Sleep(_frames.Next(20, 120 * _level));
+            if (!_off.Contains("nostall") && _frames.NextDouble() < 0.015 * _level) Thread.Sleep(_frames.Next(20, 120 * _level));
             if (now < _nextAction) return;
             _nextAction = now + 0.3f + (float)_actions.NextDouble() * 3f / _level;
             Act();
@@ -99,47 +102,59 @@ namespace BeaverBuddies.DevTools
 
         private static string Pick(string[] list) => list[_actions.Next(list.Length)];
 
+        // A placement that fits, of some building: a third of them the army's, barracks, ranges, armories, siege machines
+        private static string PlaceCommand(TestHarness harness)
+        {
+            string[] rotations = { "0", "90", "180", "270" };
+            var army = _prefabs.Where(f => Is(f, Military) || Is(f, Machines)).ToArray();
+            var machines = _prefabs.Where(f => Is(f, Machines)).ToArray();
+            string prefab = _actions.Next(3) != 0 || army.Length == 0 ? Pick(_prefabs)
+                : machines.Length > 0 && _actions.Next(2) == 0 ? Pick(machines) : Pick(army);
+            // Spots until one fits: most of the map's tiles don't suit most buildings
+            for (int tries = 0; tries < 25; tries++)
+            {
+                Vector3Int at = RandomSpot(harness);
+                int turn = _actions.Next(4);
+                Orientation orientation = new[] { Orientation.Cw0, Orientation.Cw90, Orientation.Cw180, Orientation.Cw270 }[turn];
+                bool fits;
+                try { fits = harness.CanPlace(prefab, at, orientation); }
+                catch { fits = false; }
+                if (!fits) continue;
+                _placed.Add((prefab, at));
+                return $"place {prefab} {at.x} {at.y} {at.z} {rotations[turn]}{(_actions.Next(3) == 0 ? " instant" : "")}";
+            }
+            return null;
+        }
+
         private static void Act()
         {
             var harness = TestHarness.Current;
             if (harness == null) return;
             string command = null;
             int roll = _actions.Next(100);
-            if (roll < 12) command = "speed " + Pick(new[] { "0", "1", "3", "7" });
-            else if (roll < 18) command = "speedkey " + Pick(new[] { "0", "1", "3" });
-            else if (roll < 21) command = "tickonce";
+            if (roll < 21)
+            {
+                string speed = _actions.Next(3) == 0 ? "tickonce" : _actions.Next(2) == 0 ? "speed " + Pick(new[] { "0", "1", "3", "7" }) : "speedkey " + Pick(new[] { "0", "1", "3" });
+                if (_off.Contains("nospeed")) return;
+                command = speed;
+            }
             else if (_prefabs.Length == 0) return;
             else if (roll < 58 || _placed.Count == 0)
             {
-                // Spots until one fits: most of the map's tiles don't suit most buildings
-                string[] rotations = { "0", "90", "180", "270" };
-                // A third of them the army's: barracks, ranges, armories, siege machines
-                var army = _prefabs.Where(f => Is(f, Military) || Is(f, Machines)).ToArray();
-                var machines = _prefabs.Where(f => Is(f, Machines)).ToArray();
-                string prefab = _actions.Next(3) != 0 || army.Length == 0 ? Pick(_prefabs)
-                    : machines.Length > 0 && _actions.Next(2) == 0 ? Pick(machines) : Pick(army);
-                for (int tries = 0; tries < 25 && command == null; tries++)
-                {
-                    Vector3Int at = RandomSpot(harness);
-                    int turn = _actions.Next(4);
-                    Orientation orientation = new[] { Orientation.Cw0, Orientation.Cw90, Orientation.Cw180, Orientation.Cw270 }[turn];
-                    bool fits;
-                    try { fits = harness.CanPlace(prefab, at, orientation); }
-                    catch { fits = false; }
-                    if (!fits) continue;
-                    command = $"place {prefab} {at.x} {at.y} {at.z} {rotations[turn]}{(_actions.Next(3) == 0 ? " instant" : "")}";
-                    _placed.Add((prefab, at));
-                }
+                if (_off.Contains("noplace")) return;
+                command = PlaceCommand(harness);
                 if (command == null) return;
             }
             else if (roll < 68)
             {
+                if (_off.Contains("nodelete")) return;
                 int i = _actions.Next(_placed.Count);
                 command = $"delete {_placed[i].at.x} {_placed[i].at.y} {_placed[i].at.z}";
                 _placed.RemoveAt(i);
             }
             else
             {
+                if (_off.Contains("notroops")) return;
                 // Troops: whoever works at one of the military buildings placed
                 var barracks = _placed.Where(p => Is(p.prefab, Military)).ToList();
                 var machines = _placed.Where(p => Is(p.prefab, Machines)).ToList();

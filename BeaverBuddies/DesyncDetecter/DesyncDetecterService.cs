@@ -109,6 +109,14 @@ namespace BeaverBuddies.DesyncDetecter
         private static int suspectTick = -1;
         private const int suspectTicks = 2;
 
+        // Ticks in a row whose hashes differ, and where it began: the state
+        // really differs, whatever the traces say, once it's gone on a few
+        // ticks (a tick played in two batches can read differently for one)
+        private static int splitStart = -1;
+        private static int splitTicks;
+        private const int splitResyncTicks = 3;
+        private static bool splitDumped;
+
         /**
          * Whether a tick's traces and hashes call for resyncing everyone.
          * Traces that differ with the hashes still the same don't, yet: the
@@ -121,6 +129,31 @@ namespace BeaverBuddies.DesyncDetecter
             int[] mine = HashesOf(tick);
             bool known = mine != null && otherHashes != null;
             bool hashesMatch = known && mine.SequenceEqual(otherHashes);
+            if (known)
+            {
+                if (hashesMatch)
+                {
+                    // Back together after a tick or two: nothing to report
+                    if (splitDumped && suspectTick < 0) lastDesyncTrace = null;
+                    splitStart = -1;
+                    splitTicks = 0;
+                    splitDumped = false;
+                }
+                else
+                {
+                    if (splitStart < 0) splitStart = tick;
+                    if (++splitTicks >= splitResyncTicks)
+                    {
+                        Plugin.LogWarning($"Resyncing: the hashes have differed since tick {splitStart}");
+                        if (lastDesyncTrace != null) Plugin.LogError(lastDesyncTrace);
+                        splitStart = -1;
+                        splitTicks = 0;
+                        splitDumped = false;
+                        suspectTick = -1;
+                        return true;
+                    }
+                }
+            }
             if (suspectTick >= 0 && tick > suspectTick)
             {
                 if (!tracesMatch || (known && !hashesMatch))
@@ -165,6 +198,9 @@ namespace BeaverBuddies.DesyncDetecter
             tickHashes.Clear();
             firstHashSplit = -1;
             suspectTick = -1;
+            splitStart = -1;
+            splitTicks = 0;
+            splitDumped = false;
             if (Settings.Debug)
             {
                 Trace("Start Preload");
@@ -338,6 +374,21 @@ namespace BeaverBuddies.DesyncDetecter
             }
             if (errorIndex == -1)
             {
+                // The traces agree but the state doesn't: keep what this tick
+                // logged, for the report if it goes on
+                int[] mineHashes = HashesOf(tick);
+                if (!splitDumped && mineHashes != null && otherHashes != null && !mineHashes.SequenceEqual(otherHashes))
+                {
+                    splitDumped = true;
+                    var dump = new StringBuilder();
+                    dump.AppendLine($"Desync detected for tick {tick}! The traces match, the hashes don't");
+                    AppendSummary(dump, tick, myTraces.Count, myTraces, otherTraces, otherHashes);
+                    dump.AppendLine($"========== This tick's trace ==========");
+                    for (int i = 0; i < myTraces.Count; i++) LogTrace(dump, myTraces[i], i > myTraces.Count - 6);
+                    dump.AppendLine("========== Desynced Log End ==========");
+                    // Logged if the split goes on and everyone resyncs (see ShouldResync)
+                    lastDesyncTrace = (lastDesyncTrace ?? "") + dump;
+                }
                 // If the index we're verifying (that's ticked on both Client and Server)
                 // is greater than the number of ticks we should keep as history (in case
                 // of future desyncs), detele that many stored logs.

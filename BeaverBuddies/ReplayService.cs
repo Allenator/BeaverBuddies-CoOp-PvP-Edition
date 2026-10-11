@@ -123,6 +123,8 @@ namespace BeaverBuddies
         // How many times the buckets the game asks for a client plays a frame
         public float BucketBoost { get; private set; } = 1;
         private float _nextTickArrived;
+        private bool _desyncKept;
+
         public bool IsDesynced { get; private set; } = false;
 
         private ConcurrentQueue<ReplayEvent> eventsToSend = new ConcurrentQueue<ReplayEvent>();
@@ -427,6 +429,16 @@ namespace BeaverBuddies
         public void HandleDesync()
         {
             if (IsDesynced) return;
+            // The test harness can keep a desynced game as it is, to look at what differs
+            if (DevTools.TestHarness.Active && DevTools.TestHarness.NoResync)
+            {
+                if (!_desyncKept)
+                {
+                    _desyncKept = true;
+                    Plugin.LogError($"[Test] Desync kept, not resyncing:\n{DesyncDetecter.DesyncDetecterService.GetLastDesyncTrace()}");
+                }
+                return;
+            }
 
             ClientDesyncedEvent e = new ClientDesyncedEvent()
             {

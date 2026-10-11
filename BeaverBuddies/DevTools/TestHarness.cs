@@ -77,6 +77,9 @@ namespace BeaverBuddies.DevTools
             _clientConnectionService = clientConnectionService;
         }
 
+        // A desync is kept as it is, not resynced, to look at what differs
+        internal static bool NoResync { get; private set; }
+
         // The harness of the game being played, for what runs between games (chaos mode)
         internal static TestHarness Current { get; private set; }
 
@@ -649,6 +652,46 @@ namespace BeaverBuddies.DevTools
                 case "chaos":
                     Chaos.Start(a);
                     break;
+                case "noresync":
+                    NoResync = a.Length < 2 || a[1] != "off";
+                    break;
+                case "has":
+                {
+                    // has id: whether the entity is there, and how it looks to the block service
+                    var registry = Get<Timberborn.EntitySystem.EntityRegistry>();
+                    var entity = registry.Entities.FirstOrDefault(e => e && e.EntityId.ToString() == a[1]);
+                    string where = "";
+                    if (entity)
+                    {
+                        var block = entity.GetComponent<BlockObject>();
+                        where = block ? $" at {block.Coordinates}" : "";
+                    }
+                    Plugin.Log($"[Test] has {a[1]}: {(entity ? "yes" : "no")}{where}");
+                    break;
+                }
+                case "canplace":
+                {
+                    // canplace Name x y z [rotation]: only asks, as the building tool's preview does
+                    Orientation orientation = a.Length > 5 ? a[5] switch { "90" => Orientation.Cw90, "180" => Orientation.Cw180, "270" => Orientation.Cw270, _ => Orientation.Cw0 } : Orientation.Cw0;
+                    Plugin.Log($"[Test] canplace {a[1]} {a[2]} {a[3]} {a[4]}: {CanPlace(a[1], new Vector3Int(I(a[2]), I(a[3]), I(a[4])), orientation)}");
+                    break;
+                }
+                case "dumpentities":
+                {
+                    // dumpentities path: every entity, one line each in id order, to compare two copies
+                    var lines = Get<Timberborn.EntitySystem.EntityRegistry>().Entities
+                        .Where(e => e)
+                        .Select(e =>
+                        {
+                            var block = e.GetComponent<BlockObject>();
+                            string at = block ? $"{block.Coordinates}{(block.IsFinished ? " finished" : "")}" : e.Transform ? $"{e.Transform.position:F2}" : "";
+                            return $"{e.EntityId} {e.GameObject.name} {at}";
+                        })
+                        .OrderBy(l => l, StringComparer.Ordinal);
+                    File.WriteAllLines(a[1], lines);
+                    Plugin.Log($"[Test] Dumped the entities to {a[1]}");
+                    break;
+                }
                 case "speed":
                     Record(new SpeedSetEvent() { speed = float.Parse(a[1], CultureInfo.InvariantCulture) });
                     break;
