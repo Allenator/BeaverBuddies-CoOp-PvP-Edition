@@ -513,4 +513,19 @@ namespace BeaverBuddies.DesyncDetecter
             return __exception;
         }
     }
+
+    /**
+     * A gatherer's job ending before its time: something released the
+     * reservation. With the stack, the line itself says who did, and it only
+     * appears on the machine where it happened.
+     */
+    [HarmonyPatch(typeof(Timberborn.Yielding.YielderRemover), nameof(Timberborn.Yielding.YielderRemover.Unreserve))]
+    public class YielderRemoverUnreservePatcher
+    {
+        static void Prefix(Timberborn.Yielding.YielderRemover __instance)
+        {
+            if (!Settings.Debug || !__instance.HasReservedYielder) return;
+            DesyncDetecterService.Trace($"YielderRemover of {__instance.GetComponent<EntityComponent>()?.EntityId} unreserves {__instance.ReservedYielder.GetComponent<EntityComponent>()?.EntityId}", true, false);
+        }
+    }
 }
