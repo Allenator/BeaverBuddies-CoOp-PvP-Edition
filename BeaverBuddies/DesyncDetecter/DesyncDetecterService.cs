@@ -204,6 +204,7 @@ namespace BeaverBuddies.DesyncDetecter
             traces.Add(new List<Trace>());
             tracing = Settings.Debug;
             tickHashes.Clear();
+            StateReflection.Reset();
             sentTraces.Clear();
             StateDigest.Reset();
             firstDifference = null;

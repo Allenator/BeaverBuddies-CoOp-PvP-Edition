@@ -19,6 +19,12 @@ namespace BeaverBuddies.DesyncDetecter
         private static readonly Dictionary<Type, FieldInfo[]> fieldsOf = new();
         private const int MaxChars = 700;
 
+        private static Timberborn.TimeSystem.IDayNightCycle cycle;
+        // Found once per game: looking for a singleton each time is slow and logs
+        private static Timberborn.TimeSystem.IDayNightCycle Cycle => cycle ??= SingletonManager.GetSingleton<ReplayService>()?.GetSingleton<Timberborn.TimeSystem.IDayNightCycle>();
+
+        public static void Reset() => cycle = null;
+
         private static string Bonuses(Timberborn.BonusSystem.BonusManager manager)
         {
             var sb = new StringBuilder();
@@ -70,6 +76,8 @@ namespace BeaverBuddies.DesyncDetecter
                 // another order, and a difference in the last digit moves when a job ends by a whole tick
                 if (o is BaseComponent owner && owner)
                 {
+                    // What time the entity sees as it ticks: jobs end when the clock reaches a time
+                    if (Cycle != null) sb.Append("now=").Append(Cycle.PartialDayNumber.ToString("R")).Append(' ');
                     var worker = owner.GetComponent<Timberborn.WorkSystem.Worker>();
                     if (worker) sb.Append("speed=").Append(worker.WorkingSpeedMultiplier.ToString("R")).Append(' ');
                     var bonuses = owner.GetComponent<Timberborn.BonusSystem.BonusManager>();
