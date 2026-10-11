@@ -110,6 +110,14 @@ namespace BeaverBuddies.Events
             }
         }
 
+        // Whether the building could be placed there now, as the replay of a placement would find
+        internal bool CanPlace(IReplayContext context, string prefabName, Placement placement, string playerID)
+        {
+            var buildingSpec = GetBuilding(context, prefabName);
+            if (prefabName.StartsWith("DistrictCenter.")) return false;
+            return IsPlacementValid(context, placement, buildingSpec, playerID);
+        }
+
         private static bool IsPlacementValid(IReplayContext context, Placement placement, BuildingSpec spec, string playerID)
         {
             // The preview mustn't touch the game's random numbers (entity IDs

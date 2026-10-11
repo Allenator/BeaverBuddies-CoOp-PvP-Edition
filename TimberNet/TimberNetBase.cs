@@ -131,6 +131,8 @@ namespace TimberNet
             return type.ToObject<string>()!;
         }
 
+        public static Action? BeforeReceive;
+
         protected void InsertInScript(JObject message, List<JObject> script)
         {
             int tick = GetTick(message);
@@ -409,6 +411,8 @@ namespace TimberNet
                 }
                 try
                 {
+                    // Set by the test harness's chaos mode, to hold messages up like a slow connection
+                    BeforeReceive?.Invoke();
                     JObject message = JObject.Parse(received.message!);
                     // Taken as it arrives, not when played: a player who joined
                     // after a reload can act before the state's tick comes round

@@ -77,8 +77,13 @@ namespace BeaverBuddies.DevTools
             _clientConnectionService = clientConnectionService;
         }
 
+        // The harness of the game being played, for what runs between games (chaos mode)
+        internal static TestHarness Current { get; private set; }
+
         public void UpdateSingleton()
         {
+            Current = this;
+            if (Active) Chaos.Update();
             if (!Active || Time.unscaledTime < _nextPoll) return;
             _nextPoll = Time.unscaledTime + 0.5f;
             if (!File.Exists(Flag)) return;
@@ -107,7 +112,7 @@ namespace BeaverBuddies.DevTools
             name.StartsWith("user:") ? MapFileReference.FromUserFolder(name.Substring(5)) : MapFileReference.FromResource(name);
 
 
-        private void Run(string[] a)
+        internal void Run(string[] a)
         {
             switch (a[0])
             {
@@ -312,9 +317,29 @@ namespace BeaverBuddies.DevTools
                     object order = Activator.CreateInstance(type);
                     type.GetField("warriorIDs").SetValue(order, workplace.AssignedWorkers.Select(ReplayEvent.GetEntityID).ToList());
                     type.GetField("target").SetValue(order, CoordinateSystem.GridToWorldCentered(new Vector3Int(I(a[4]), I(a[5]), I(a[6]))));
-                    type.GetField("attack").SetValue(order, true);
+                    // send ... [attack|move|queue|patrol|halt|clear]: attacks unless told how else
+                    string how = a.Length > 7 ? a[7] : "attack";
+                    type.GetField("attack").SetValue(order, how == "attack" || how == "queue" || how == "patrol");
+                    type.GetField("queue").SetValue(order, how == "queue");
+                    type.GetField("patrol").SetValue(order, how == "patrol");
+                    type.GetField("halt").SetValue(order, how == "halt");
+                    type.GetField("clear").SetValue(order, how == "clear");
                     // Timber Empires' events travel inside ours, as its bridge sends them
                     Record(new Modding.ModEvent() { mod = "timberempires", payload = order });
+                    break;
+                }
+                case "board":
+                {
+                    // board x y z cx cy cz: the workers of the building at the first tile climb into the machine at the second
+                    var workplace = Get<IBlockService>().GetObjectsAt(new Vector3Int(I(a[1]), I(a[2]), I(a[3])))
+                        .Select(o => o.GetComponent<Timberborn.WorkSystem.Workplace>()).FirstOrDefault(w => w) ?? throw new Exception("no workplace there");
+                    var machine = Get<IBlockService>().GetObjectsAt(new Vector3Int(I(a[4]), I(a[5]), I(a[6]))).FirstOrDefault(o => o) ?? throw new Exception("no machine there");
+                    Type type = AppDomain.CurrentDomain.GetAssemblies().Select(x => x.GetType("TimberEmpires.Warriors.CrewBoardEvent")).FirstOrDefault(t => t != null)
+                        ?? throw new Exception("Timber Empires isn't loaded");
+                    object board = Activator.CreateInstance(type);
+                    type.GetField("warriorIDs").SetValue(board, workplace.AssignedWorkers.Select(ReplayEvent.GetEntityID).ToList());
+                    type.GetField("crewID").SetValue(board, ReplayEvent.GetEntityID(machine));
+                    Record(new Modding.ModEvent() { mod = "timberempires", payload = board });
                     break;
                 }
                 case "look":
@@ -621,6 +646,9 @@ namespace BeaverBuddies.DevTools
                         box.OnUIConfirmed();
                     }
                     break;
+                case "chaos":
+                    Chaos.Start(a);
+                    break;
                 case "speed":
                     Record(new SpeedSetEvent() { speed = float.Parse(a[1], CultureInfo.InvariantCulture) });
                     break;
@@ -634,6 +662,17 @@ namespace BeaverBuddies.DevTools
         private Timberborn.TimeSystemUI.SpeedControlPanel SpeedPanel() =>
             Get<Timberborn.InputSystem.InputService>()._inputProcessors.OfType<Timberborn.TimeSystemUI.SpeedControlPanel>().FirstOrDefault()
             ?? throw new Exception("no speed panel");
+
+        // Whether the player could place the building there now
+        internal bool CanPlace(string prefab, Vector3Int at, Orientation orientation) =>
+            new BuildingPlacedEvent().CanPlace(Replay, prefab, new Placement(at, orientation, FlipMode.Unflipped), Players.PlayerIdentity.LocalID);
+
+        // The height of the ground at a tile, for placing something on it
+        internal int GroundAt(int x, int y)
+        {
+            var terrain = Get<Timberborn.TerrainSystem.ITerrainService>();
+            return terrain.GetTerrainHeightBelow(terrain.Clamp(new Vector3Int(x, y, 999)));
+        }
 
         private T Get<T>() where T : class =>
             _container.GetInstance<T>() ?? throw new Exception($"no {typeof(T).Name}");
