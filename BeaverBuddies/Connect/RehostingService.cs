@@ -71,8 +71,12 @@ namespace BeaverBuddies.Connect
                 };
             }
             SettlementReference settlementReference = _settlementReferenceService.SettlementReference;
-            string saveName = _autosaveNameService.Timestamp().Replace(",", "") + " Rehost";
-            SaveReference saveReference = new SaveReference(saveName, settlementReference);
+            // One save per game, reused for every resync, instead of a new
+            // timestamped copy each time
+            SaveReference saveReference = new SaveReference(
+                GameNames.Current(name => _gameSaveRepository.SaveExists(new SaveReference(name, settlementReference))),
+                settlementReference);
+            if (_gameSaveRepository.SaveExists(saveReference)) _gameSaveRepository.DeleteSaveSafely(saveReference);
             try
             {
                 _gameSaver.SaveInstantlySkippingNameValidation(saveReference, () =>
@@ -96,6 +100,7 @@ namespace BeaverBuddies.Connect
 
         public bool RehostGame()
         {
+            GameNames.Reset();
             return SaveRehostFile(LoadGame, true);
         }
 

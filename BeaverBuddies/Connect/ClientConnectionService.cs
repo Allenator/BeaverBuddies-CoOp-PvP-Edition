@@ -233,9 +233,9 @@ namespace BeaverBuddies.Connect
             SingletonManager.Reset();
 
             Plugin.Log("Loading map");
-            //string saveName = Guid.NewGuid().ToString();
-            string saveName = TimberNetBase.GetHashCode(mapBytes).ToString("X8");
-            SaveReference saveRef = new SaveReference("Online Games", new SettlementReference(saveName, gameSaveRepository.DefaultSaveDirectory));
+            // One save per game, reused for every resync, instead of a folder per map
+            SaveReference saveRef = new SaveReference(GameNames.FromSave(mapBytes), new SettlementReference("Multiplayer", gameSaveRepository.DefaultSaveDirectory));
+            if (gameSaveRepository.SaveExists(saveRef)) gameSaveRepository.DeleteSaveSafely(saveRef);
             Stream stream = gameSaveRepository.CreateSaveSkippingNameValidation(saveRef);
             stream.Write(mapBytes);
             stream.Close();
