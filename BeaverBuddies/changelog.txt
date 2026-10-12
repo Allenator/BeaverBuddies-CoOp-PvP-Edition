@@ -1,3 +1,9 @@
+v1.1.0-1.4.1
+* A multiplayer game keeps one save, named after the map and the players ("Crossroads Ada vs Bo"), instead of a new copy on every resync.
+* Fewer desyncs: whatever a player deletes or demolishes goes away at the same moment on every machine.
+* A demolition follows the Ctrl of the player who made it, not each player's own.
+* Fewer needless resyncs: the game resyncs only after three ticks in a row that don't match, and not over differences that don't change the game.
+
 v1.1.0-1.4.0
 * New: join a game that has already started.
 * A desync resyncs everyone without leaving the game, and Steam games reconnect on their own after one.
