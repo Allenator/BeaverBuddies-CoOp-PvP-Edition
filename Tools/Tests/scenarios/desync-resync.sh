@@ -2,6 +2,8 @@
 # the host saves and sends the save over the connection they already have, and both load it. Once
 # back, the dialog's button turns logging on, or with logging on saves the desync's trace next to
 # Player.log for a report on Discord. Nothing is posted anywhere.
+# Logging off, as a player has it by default: the scenario is about it being turned on from the dialog
+pref_set ModSetting.beaverbuddies.Settings.AlwaysTrace 0
 bb_close
 start_match Folktails Folktails || { fail "a match starts" "the copies never got into the game"; return; }
 pass "a match starts"

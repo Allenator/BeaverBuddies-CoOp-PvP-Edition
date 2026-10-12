@@ -3,6 +3,8 @@
 # moments. Nothing should desync or need a resync. BB_CHAOS_SECONDS (150 by default) is how long,
 # BB_CHAOS_OFF parts to leave out (nospeed nodelete notroops noplace nonet nostall), BB_CHAOS_SEED the seed (random by default; the same seed does the same things, though not at the
 # same instants), BB_CHAOS_LEVEL 1 to 3.
+# These read the logging, so it is on, whatever this Mac has it at
+pref_set ModSetting.beaverbuddies.Settings.AlwaysTrace 1
 bb_close
 start_match Folktails Folktails || { fail "a match starts" "the copies never got into the game"; return; }
 pass "a match starts"

@@ -52,6 +52,29 @@ prefs_restore() {
     rm -f "$BB_PREFS_SAVED"
 }
 
+# pref_set <key> <int>: a game preference for this scenario only (a mod's setting, say), the player's
+# own put back when the scenario is over. BeaverBuddies' "always trace" is the one that matters:
+# a scenario that is about logging being off, or on, sets it, whatever this Mac has it at.
+BB_PREFS_OVERRIDES="$BB_TEST_DIR/prefs.overrides"
+pref_set() {
+    local k=$1 v=$2 old
+    old=$(defaults read $BB_PREFS_DOMAIN "$k" 2>/dev/null) || old=""
+    # Only the first change of a key remembers the player's own value
+    grep -q "^$k|" "$BB_PREFS_OVERRIDES" 2>/dev/null || echo "$k|$old" >> "$BB_PREFS_OVERRIDES"
+    defaults write $BB_PREFS_DOMAIN "$k" -int "$v"
+}
+
+prefs_restore_overrides() {
+    [ -f "$BB_PREFS_OVERRIDES" ] || return 0
+    local k v
+    while IFS='|' read -r k v; do
+        if [ -z "$v" ]; then defaults delete $BB_PREFS_DOMAIN "$k" 2>/dev/null
+        elif [[ "$v" =~ ^-?[0-9]+$ ]]; then defaults write $BB_PREFS_DOMAIN "$k" -int "$v"
+        else defaults write $BB_PREFS_DOMAIN "$k" -string "$v"; fi
+    done < "$BB_PREFS_OVERRIDES"
+    rm -f "$BB_PREFS_OVERRIDES"
+}
+
 # ---- Mods: switching one off for a scenario, and always back on --------------
 
 bb_mods_dir() { (cd "$HOME/Documents/Timberborn/Mods" && pwd -P); }

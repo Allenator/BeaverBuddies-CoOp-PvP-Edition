@@ -24,6 +24,8 @@ Runs each script in `scenarios/` (and in the folders of `BB_SCENARIOS`, a colon-
 
 A chaos run that finds nothing proves little; one that finds something is a bug with a recipe. Desyncs here come about one run in three or four unless fixed, so loop it.
 
+A scenario that depends on the game's logging being on or off sets BeaverBuddies' "always trace" itself with `pref_set` (`lib.sh`), whatever this Mac has it at, and the player's own value is put back when the scenario ends.
+
 Scenarios run the game at `BB_SPEED` (30 by default) while they wait on it.
 
 Writing a scenario: see `lib.sh` (`start_match`, `send`, `wait_for`, `layout_of`, `shot`, the `expect_*` checks) and the scenarios here. The harness commands are the `case` labels of `TestHarness.cs`: `hostmatch Map Faction [game mode]`, `joinmatch`, `place`, `slots`, `speed` (sends the speed as an event), `play speed`, `speedkey speed` and `tickonce` (the speed buttons and keys, as a player presses them), `menu` (the game menu), `click Button`, `layout Element` (where an element of the panel on top sits), `desync [traced]`, `setfield Name value`, `gamesetting id value` and `matchoption id value` (this copy's picks for new games), `scrollend List`, `snap path`, `openmatches` and more. A mod can add its own: BeaverBuddies has the `te ...` command that passes its arguments to Timber Empires' probe.

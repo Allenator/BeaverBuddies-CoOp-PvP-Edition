@@ -83,6 +83,7 @@ cleanup() {
     [ -n "${spid:-}" ] && kill -9 $spid 2>/dev/null
     bb_close
     mod_enable_all
+    prefs_restore_overrides
     prefs_restore
     rm -rf "$LOCK"
 }
@@ -146,6 +147,7 @@ for f in $FILES; do
     spid=
     bb_close
     mod_enable_all
+    prefs_restore_overrides
     printf '%s\t%s\t%s\t%s\n' TIME "$name" "$(( $(date +%s) - t0 ))" "" >> "$BB_RESULTS"
 done
 

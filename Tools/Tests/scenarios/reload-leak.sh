@@ -1,6 +1,8 @@
 # A game loaded over another one leaves nothing of the first behind: Unity holds about as many objects
 # after the third reload as after the second. A leak shows as a count that climbs
 # with every reload, and a load that takes ten seconds longer each time.
+# These read the logging, so it is on, whatever this Mac has it at
+pref_set ModSetting.beaverbuddies.Settings.AlwaysTrace 1
 bb_close
 start_match Folktails Folktails || { fail "a match starts" "the copies never got into the game"; return; }
 pass "a match starts"
