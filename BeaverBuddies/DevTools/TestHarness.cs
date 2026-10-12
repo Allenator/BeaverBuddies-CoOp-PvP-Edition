@@ -397,6 +397,21 @@ namespace BeaverBuddies.DevTools
                     Record(new BuildingsDeconstructedEvent() { entityIDs = ids });
                     break;
                 }
+                case "tooldelete":
+                {
+                    // The demolish tool, as a player confirms it over a tile
+                    var tool = Get<Timberborn.ToolButtonSystem.ToolButtonService>().ToolButtons.Select(b => b.Tool)
+                        .OfType<Timberborn.DeconstructionSystemUI.BuildingDeconstructionTool>().FirstOrDefault()
+                        ?? throw new Exception("no demolish tool");
+                    var blocks = Replay.GetSingleton<IBlockService>();
+                    var objects = blocks.GetObjectsAt(new Vector3Int(I(a[1]), I(a[2]), I(a[3])))
+                        .Where(o => o.GetComponent<BuildingSpec>() != null).Distinct().ToList();
+                    if (objects.Count == 0) throw new Exception("no building there");
+                    tool._temporaryBlockObjects.AddRange(objects);
+                    tool.DeleteBlockObjects();
+                    Plugin.Log($"[Test] Tool deleted {objects.Count} at {a[1]} {a[2]} {a[3]}");
+                    break;
+                }
                 case "ghosts":
                 {
                     // The previews showing

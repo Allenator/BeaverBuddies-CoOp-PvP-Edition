@@ -336,7 +336,7 @@ namespace BeaverBuddies.Events
         public static bool HeldHere()
         {
             readingHere = true;
-            try { return SingletonManager.GetSingleton<InputService>().IsKeyHeld(DontRecoverGoodsKey); }
+            try { return InputServiceCapture.Instance?.IsKeyHeld(DontRecoverGoodsKey) ?? false; }
             finally { readingHere = false; }
         }
 
@@ -345,6 +345,16 @@ namespace BeaverBuddies.Events
             if (readingHere || keyId != DontRecoverGoodsKey || IO.EventIO.IsNull) return;
             __result = BuildingsDeconstructedEvent.DontRecoverOverride ?? false;
         }
+    }
+
+    // InputService isn't one of our registered singletons, so keep hold of the
+    // game's instance as it updates.
+    [HarmonyPatch(typeof(InputService), nameof(InputService.UpdateSingleton))]
+    class InputServiceCapture
+    {
+        public static InputService Instance;
+
+        static void Prefix(InputService __instance) => Instance = __instance;
     }
 
     // MarkArea/UnmarkArea derive the planting height by raycasting the planter's
