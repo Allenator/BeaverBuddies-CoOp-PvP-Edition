@@ -78,10 +78,15 @@ while true; do
 done
 echo $$ > "$LOCK/pid"
 rm -f "$TICKET"
+# The saves this run's games make (the harness names them "Test ..." and "Harness ...") go once it ends
+RUN_START="$BB_TEST_DIR/.run-start"
+touch "$RUN_START"
 
 cleanup() {
     [ -n "${spid:-}" ] && kill -9 $spid 2>/dev/null
     bb_close
+    find "$HOME/Documents/Timberborn/Saves/" -mindepth 1 -maxdepth 1 -type d \( -name 'Test *' -o -name 'Harness *' \) \
+        -newer "$RUN_START" -exec rm -rf {} + 2>/dev/null
     mod_enable_all
     prefs_restore_overrides
     prefs_restore
