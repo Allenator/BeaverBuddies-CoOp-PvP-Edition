@@ -111,6 +111,11 @@ build_current() {
     done
     [ -z "$(find "$(bb_mods_dir)" -maxdepth 3 -name '*.dll' -newer "$stamp" -print -quit)" ]
 }
+# Before building: the build reinstalls the mods under a game that may be loading them
+if player_game_running; then
+    echo "Timberborn is running: close it first, the tests need the game to themselves."
+    exit 1
+fi
 if [ $BUILD -eq 1 ] && [ -n "${BB_BUILD:-}" ]; then
     if build_current; then
         echo "Nothing changed since the last build: not building."
@@ -119,10 +124,6 @@ if [ $BUILD -eq 1 ] && [ -n "${BB_BUILD:-}" ]; then
         ( export BB_HOLDS_LOCK=1; eval "$BB_BUILD" ) || { echo "The build failed."; exit 1; }
         [ -n "${BB_BUILD_SOURCES:-}" ] && echo "$BB_BUILD_SOURCES" > "$BB_TEST_DIR/.build-stamp"
     fi
-fi
-if player_game_running; then
-    echo "Timberborn is running: close it first, the tests need the game to themselves."
-    exit 1
 fi
 prefs_save
 rm -f "$BB_RESULTS"; rm -f "$BB_TEST_DIR"/shots/*.png
