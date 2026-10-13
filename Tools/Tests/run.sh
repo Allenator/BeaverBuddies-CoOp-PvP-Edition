@@ -135,6 +135,8 @@ for f in $FILES; do
     echo
     echo "== $name"
     t0=$(date +%s)
+    # The last scenario's logs out of the way, so its fatal lines aren't taken for this one's
+    rm -f "$(bb_log host)" "$(bb_log client)"
     (
         export BB_SCENARIO="$name" BB_SCENARIO_DIR="$(cd "$(dirname "$f")" && pwd)"
         source "$f"
@@ -145,6 +147,13 @@ for f in $FILES; do
         if [ $(( $(date +%s) - t0 )) -ge "${BB_SCENARIO_TIMEOUT:-600}" ]; then
             pkill -9 -P $spid 2>/dev/null; kill -9 $spid 2>/dev/null
             BB_SCENARIO="$name" fail "finishes in time" "past the ${BB_SCENARIO_TIMEOUT:-600} s limit (BB_SCENARIO_TIMEOUT)"
+            break
+        fi
+        # A copy that logs "[Test] FATAL: ..." (a beaver starved, say) can't pass: stopped there
+        fatal=$(grep -ah "\[Test\] FATAL: " "$(bb_log host)" "$(bb_log client)" 2>/dev/null | head -1 | sed -E 's/.*\[Test\] FATAL: //')
+        if [ -n "$fatal" ]; then
+            pkill -9 -P $spid 2>/dev/null; kill -9 $spid 2>/dev/null
+            BB_SCENARIO="$name" fail "nothing fatal happens" "$fatal"
             break
         fi
         sleep 1

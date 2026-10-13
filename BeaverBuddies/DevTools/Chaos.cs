@@ -18,7 +18,7 @@ namespace BeaverBuddies.DevTools
      * so the same seed does the same things (though not at the same instants).
      *
      *   chaos off
-     *   chaos seed level [prefab,prefab,... x y z radius] [nospeed] [nodelete] [notroops] [noplace] [nonet] [nostall]
+     *   chaos seed level [prefab,prefab,... x y z radius] [nospeed] [nodelete] [notroops] [noplace] [nonet] [nostall] [nosave]
      *
      * level is 1 (mild) to 3. The places are around x y z (grid), of the
      * prefabs given; without them it only changes speeds and timing.
@@ -63,6 +63,7 @@ namespace BeaverBuddies.DevTools
             _nextAction = Time.unscaledTime + 2;
             _nextRate = 0;
             Actions = 0;
+            _placed.Clear();
             // Only the connection's reading thread calls this
             TimberNetBase.BeforeReceive = () =>
             {
@@ -132,7 +133,13 @@ namespace BeaverBuddies.DevTools
             if (harness == null) return;
             string command = null;
             int roll = _actions.Next(100);
-            if (roll < 21)
+            if (roll < 2)
+            {
+                // A save mid-play: it must wait for the full tick and leave nothing behind
+                if (_off.Contains("nosave")) return;
+                command = "save";
+            }
+            else if (roll < 21)
             {
                 string speed = _actions.Next(3) == 0 ? "tickonce" : _actions.Next(2) == 0 ? "speed " + Pick(new[] { "0", "1", "3", "7" }) : "speedkey " + Pick(new[] { "0", "1", "3" });
                 if (_off.Contains("nospeed")) return;

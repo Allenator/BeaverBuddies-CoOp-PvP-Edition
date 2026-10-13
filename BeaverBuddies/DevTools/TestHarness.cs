@@ -662,6 +662,17 @@ namespace BeaverBuddies.DevTools
                     // What the tick once key does
                     SpeedPanel().PauseOrTickOnce();
                     break;
+                case "save":
+                    // A save of the match, as the Save game screen makes one
+                    Get<Timberborn.GameSaveRuntimeSystem.GameSaver>().QueueSaveSkippingNameValidation(
+                        new Timberborn.GameSaveRepositorySystem.SaveReference("Test save " + DateTime.Now.ToString("HH'h'mm'm'ss", CultureInfo.InvariantCulture),
+                            Get<Timberborn.SettlementNameSystem.SettlementReferenceService>().SettlementReference), () => Plugin.Log("[Test] saved"));
+                    break;
+                case "exitmenu":
+                    // Exit to main menu, with the exit save it makes; exitmenu nosave skips it
+                    if (a.Length > 1 && a[1] == "nosave") Get<Timberborn.MainMenuSceneLoading.MainMenuSceneLoader>().OpenMainMenu();
+                    else Get<Timberborn.MainMenuSceneLoading.MainMenuSceneLoader>().SaveAndOpenMainMenu();
+                    break;
                 case "menu":
                     // The game menu, as Escape opens it
                     Get<Timberborn.Options.IOptionsBox>().Show();
