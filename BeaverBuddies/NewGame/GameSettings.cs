@@ -674,10 +674,11 @@ namespace BeaverBuddies.NewGame
                 Round(dragger, 8);
                 dragger.style.borderTopWidth = dragger.style.borderBottomWidth = dragger.style.borderLeftWidth = dragger.style.borderRightWidth = 1;
                 dragger.style.borderTopColor = dragger.style.borderBottomColor = dragger.style.borderLeftColor = dragger.style.borderRightColor = new Color(0.4f, 0.32f, 0.18f);
-                // The filled part follows the handle
-                void Follow() => filled.style.width = dragger.layout.x + dragger.layout.width / 2;
-                dragger.RegisterCallback<GeometryChangedEvent>(_ => Follow());
-                slider.RegisterValueChangedCallback(_ => Follow());
+                // The filled part up to the value, as a share of the track
+                void Follow(int value) => filled.style.width = Length.Percent(100f * (value - slider.lowValue) / Mathf.Max(1, slider.highValue - slider.lowValue));
+                Follow(slider.value);
+                slider.RegisterValueChangedCallback(e => Follow(e.newValue));
+                slider.RegisterCallback<AttachToPanelEvent>(_ => Follow(slider.value));
             }
         }
 
