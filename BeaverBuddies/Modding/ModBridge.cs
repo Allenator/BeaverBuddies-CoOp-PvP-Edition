@@ -237,6 +237,9 @@ namespace BeaverBuddies.Modding
         // it loads, or null for a game started without one
         public static string GetGameMode() => MatchOptions.GameValue(MatchOptions.GameModeId);
 
+        // The game mode picked on the New Game screens right now (what a new game with others would be)
+        public static string GetPickedGameMode() => MatchOptions.ValueOf(MatchOptions.GameModeId);
+
         // The pick for the new game starting on this machine, while it loads,
         // or null for a game started without one (alone, or a saved game)
         public static string GetMatchOption(string id) => MatchOptions.GameValue(id);
@@ -263,7 +266,7 @@ namespace BeaverBuddies.Modding
             });
 
         // A whole number from min to max in steps of step, on a slider with its value beside it, shown by
-        // valueLocKey ("{0} %"): saved as the number
+        // valueLocKey ("{0} %"), or at min by valueLocKey + ".Min" where the mod has that ("None"): saved as the number
         public static void AddGameSlider(string id, string groupLocKey, string labelLocKey, string tooltipLocKey,
             int min, int max, int step, int defaultValue, string valueLocKey, string[] modes) =>
             GameSettings.Add(new GameSetting

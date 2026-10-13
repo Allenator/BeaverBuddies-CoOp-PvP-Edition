@@ -88,7 +88,7 @@ namespace BeaverBuddies.DevTools
             Current = this;
             if (Active) Chaos.Update();
             if (!Active || Time.unscaledTime < _nextPoll) return;
-            _nextPoll = Time.unscaledTime + 0.5f;
+            _nextPoll = Time.unscaledTime + 0.05f;
             if (!File.Exists(Flag)) return;
             string[] lines = File.ReadAllLines(Flag);
             File.Delete(Flag);
@@ -260,6 +260,15 @@ namespace BeaverBuddies.DevTools
                         orientation = orientation,
                         instant = a.Contains("instant"),
                     });
+                    break;
+                }
+                case "loadsave":
+                {
+                    // loadsave Settlement|Save name (a saved game, loaded alone, as the Load game screen does)
+                    string[] names = string.Join(" ", a.Skip(1)).Split('|');
+                    var saves = Get<Timberborn.GameSaveRepositorySystem.GameSaveRepository>();
+                    var settlement = new Timberborn.GameSaveRepositorySystem.SettlementReference(names[0], saves.DefaultSaveDirectory);
+                    _gameSceneLoader.StartSaveGame(new Timberborn.GameSaveRepositorySystem.SaveReference(names[1], settlement));
                     break;
                 }
                 case "newgame":

@@ -105,7 +105,7 @@ send() {
     local inst=$1 file n=0
     shift
     file="$BB_CMD_PREFIX-$inst"
-    while [ -e "$file" ] && [ $n -lt 40 ]; do sleep 0.25; n=$((n + 1)); done
+    while [ -e "$file" ] && [ $n -lt 200 ]; do sleep 0.05; n=$((n + 1)); done
     echo "$*" > "$file"
 }
 
@@ -260,10 +260,10 @@ probe() {
     log=$(bb_log "$inst")
     before=$(grep -aFc "[Test] te $key:" "$log")
     send "$inst" "te $key"
-    for i in $(seq 1 60); do
+    for i in $(seq 1 300); do
         after=$(grep -aFc "[Test] te $key:" "$log")
         [ "$after" -gt "$before" ] && break
-        sleep 0.25
+        sleep 0.05
     done
     grep -aF "[Test] te $key:" "$log" | tail -1 | sed "s/.*\[Test\] te $key: *//" | sed -E 's/[0-9a-f]{8}-[0-9a-f-]{27}/P/g'
 }

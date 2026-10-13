@@ -166,9 +166,25 @@ namespace BeaverBuddies.NewGame
 
         private static string ValueLabel(ILoc loc, GameSetting setting, string value)
         {
-            if (setting.IsSlider) return int.TryParse(value, out int n) ? loc.T(setting.ValueLocKey, n) : value;
+            if (setting.IsSlider) return int.TryParse(value, out int n) ? SliderText(loc, setting, n) : value;
             int index = Array.IndexOf(setting.Values, value);
             return index >= 0 && index < setting.ValueLocKeys.Length ? loc.T(setting.ValueLocKeys[index]) : value;
+        }
+
+        /**
+         * A slider's value in words: its value text, or at its minimum the
+         * mod's own text for it where there's one (its value text's key with
+         * ".Min": "No raids").
+         */
+        public static string SliderText(ILoc loc, GameSetting setting, int value)
+        {
+            if (value == setting.Min)
+            {
+                string key = setting.ValueLocKey + ".Min";
+                string text = loc.T(key);
+                if (text != key) return text;
+            }
+            return loc.T(setting.ValueLocKey, value);
         }
 
         /**
@@ -631,12 +647,12 @@ namespace BeaverBuddies.NewGame
                 slider.lowValue = setting.Min;
                 slider.highValue = setting.Max;
                 slider.SetValueWithoutNotify(current);
-                if (value != null) value.text = _loc.T(setting.ValueLocKey, current);
+                if (value != null) value.text = GameSettings.SliderText(_loc, setting, current);
                 slider.RegisterValueChangedCallback(e =>
                 {
                     int n = Snap(Mathf.RoundToInt(e.newValue));
                     if (!Mathf.Approximately(n, e.newValue)) slider.SetValueWithoutNotify(n);
-                    if (value != null) value.text = _loc.T(setting.ValueLocKey, n);
+                    if (value != null) value.text = GameSettings.SliderText(_loc, setting, n);
                     GameSettings.Pick(setting.Id, n.ToString(System.Globalization.CultureInfo.InvariantCulture));
                 });
                 if (setting.TooltipLocKey != null) Tip(row, setting.TooltipLocKey);
@@ -685,7 +701,7 @@ namespace BeaverBuddies.NewGame
             slider.style.flexGrow = 1;
             slider.style.minWidth = 160;
             Style(slider);
-            void Show(int n) => value.text = _loc.T(setting.ValueLocKey, n);
+            void Show(int n) => value.text = GameSettings.SliderText(_loc, setting, n);
             slider.SetValueWithoutNotify(current);
             Show(current);
             slider.RegisterValueChangedCallback(e =>
