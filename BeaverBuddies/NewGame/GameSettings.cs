@@ -601,6 +601,7 @@ namespace BeaverBuddies.NewGame
             var slider = new SliderInt(setting.Min, setting.Max) { pageSize = setting.Step, focusable = false };
             slider.style.flexGrow = 1;
             slider.style.minWidth = 160;
+            Style(slider);
             int Snap(int n) => Mathf.Clamp(setting.Min + Mathf.RoundToInt((n - setting.Min) / (float)setting.Step) * setting.Step, setting.Min, setting.Max);
             void Show(int n) => value.text = _loc.T(setting.ValueLocKey, n);
             int current = int.TryParse(GameSettings.ValueOf(setting.Id), out int picked) ? Snap(picked) : Snap(int.Parse(setting.Default));
@@ -618,6 +619,72 @@ namespace BeaverBuddies.NewGame
             line.style.marginRight = 8;
             rows.Add(line);
             return rows;
+        }
+
+        // The game has no style for Unity's own sliders (they draw as nothing): a thin track, the
+        // part up to the value filled, and a round handle, in the panel's colours
+        private static readonly Color Track = new(0.1f, 0.16f, 0.15f), Fill = new(0.85f, 0.72f, 0.42f), Handle = new(0.98f, 0.9f, 0.68f);
+
+        private static void Style(SliderInt slider)
+        {
+            slider.style.height = 22;
+            slider.style.marginTop = 2;
+            slider.style.marginBottom = 2;
+            VisualElement input = slider.Q(className: "unity-base-slider__input");
+            if (input != null)
+            {
+                input.style.flexGrow = 1;
+                input.style.height = 22;
+            }
+            VisualElement container = slider.Q(className: "unity-base-slider__drag-container");
+            if (container != null)
+            {
+                container.style.flexGrow = 1;
+                container.style.height = 22;
+            }
+            VisualElement tracker = slider.Q(className: "unity-base-slider__tracker");
+            if (tracker != null)
+            {
+                tracker.style.position = Position.Absolute;
+                tracker.style.left = 0;
+                tracker.style.right = 0;
+                tracker.style.top = 8;
+                tracker.style.height = 6;
+                tracker.style.backgroundColor = Track;
+                Round(tracker, 3);
+                tracker.style.borderTopWidth = tracker.style.borderBottomWidth = tracker.style.borderLeftWidth = tracker.style.borderRightWidth = 1;
+                tracker.style.borderTopColor = tracker.style.borderBottomColor = tracker.style.borderLeftColor = tracker.style.borderRightColor = new Color(0.5f, 0.43f, 0.27f);
+            }
+            var filled = new VisualElement { pickingMode = PickingMode.Ignore };
+            filled.style.position = Position.Absolute;
+            filled.style.left = 0;
+            filled.style.top = 8;
+            filled.style.height = 6;
+            filled.style.backgroundColor = Fill;
+            Round(filled, 3);
+            container?.Insert(1, filled);
+            VisualElement dragger = slider.Q(className: "unity-base-slider__dragger");
+            if (dragger != null)
+            {
+                dragger.style.position = Position.Absolute;
+                dragger.style.width = 16;
+                dragger.style.height = 16;
+                dragger.style.top = 3;
+                dragger.style.backgroundColor = Handle;
+                Round(dragger, 8);
+                dragger.style.borderTopWidth = dragger.style.borderBottomWidth = dragger.style.borderLeftWidth = dragger.style.borderRightWidth = 1;
+                dragger.style.borderTopColor = dragger.style.borderBottomColor = dragger.style.borderLeftColor = dragger.style.borderRightColor = new Color(0.4f, 0.32f, 0.18f);
+                // The filled part follows the handle
+                void Follow() => filled.style.width = dragger.layout.x + dragger.layout.width / 2;
+                dragger.RegisterCallback<GeometryChangedEvent>(_ => Follow());
+                slider.RegisterValueChangedCallback(_ => Follow());
+            }
+        }
+
+        private static void Round(VisualElement element, float radius)
+        {
+            element.style.borderTopLeftRadius = element.style.borderTopRightRadius = radius;
+            element.style.borderBottomLeftRadius = element.style.borderBottomRightRadius = radius;
         }
 
         // A checkbox and its label, as the game's Drought and Badtide rows
