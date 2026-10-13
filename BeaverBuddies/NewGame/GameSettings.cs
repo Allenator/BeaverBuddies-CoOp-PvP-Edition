@@ -271,8 +271,13 @@ namespace BeaverBuddies.NewGame
         private Button _baseButton;
         private Dictionary<string, (string Label, string Value)> _baseRows;
 
-        public GameSettingsSection(ILoc loc, ITooltipRegistrar tooltipRegistrar, DialogBoxShower dialogBoxShower)
+        private readonly VisualElementLoader _visualElementLoader;
+        // A choice of this many values or fewer puts them side by side
+        private const int SideBySide = 3;
+
+        public GameSettingsSection(ILoc loc, ITooltipRegistrar tooltipRegistrar, DialogBoxShower dialogBoxShower, VisualElementLoader visualElementLoader)
         {
+            _visualElementLoader = visualElementLoader;
             _loc = loc;
             _tooltipRegistrar = tooltipRegistrar;
             _dialogBoxShower = dialogBoxShower;
@@ -448,11 +453,28 @@ namespace BeaverBuddies.NewGame
                 string picked = GameSettings.ValueOf(setting.Id);
                 foreach (var (toggle, value) in toggles) toggle.SetValueWithoutNotify(value == picked);
             }
+            // Three or fewer side by side on one line, each with its label; more, a line each
+            bool sideBySide = setting.Values.Length <= SideBySide;
+            VisualElement line = null;
+            if (sideBySide)
+            {
+                line = new VisualElement();
+                line.style.flexDirection = FlexDirection.Row;
+                line.style.marginLeft = 16;
+                rows.Add(line);
+            }
             for (int i = 0; i < setting.Values.Length; i++)
             {
                 string value = setting.Values[i];
-                Toggle toggle = Row(rows, setting.ValueLocKeys[i], null);
-                toggle.parent.style.marginLeft = 16;
+                Toggle toggle = Row(sideBySide ? line : rows, setting.ValueLocKeys[i], null);
+                if (sideBySide)
+                {
+                    VisualElement cell = toggle.parent;
+                    cell.style.flexGrow = 1;
+                    cell.style.flexBasis = 0;
+                    cell.style.marginRight = 8;
+                }
+                else toggle.parent.style.marginLeft = 16;
                 toggle.RegisterValueChangedCallback(_ =>
                 {
                     GameSettings.Pick(setting.Id, value);
@@ -585,10 +607,71 @@ namespace BeaverBuddies.NewGame
         }
 
         /**
-         * A slider: its name, then the slider with the value it's at beside
-         * it, snapping to its steps.
+         * A slider: the game's own slider row from its Settings menu (camera
+         * speeds and the like), with this setting's name and value, snapping
+         * to its steps. Where that row can't be had, one drawn by hand.
          */
         private VisualElement Slider(GameSetting setting)
+        {
+            int Snap(int n) => Mathf.Clamp(setting.Min + Mathf.RoundToInt((n - setting.Min) / (float)setting.Step) * setting.Step, setting.Min, setting.Max);
+            int current = int.TryParse(GameSettings.ValueOf(setting.Id), out int picked) ? Snap(picked) : Snap(int.Parse(setting.Default));
+            VisualElement row = GameSlider();
+            if (row != null)
+            {
+                var name = row.Query<Label>().Where(l => l.name != "Value").First();
+                if (name != null) name.text = _loc.T(setting.LabelLocKey);
+                Label value = row.Q<Label>("Value");
+                if (value != null)
+                {
+                    // Room between the slider and what it's at
+                    value.style.marginLeft = 12;
+                    value.style.minWidth = 56;
+                }
+                var slider = row.Q<Slider>("Slider");
+                slider.lowValue = setting.Min;
+                slider.highValue = setting.Max;
+                slider.SetValueWithoutNotify(current);
+                if (value != null) value.text = _loc.T(setting.ValueLocKey, current);
+                slider.RegisterValueChangedCallback(e =>
+                {
+                    int n = Snap(Mathf.RoundToInt(e.newValue));
+                    if (!Mathf.Approximately(n, e.newValue)) slider.SetValueWithoutNotify(n);
+                    if (value != null) value.text = _loc.T(setting.ValueLocKey, n);
+                    GameSettings.Pick(setting.Id, n.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                });
+                if (setting.TooltipLocKey != null) Tip(row, setting.TooltipLocKey);
+                return row;
+            }
+            return DrawnSlider(setting, current, Snap);
+        }
+
+        // The Settings menu's slider row, taken out of a fresh copy of its box with the styles that dress it
+        private VisualElement GameSlider()
+        {
+            try
+            {
+                VisualElement box = _visualElementLoader.LoadVisualElement("Options/SettingsBox");
+                VisualElement row = box.Q<VisualElement>("EdgePanCameraSpeed");
+                if (row?.Q<Slider>("Slider") == null) return null;
+                var sheets = new List<StyleSheet>();
+                for (VisualElement e = row; e != null; e = e.parent)
+                {
+                    for (int i = 0; i < e.styleSheets.count; i++) sheets.Add(e.styleSheets[i]);
+                }
+                row.RemoveFromHierarchy();
+                foreach (StyleSheet sheet in sheets) row.styleSheets.Add(sheet);
+                row.name = null;
+                return row;
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"[GameSettings] No game slider to copy: {e.Message}");
+                return null;
+            }
+        }
+
+        // Drawn by hand, where the game's own slider row can't be had
+        private VisualElement DrawnSlider(GameSetting setting, int current, Func<int, int> Snap)
         {
             var rows = new VisualElement();
             var name = Wrapper(Label(setting.LabelLocKey));
@@ -602,9 +685,7 @@ namespace BeaverBuddies.NewGame
             slider.style.flexGrow = 1;
             slider.style.minWidth = 160;
             Style(slider);
-            int Snap(int n) => Mathf.Clamp(setting.Min + Mathf.RoundToInt((n - setting.Min) / (float)setting.Step) * setting.Step, setting.Min, setting.Max);
             void Show(int n) => value.text = _loc.T(setting.ValueLocKey, n);
-            int current = int.TryParse(GameSettings.ValueOf(setting.Id), out int picked) ? Snap(picked) : Snap(int.Parse(setting.Default));
             slider.SetValueWithoutNotify(current);
             Show(current);
             slider.RegisterValueChangedCallback(e =>
