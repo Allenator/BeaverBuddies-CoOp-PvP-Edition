@@ -241,6 +241,38 @@ start_match() {
     return 0
 }
 
+# rematch <host faction> <client faction>: both copies exit to the main menu, the host with the exit save
+# and the client without, so state a save leaves behind differs between them,
+# and start a new match without restarting, so whatever the last one left behind is still there.
+# Returns 1 if it never got there
+rematch() {
+    local hostf=${1:-Folktails} clientf=${2:-IronTeeth} c i n_host n_client
+    n_host=$(grep -ac "Registering Main Menu Services" "$(bb_log host)")
+    n_client=$(grep -ac "Registering Main Menu Services" "$(bb_log client)")
+    send client "exitmenu nosave"; send host "exitmenu"
+    for ((i = 0; i < 240; i++)); do
+        [ "$(grep -ac "Registering Main Menu Services" "$(bb_log host)")" -gt "$n_host" ] \
+            && [ "$(grep -ac "Registering Main Menu Services" "$(bb_log client)")" -gt "$n_client" ] && break
+        sleep 0.5
+    done
+    [ $i -lt 240 ] || return 1
+    sleep 3
+    n_host=$(grep -ac "Load time" "$(bb_log host)"); n_client=$(grep -ac "Load time" "$(bb_log client)")
+    c=$(grep -ac "Server started listening" "$(bb_log host)")
+    send host "hostmatch ${BB_MAP:-Waterfalls} $hostf"
+    for ((i = 0; i < 240; i++)); do [ "$(grep -ac "Server started listening" "$(bb_log host)")" -gt "$c" ] && break; sleep 0.5; done
+    [ $i -lt 240 ] || return 1
+    send client "joinmatch $clientf"
+    for ((i = 0; i < 180; i++)); do
+        [ "$(grep -ac "Load time" "$(bb_log host)")" -gt "$n_host" ] && [ "$(grep -ac "Load time" "$(bb_log client)")" -gt "$n_client" ] && break
+        sleep 1
+    done
+    [ $i -lt 180 ] || return 1
+    sleep 3
+    send host dismiss; send client dismiss
+    sleep 2
+}
+
 # place_starts <host faction> <client faction>: each player's free District Center, where the map's open
 place_starts() {
     send host "place DistrictCenter.$1 ${BB_HOST_START:-79 46 5}"
