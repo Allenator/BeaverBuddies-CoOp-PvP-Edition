@@ -705,6 +705,7 @@ namespace BeaverBuddies
         // Holding the (unused) hook reference keeps it active.
         private static Hook hook;
         public static bool IsSaving { get; set; }
+        public static bool IsExitSaving { get; set; }
 
         public static void Install() {
             // holding a reference to the hook keeps it active.
@@ -715,6 +716,11 @@ namespace BeaverBuddies
         }
 
         private static void Save(Action<GameSaver, QueuedSave> original, GameSaver instance, QueuedSave queuedSave) {
+            if (IsExitSaving) {
+                IsExitSaving = false;
+                SaveNow(original, instance, queuedSave);
+                return;
+            }
             if (IsSaving || EventIO.IsNull) {
                 original(instance, queuedSave);
                 return;
@@ -724,12 +730,18 @@ namespace BeaverBuddies
                 original(instance, queuedSave);
                 return;
             }
-            replayService.FinishFullTickIfNeededAndThen(() =>
-            {
-                IsSaving = true;
+            replayService.FinishFullTickIfNeededAndThen(() => SaveNow(original, instance, queuedSave));
+        }
+
+        // IsSaving is static, so it must never outlive the save or the next
+        // game skips full ticks and desync traces.
+        private static void SaveNow(Action<GameSaver, QueuedSave> original, GameSaver instance, QueuedSave queuedSave) {
+            IsSaving = true;
+            try {
                 original(instance, queuedSave);
+            } finally {
                 IsSaving = false;
-            });
+            }
         }
     }
 
@@ -741,7 +753,7 @@ namespace BeaverBuddies
         {
             // Go straight to saving since we're going to exit
             // and don't need to keep clients in sync
-            GameSaverSavePatcher.IsSaving = true;
+            GameSaverSavePatcher.IsExitSaving = true;
         }
     }
 
