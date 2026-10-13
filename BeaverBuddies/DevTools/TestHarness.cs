@@ -271,6 +271,10 @@ namespace BeaverBuddies.DevTools
                     _gameSceneLoader.StartSaveGame(new Timberborn.GameSaveRepositorySystem.SaveReference(names[1], settlement));
                     break;
                 }
+                case "mapeditor":
+                    // A new map in the map editor, this many tiles a side
+                    Get<Timberborn.MapEditorSceneLoading.MapEditorSceneLoader>().StartNewMapInstantly(new Vector2Int(I(a[1]), I(a[1])));
+                    break;
                 case "newgame":
                     _gameSceneLoader.StartNewGameInstantly(a[2], Map(a[1]), "Harness " + DateTime.Now.ToString("HH'h'mm", CultureInfo.InvariantCulture));
                     break;
