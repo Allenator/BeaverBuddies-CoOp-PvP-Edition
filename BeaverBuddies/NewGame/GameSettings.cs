@@ -41,9 +41,15 @@ namespace BeaverBuddies.NewGame
         public string ItemLocKey;
         public string ItemDefault;
 
-        public bool IsToggle => Values == null;
+        // A slider: a whole number from Min to Max in steps of Step, shown by ValueLocKey ("{0} %")
+        public int Min, Max, Step = 1;
+        public string ValueLocKey;
+
+        public bool IsSlider => Max > Min;
+        public bool IsToggle => Values == null && !IsSlider;
         public bool IsList => MaxItems > 0;
-        public bool Has(string value) => IsToggle ? value == On || value == Off
+        public bool Has(string value) => IsSlider ? int.TryParse(value, out int n) && n >= Min && n <= Max && (n - Min) % Step == 0
+            : IsToggle ? value == On || value == Off
             : IsList ? value != null && Items(value).Length <= MaxItems && Items(value).All(Values.Contains)
             : Values.Contains(value);
 
@@ -160,6 +166,7 @@ namespace BeaverBuddies.NewGame
 
         private static string ValueLabel(ILoc loc, GameSetting setting, string value)
         {
+            if (setting.IsSlider) return int.TryParse(value, out int n) ? loc.T(setting.ValueLocKey, n) : value;
             int index = Array.IndexOf(setting.Values, value);
             return index >= 0 && index < setting.ValueLocKeys.Length ? loc.T(setting.ValueLocKeys[index]) : value;
         }
@@ -430,6 +437,7 @@ namespace BeaverBuddies.NewGame
                 return rows;
             }
             if (setting.IsList) return List(setting);
+            if (setting.IsSlider) return Slider(setting);
             // A choice: its name, then a checkbox per value, of which one is ticked
             var name = Wrapper(Label(setting.LabelLocKey));
             if (setting.TooltipLocKey != null) Tip(name, setting.TooltipLocKey);
@@ -574,6 +582,42 @@ namespace BeaverBuddies.NewGame
             button.style.paddingRight = 0;
             button.style.unityFontStyleAndWeight = FontStyle.Bold;
             return button;
+        }
+
+        /**
+         * A slider: its name, then the slider with the value it's at beside
+         * it, snapping to its steps.
+         */
+        private VisualElement Slider(GameSetting setting)
+        {
+            var rows = new VisualElement();
+            var name = Wrapper(Label(setting.LabelLocKey));
+            if (setting.TooltipLocKey != null) Tip(name, setting.TooltipLocKey);
+            rows.Add(name);
+            var value = Inline(new Label());
+            value.AddToClassList(LabelClass);
+            value.style.minWidth = 64;
+            value.style.marginLeft = 8;
+            var slider = new SliderInt(setting.Min, setting.Max) { pageSize = setting.Step, focusable = false };
+            slider.style.flexGrow = 1;
+            slider.style.minWidth = 160;
+            int Snap(int n) => Mathf.Clamp(setting.Min + Mathf.RoundToInt((n - setting.Min) / (float)setting.Step) * setting.Step, setting.Min, setting.Max);
+            void Show(int n) => value.text = _loc.T(setting.ValueLocKey, n);
+            int current = int.TryParse(GameSettings.ValueOf(setting.Id), out int picked) ? Snap(picked) : Snap(int.Parse(setting.Default));
+            slider.SetValueWithoutNotify(current);
+            Show(current);
+            slider.RegisterValueChangedCallback(e =>
+            {
+                int n = Snap(e.newValue);
+                if (n != e.newValue) slider.SetValueWithoutNotify(n);
+                Show(n);
+                GameSettings.Pick(setting.Id, n.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            });
+            var line = Line(slider, value);
+            line.style.marginLeft = 16;
+            line.style.marginRight = 8;
+            rows.Add(line);
+            return rows;
         }
 
         // A checkbox and its label, as the game's Drought and Badtide rows

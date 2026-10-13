@@ -176,6 +176,7 @@ Add these once, when your mod starts. Each one combines with every other mod's: 
 | `GetMatchOption(id)` | Your option's pick for the new game loading on this machine, or null |
 | `AddGameToggle(id, groupLocKey, labelLocKey, tooltipLocKey, defaultOn, modes)` | Adds a checkbox to the game settings on the New Game screens (see below) |
 | `AddGameChoice(id, groupLocKey, labelLocKey, tooltipLocKey, values, valueLocKeys, defaultValue, modes)` | The same for one of a few values |
+| `AddGameSlider(id, groupLocKey, labelLocKey, tooltipLocKey, min, max, step, defaultValue, valueLocKey, modes)` | The same for a whole number on a slider, from `min` to `max` in steps of `step`, its value shown beside it by `valueLocKey` (`"{0} %"`) and saved as the number |
 | `GetGameSetting(id)` | Your setting's pick for the new game loading on this machine (`on` or `off` for a toggle), or null |
 
 Hooks get your own events as you sent them and BeaverBuddies' events as they are, so a hook can tell them apart by type.
@@ -196,7 +197,7 @@ For a choice that isn't a game mode, `AddMatchOption` adds a column of its own n
 
 For a rule that changes how a game plays, use a game setting instead of a Mod Settings entry. It's picked once, when the game is created, and saved with it, so every player plays by the same rules and nobody has to send them around.
 
-`AddGameToggle` and `AddGameChoice` add yours to the end of the New Game screens' Customize list, the one with the game's own starting beavers, droughts and badtides, under a heading of your own (`groupLocKey`, shared by all your settings). A toggle is a checkbox. A choice is its name followed by a checkbox per value, one ticked at a time. The tooltip shows on hover. Each player's picks are remembered between games, and a new game takes them whether the list was opened or not.
+`AddGameToggle` and `AddGameChoice` add yours to the end of the New Game screens' Customize list, the one with the game's own starting beavers, droughts and badtides, under a heading of your own (`groupLocKey`, shared by all your settings). A toggle is a checkbox. A choice is its name followed by a checkbox per value, one ticked at a time. A slider (`AddGameSlider`) is its name over a slider with the value it's at beside it. The tooltip shows on hover. Each player's picks are remembered between games, and a new game takes them whether the list was opened or not.
 
 `modes` lists the game modes a setting shows for, by id, so a rule that means nothing in Co-op can stay out of it. `bb.alone` is a game started alone, and `bb.others` is any mode of a game with others. Null shows it for every game.
 

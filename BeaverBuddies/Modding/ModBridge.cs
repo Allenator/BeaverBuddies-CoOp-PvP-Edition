@@ -262,6 +262,17 @@ namespace BeaverBuddies.Modding
                 Values = values, ValueLocKeys = valueLocKeys, Default = defaultValue, Modes = modes,
             });
 
+        // A whole number from min to max in steps of step, on a slider with its value beside it, shown by
+        // valueLocKey ("{0} %"): saved as the number
+        public static void AddGameSlider(string id, string groupLocKey, string labelLocKey, string tooltipLocKey,
+            int min, int max, int step, int defaultValue, string valueLocKey, string[] modes) =>
+            GameSettings.Add(new GameSetting
+            {
+                Id = id, GroupLocKey = groupLocKey, LabelLocKey = labelLocKey, TooltipLocKey = tooltipLocKey,
+                Min = min, Max = max, Step = Math.Max(1, step), Default = defaultValue.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                ValueLocKey = valueLocKey, Modes = modes,
+            });
+
         // A list of up to maxItems picks of a few values, each its own row (itemLabelLocKey takes its number),
         // with buttons to add one or take one off: saved as the picks joined by commas, "" for none
         public static void AddGameList(string id, string groupLocKey, string labelLocKey, string tooltipLocKey, string itemLabelLocKey,
