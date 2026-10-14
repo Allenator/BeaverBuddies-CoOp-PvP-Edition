@@ -814,7 +814,8 @@ namespace BeaverBuddies.NewGame
         private void AddNote(VisualElement rows, GameSetting setting)
         {
             if (string.IsNullOrEmpty(setting.NoteLocKey)) return;
-            var note = new Label(_loc.T(setting.NoteLocKey)) { name = "BeaverBuddies.GameSettings.Note." + setting.Id };
+            Label note = Label(setting.NoteLocKey);
+            note.name = "BeaverBuddies.GameSettings.Note." + setting.Id;
             note.style.whiteSpace = WhiteSpace.Normal;
             note.style.fontSize = 12;
             note.style.unityFontStyleAndWeight = FontStyle.Italic;
