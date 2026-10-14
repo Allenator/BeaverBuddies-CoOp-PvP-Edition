@@ -1,3 +1,8 @@
+v1.1.0-1.5.1
+* Cancelling the hosting box plays on alone, instead of leaving the game frozen.
+* A game setting can have a line of small print under its name.
+* Customize doesn't open by itself on a map with several starts.
+
 v1.1.0-1.5.0
 * New: the Trading Post, Power Exchange and toll stations, in any game, co-op too.
 * Fix a desync in the first ticks of a match started after leaving another one.
