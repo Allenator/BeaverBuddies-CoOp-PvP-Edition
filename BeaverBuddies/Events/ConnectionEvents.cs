@@ -15,6 +15,9 @@ namespace BeaverBuddies.Events
     public class InitializeClientEvent : ReplayEvent
     {
         public string serverModVersion;
+        // Which compile of the mod the host runs: two builds can share a version number
+        // and still play differently. Null from hosts that don't send it
+        public string serverModBuild;
         public string serverGameVersion;
         //public string mapName;
         public bool isDebugMode;
@@ -39,6 +42,10 @@ namespace BeaverBuddies.Events
             {
                 warningMessage = $"Warning! Server mod version ({serverModVersion}) does not match client mod version ({Plugin.Version}).\n" +
                     $"Please ensure that you are running the same version of the {Plugin.ID} mod.";
+            } else if (serverModBuild != null && serverModBuild != ModBuild)
+            {
+                warningMessage = $"Warning! You and the host run different builds of {Plugin.ID} {Plugin.Version} (host {serverModBuild}, you {ModBuild}).\n" +
+                    $"Please reinstall the mod from the same place as the host, or the game will fall out of sync.";
             } else if (serverAddOns != null && serverAddOns != ReplayHooks.AddOnList)
             {
                 warningMessage = $"Warning! The host plays with these add-on mods: {Describe(serverAddOns)}.\n" +
@@ -64,6 +71,9 @@ namespace BeaverBuddies.Events
             }
         }
 
+        // Short, so it fits in the warning and the desync report
+        public static readonly string ModBuild = typeof(Plugin).Assembly.ManifestModule.ModuleVersionId.ToString("N").Substring(0, 8);
+
         private static string Describe(string addOns) => string.IsNullOrEmpty(addOns) ? "none" : addOns;
 
         public static InitializeClientEvent Create()
@@ -71,6 +81,7 @@ namespace BeaverBuddies.Events
             InitializeClientEvent message = new InitializeClientEvent()
             {
                 serverModVersion = Plugin.Version,
+                serverModBuild = ModBuild,
                 serverGameVersion = GameVersions.CurrentVersion.ToString(),
                 isDebugMode = Settings.Debug,
                 allowDevTools = Settings.AllowDevTools,
@@ -110,7 +121,7 @@ namespace BeaverBuddies.Events
             {
                 string folder = System.IO.Path.GetDirectoryName(UnityEngine.Application.consoleLogPath);
                 string file = System.IO.Path.Combine(folder, $"BeaverBuddies-desync-{desyncID}.txt");
-                System.IO.File.WriteAllText(file, $"BeaverBuddies: {Plugin.Version}; Timberborn: {GameVersions.CurrentVersion}\n\n{desyncTrace}");
+                System.IO.File.WriteAllText(file, $"BeaverBuddies: {Plugin.Version} (build {InitializeClientEvent.ModBuild}); Timberborn: {GameVersions.CurrentVersion}\n\n{desyncTrace}");
                 Plugin.Log($"Desync trace saved to {file}");
             }
             catch (Exception e)

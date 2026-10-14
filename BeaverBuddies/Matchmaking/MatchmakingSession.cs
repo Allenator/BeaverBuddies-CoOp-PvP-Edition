@@ -228,7 +228,7 @@ namespace BeaverBuddies.Matchmaking
             $"{GameVersions.CurrentVersion}|{Plugin.Version} {Build}|{ReplayHooks.AddOnList}|{ReplayHooks.FactionList}";
 
         // This exact build: two builds of the same version can still play differently
-        private static string Build => typeof(Plugin).Assembly.ManifestModule.ModuleVersionId.ToString("N").Substring(0, 8);
+        private static string Build => Events.InitializeClientEvent.ModBuild;
 
         internal static string Compat => Hash(CompatParts);
 
