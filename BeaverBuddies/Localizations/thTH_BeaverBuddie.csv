@@ -66,6 +66,7 @@ BeaverBuddies.JoinCoopGame.Success,"เข้าร่วมแล้ว! กำ
 BeaverBuddies.JoinCoopGame.Error.InvalidFormat,"รูปแบบที่อยู่ไม่ถูกต้อง ไม่สามารถแยกพอร์ตได้",""
 BeaverBuddies.JoinCoopGame.Error.InvalidAddress,"ที่อยู่นั้นไม่ใช่ที่อยู่ IP ที่ถูกต้อง
 พยายามแปลงเป็นชื่อโฮสต์แล้ว แต่ไม่สามารถแปลงเป็นที่อยู่ IP ได้",""
+BeaverBuddies.JoinCoopGame.Error.Incompatible,"โฮสต์ใช้ม็อดอื่น หรือ BeaverBuddies คนละบิลด์ ติดตั้งตัวเดียวกันจากแหล่งเดียวกัน แล้วเข้าร่วมอีกครั้ง",""
 BeaverBuddies.JoinCoopGame.Error.CouldNotConnect,"ไม่สามารถเชื่อมต่อกับโฮสต์ได้ โปรดตรวจสอบที่อยู่และพอร์ต และตรวจสอบให้แน่ใจว่าโฮสต์กำลังโฮสต์อยู่และมีการส่งต่อพอร์ตหากจำเป็น รายละเอียดข้อผิดพลาด:",""
 BeaverBuddies.KeyBindings.Group,"BeaverBuddies",""
 BeaverBuddies.KeyBindings.Ping,"ปักหมุดตำแหน่ง",""

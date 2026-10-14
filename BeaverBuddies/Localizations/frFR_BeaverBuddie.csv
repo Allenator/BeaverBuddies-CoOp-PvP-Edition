@@ -66,6 +66,7 @@ BeaverBuddies.JoinCoopGame.Success,"Rejoint ! Réception de la carte…",""
 BeaverBuddies.JoinCoopGame.Error.InvalidFormat,"Format d’adresse invalide. Impossible d’analyser le port.",""
 BeaverBuddies.JoinCoopGame.Error.InvalidAddress,"L’adresse n’était pas une adresse IP valide.
 Une tentative de résolution en nom d’hôte a été faite, mais elle n’a pas abouti à une adresse IP.",""
+BeaverBuddies.JoinCoopGame.Error.Incompatible,"L'hôte joue avec d'autres mods ou une autre version compilée de BeaverBuddies. Installe les mêmes depuis la même source, puis rejoins à nouveau.",""
 BeaverBuddies.JoinCoopGame.Error.CouldNotConnect,"Impossible de se connecter à l’hôte. Veuillez vérifier l’adresse et le port, et assurez-vous que l’hôte héberge bien la partie et a configuré la redirection de port si nécessaire. Détails de l’erreur :",""
 BeaverBuddies.KeyBindings.Group,"BeaverBuddies",""
 BeaverBuddies.KeyBindings.Ping,"Marquer un emplacement",""

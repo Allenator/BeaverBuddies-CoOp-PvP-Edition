@@ -66,6 +66,7 @@ BeaverBuddies.JoinCoopGame.Success,"Conectado! Recebendo mapa…",""
 BeaverBuddies.JoinCoopGame.Error.InvalidFormat,"Formato de endereço inválido. Não foi possível analisar a porta.",""
 BeaverBuddies.JoinCoopGame.Error.InvalidAddress,"O endereço não era um endereço IP válido.
 Tentou-se resolvê-lo como um nome de host, mas ele não foi convertido em um endereço IP.",""
+BeaverBuddies.JoinCoopGame.Error.Incompatible,"O anfitrião joga com outros mods ou outra build do BeaverBuddies. Instale os mesmos do mesmo lugar e entre de novo.",""
 BeaverBuddies.JoinCoopGame.Error.CouldNotConnect,"Não foi possível conectar ao host. Verifique o endereço e a porta, e certifique-se de que o host esteja hospedando e com o redirecionamento de porta configurado, se necessário. Detalhes do erro:",""
 BeaverBuddies.KeyBindings.Group,"BeaverBuddies",""
 BeaverBuddies.KeyBindings.Ping,"Marcar localização",""

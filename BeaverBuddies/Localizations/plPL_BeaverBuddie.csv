@@ -66,6 +66,7 @@ BeaverBuddies.JoinCoopGame.Success,"Dołączono! Odbieranie mapy…",""
 BeaverBuddies.JoinCoopGame.Error.InvalidFormat,"Nieprawidłowy format adresu. Nie udało się odczytać portu.",""
 BeaverBuddies.JoinCoopGame.Error.InvalidAddress,"Adres nie był prawidłowym adresem IP.
 Podjęto próbę rozwiązania go jako nazwy hosta, ale nie został przetłumaczony na adres IP.",""
+BeaverBuddies.JoinCoopGame.Error.Incompatible,"Host gra z innymi modami lub inną kompilacją BeaverBuddies. Zainstaluj te same z tego samego źródła i dołącz ponownie.",""
 BeaverBuddies.JoinCoopGame.Error.CouldNotConnect,"Nie udało się połączyć z hostem. Sprawdź adres i port oraz upewnij się, że host faktycznie hostuje i ma przekierowany port, jeśli to konieczne. Szczegóły błędu:",""
 BeaverBuddies.KeyBindings.Group,"BeaverBuddies",""
 BeaverBuddies.KeyBindings.Ping,"Oznacz lokalizację",""

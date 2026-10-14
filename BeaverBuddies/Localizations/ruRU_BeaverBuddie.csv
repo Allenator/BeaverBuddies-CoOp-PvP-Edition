@@ -66,6 +66,7 @@ BeaverBuddies.JoinCoopGame.Success,"Подключено! Получение к�
 BeaverBuddies.JoinCoopGame.Error.InvalidFormat,"Неверный формат адреса. Не удалось распознать порт.",""
 BeaverBuddies.JoinCoopGame.Error.InvalidAddress,"Адрес не является допустимым IP-адресом.
 Была предпринята попытка разрешить его как имя хоста, но оно не разрешилось в IP-адрес.",""
+BeaverBuddies.JoinCoopGame.Error.Incompatible,"Хост играет с другими модами или другой сборкой BeaverBuddies. Установите те же из того же источника и подключитесь снова.",""
 BeaverBuddies.JoinCoopGame.Error.CouldNotConnect,"Не удалось подключиться к хосту. Проверьте адрес и порт, убедитесь, что хост запущен и, при необходимости, настроена переадресация порта. Подробности ошибки:",""
 BeaverBuddies.KeyBindings.Group,"BeaverBuddies",""
 BeaverBuddies.KeyBindings.Ping,"Отметить место",""

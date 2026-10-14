@@ -66,6 +66,7 @@ BeaverBuddies.JoinCoopGame.Success,"参加しました！マップを受信中�
 BeaverBuddies.JoinCoopGame.Error.InvalidFormat,"無効なアドレス形式です。ポートを解析できませんでした。",""
 BeaverBuddies.JoinCoopGame.Error.InvalidAddress,"アドレスが有効なIPアドレスではありませんでした。
 ホスト名として解決を試みましたが、IPアドレスに解決できませんでした。",""
+BeaverBuddies.JoinCoopGame.Error.Incompatible,"ホストは別のMOD、または別のビルドのBeaverBuddiesを使っています。同じ入手元から同じものをインストールしてから、もう一度参加してください。",""
 BeaverBuddies.JoinCoopGame.Error.CouldNotConnect,"ホストに接続できませんでした。アドレスとポートを確認し、ホストが実際にホスティングしており、必要に応じてポート転送が設定されていることを確認してください。エラー詳細:",""
 BeaverBuddies.KeyBindings.Group,"BeaverBuddies",""
 BeaverBuddies.KeyBindings.Ping,"場所をピン",""
