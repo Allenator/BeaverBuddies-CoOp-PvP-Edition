@@ -6,6 +6,7 @@ using BeaverBuddies.NewGame;
 using BeaverBuddies.Players;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Timberborn.BlockObjectTools;
 using Timberborn.Buildings;
 using Timberborn.Coordinates;
@@ -317,6 +318,14 @@ namespace BeaverBuddies.Modding
                 Values = values, ValueLocKeys = valueLocKeys, Default = "", Modes = modes,
                 MaxItems = maxItems, ItemLocKey = itemLabelLocKey, ItemDefault = itemDefault,
             });
+
+        // A line of small print right under a setting's name on the New Game screens ("still in beta"),
+        // for a setting added before; null takes it away
+        public static void SetGameSettingNote(string id, string noteLocKey)
+        {
+            GameSetting setting = GameSettings.All.FirstOrDefault(s => s.Id == id);
+            if (setting != null) setting.NoteLocKey = noteLocKey;
+        }
 
         // A game setting's pick for the new game loading on this machine ("on"
         // or "off" for a toggle), or null for a saved game, which has its own

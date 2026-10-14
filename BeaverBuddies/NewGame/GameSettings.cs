@@ -30,6 +30,8 @@ namespace BeaverBuddies.NewGame
         public string GroupLocKey;
         public string LabelLocKey;
         public string TooltipLocKey;
+        // A line of small print right under its name ("still in beta"), or null for none
+        public string NoteLocKey;
         // Null for a toggle (On or Off)
         public string[] Values;
         public string[] ValueLocKeys;
@@ -453,16 +455,23 @@ namespace BeaverBuddies.NewGame
             if (setting.IsToggle)
             {
                 Toggle toggle = Row(rows, setting.LabelLocKey, setting.TooltipLocKey);
+                AddNote(rows, setting);
                 toggle.SetValueWithoutNotify(GameSettings.ValueOf(setting.Id) == GameSetting.On);
                 toggle.RegisterValueChangedCallback(e => GameSettings.Pick(setting.Id, e.newValue ? GameSetting.On : GameSetting.Off));
                 return rows;
             }
             if (setting.IsList) return List(setting);
-            if (setting.IsSlider) return Slider(setting);
+            if (setting.IsSlider)
+            {
+                rows.Add(Slider(setting));
+                AddNote(rows, setting);
+                return rows;
+            }
             // A choice: its name, then a checkbox per value, of which one is ticked
             var name = Wrapper(Label(setting.LabelLocKey));
             if (setting.TooltipLocKey != null) Tip(name, setting.TooltipLocKey);
             rows.Add(name);
+            AddNote(rows, setting);
             var toggles = new List<(Toggle Toggle, string Value)>();
             void Sync()
             {
@@ -526,6 +535,7 @@ namespace BeaverBuddies.NewGame
             name.AddToClassList(WrapperClass);
             if (setting.TooltipLocKey != null) Tip(name, setting.TooltipLocKey);
             rows.Add(name);
+            AddNote(rows, setting);
             rows.Add(items);
             List<string> Picks() => GameSetting.Items(GameSettings.ValueOf(setting.Id)).ToList();
             void Save(List<string> picks) => GameSettings.Pick(setting.Id, string.Join(",", picks));
@@ -797,6 +807,23 @@ namespace BeaverBuddies.NewGame
             if (tooltipLocKey != null) Tip(wrapper, tooltipLocKey);
             rows.Add(wrapper);
             return toggle;
+        }
+
+        // A setting's small print under its name: smaller and dimmer than the rows, wrapping, outside
+        // any row's wrapper so it never reads as part of a value
+        private void AddNote(VisualElement rows, GameSetting setting)
+        {
+            if (string.IsNullOrEmpty(setting.NoteLocKey)) return;
+            Label note = Label(setting.NoteLocKey);
+            note.name = "BeaverBuddies.GameSettings.Note." + setting.Id;
+            note.style.whiteSpace = WhiteSpace.Normal;
+            note.style.fontSize = 12;
+            note.style.unityFontStyleAndWeight = FontStyle.Italic;
+            note.style.opacity = 0.75f;
+            note.style.marginLeft = 4;
+            note.style.marginTop = 0;
+            note.style.marginBottom = 4;
+            rows.Add(note);
         }
 
         private void Tip(VisualElement target, string locKey) => Util.WrappedTooltip.Register(_tooltipRegistrar, target, () => _loc.T(locKey));
