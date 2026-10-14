@@ -140,6 +140,9 @@ namespace BeaverBuddies.Connect
 #endif
         }
 
+        // The host plays with other mods, or another build of this one
+        public void ShowIncompatible() => ShowError("BeaverBuddies.JoinCoopGame.Error.Incompatible");
+
                 private void ShowError(string reasonKey, string details = null)
         {
             string messageKey;

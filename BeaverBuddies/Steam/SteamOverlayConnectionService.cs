@@ -168,8 +168,18 @@ namespace BeaverBuddies.Steam
             // A match's lobby only pairs players up: its owner isn't hosting a game
             if (Matchmaking.MatchmakingSession.IsMatchLobby(new CSteamID(callback.m_ulSteamIDLobby))) return;
             ClearWaitForSteamOverlay();
-            var owner = SteamMatchmaking.GetLobbyOwner(new CSteamID(callback.m_ulSteamIDLobby));
-            if (owner != SteamUser.GetSteamID())
+            var lobby = new CSteamID(callback.m_ulSteamIDLobby);
+            var owner = SteamMatchmaking.GetLobbyOwner(lobby);
+            if (owner == SteamUser.GetSteamID()) return;
+            // Hosts from before it was set don't have it
+            string theirCompat = SteamMatchmaking.GetLobbyData(lobby, Matchmaking.MatchmakingSession.CompatKey);
+            if (theirCompat != "" && theirCompat != Matchmaking.MatchmakingSession.Compat)
+            {
+                Plugin.LogWarning($"Not joining {lobby}: the host's mods or build ({theirCompat}) differ from ours ({Matchmaking.MatchmakingSession.Compat})");
+                SteamMatchmaking.LeaveLobby(lobby);
+                _clientConnectionService.ShowIncompatible();
+                return;
+            }
             {
                 Plugin.Log("Joining another's lobby...");
                 bool success = _clientConnectionService.TryToConnect(owner);

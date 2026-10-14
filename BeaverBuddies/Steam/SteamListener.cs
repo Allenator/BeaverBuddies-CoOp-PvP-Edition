@@ -56,6 +56,8 @@ namespace BeaverBuddies.Steam
                 SteamMatchmaking.SetLobbyType(LobbyID, type);
                 Plugin.Log($"Lobby created with ID: {LobbyID} is joinable={Settings.LobbyJoinable}");
 #if IS_STEAM
+                // Invites too: anyone joining checks it against their own mods and build
+                SteamMatchmaking.SetLobbyData(LobbyID, Matchmaking.MatchmakingSession.CompatKey, Matchmaking.MatchmakingSession.Compat);
                 // A match's game: the other player joins it by this ID
                 Matchmaking.MatchmakingSession.ServerReady(LobbyID);
                 // Or in the list of open matches, for anyone
