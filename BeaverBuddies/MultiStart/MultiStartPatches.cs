@@ -303,47 +303,4 @@ namespace BeaverBuddies.MultiStart
 			}
         }
     }
-
-    [HarmonyPatch(typeof(NewGameModePanel), nameof(NewGameModePanel.SelectModeButton))]
-    public class NewGameModePanelSelectModeButtonPatcher
-	{
-		public static void Postfix(NewGameModePanel __instance, Button button, GameModeSpec predefinedGameMode)
-		{
-            if (button == null || predefinedGameMode == null)
-			{
-				return;
-			}
-
-			if (MultiplayerSettingsUpdater.IsMultiplayer(__instance))
-            {
-                // Automatically open the customization panel, so they can select max starting locs
-                __instance.OnCustomizeButtonClicked();
-
-            }
-        }
-	}
-
-	// Doesn't seem necessary
-	//[HarmonyPatch(typeof(NewGameModePanel), nameof(NewGameModePanel.OnCustomizeButtonClicked))]
-	//public class NewGameModePanelOnCustomizeButtonClickedPatcher
-	//{
-	//	public static void Postfix(NewGameModePanel __instance)
-	//	{
- //       }
-	//}
-
-    [HarmonyPatch(typeof(NewGameModePanel), nameof(NewGameModePanel.SelectFactionAndMap))]
-    public class NewGameModePanelSelectFactionAndMapPatcher
-    {
-        public static void Postfix(NewGameModePanel __instance)
-        {
-            if (MultiplayerSettingsUpdater.IsMultiplayer(__instance))
-			{
-				if (__instance._selectedModeButton != null)
-				{
-					__instance.OnCustomizeButtonClicked();
-				}
-			}
-        }
-    }
 }
