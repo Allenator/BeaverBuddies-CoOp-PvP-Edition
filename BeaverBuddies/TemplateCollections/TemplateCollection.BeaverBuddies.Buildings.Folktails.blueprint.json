@@ -1,0 +1,10 @@
+{
+  "TemplateCollectionSpec": {
+    "CollectionId": "BeaverBuddies.Buildings.Folktails",
+    "Blueprints": [
+      "Buildings/TradingPost/TradingPost.Folktails.blueprint",
+      "Buildings/PowerExchange/PowerExchange.Folktails.blueprint",
+      "Buildings/TollZipline/TollStation.Folktails.blueprint"
+    ]
+  }
+}

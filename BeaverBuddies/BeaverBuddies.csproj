@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <!-- Import system-specific properties -->
   <Import Project="env.props" Condition="Exists('env.props')" />
@@ -107,6 +107,10 @@
     <None Update="Localizations\*" CopyToOutputDirectory="PreserveNewest" />
     <None Update="KeyBindings\*" CopyToOutputDirectory="PreserveNewest" />
     <None Update="KeyBindingGroups\*" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="Buildings\**\*" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="TemplateCollections\*" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="Sprites\**\*" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="Sounds\*.wav" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup>
     <Compile Update="Resources.Designer.cs">
@@ -147,6 +151,11 @@
       <LocalizationFileToCopy Include="$(ProjectDir)$(OutDir)Localizations\*" />
       <KeyBindingFileToCopy Include="$(ProjectDir)$(OutDir)KeyBindings\*" />
       <KeyBindingGroupFileToCopy Include="$(ProjectDir)$(OutDir)KeyBindingGroups\*" />
+      <!-- The buildings and what they need, with their folders -->
+      <BuildingFileToCopy Include="$(ProjectDir)$(OutDir)Buildings\**\*" />
+      <TemplateCollectionFileToCopy Include="$(ProjectDir)$(OutDir)TemplateCollections\*" />
+      <SpriteFileToCopy Include="$(ProjectDir)$(OutDir)Sprites\**\*" />
+      <SoundFileToCopy Include="$(ProjectDir)$(OutDir)Sounds\*" />
       <RootDirFilesToCopy Include="$(ProjectDir)thumbnail.png" />
       <!-- The Steam Workshop item to update: the uploader writes it into the mod folder on the first upload -->
       <RootDirFilesToCopy Include="$(ProjectDir)workshop_data.json" Condition="Exists('$(ProjectDir)workshop_data.json')" />
@@ -158,6 +167,10 @@
     <Copy SourceFiles="@(LocalizationFileToCopy)" DestinationFolder="$(VersionOutputPath)\Localizations" SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(KeyBindingFileToCopy)" DestinationFolder="$(VersionOutputPath)\KeyBindings" SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(KeyBindingGroupFileToCopy)" DestinationFolder="$(VersionOutputPath)\KeyBindingGroups" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(BuildingFileToCopy)" DestinationFiles="@(BuildingFileToCopy->'$(VersionOutputPath)Buildings\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(TemplateCollectionFileToCopy)" DestinationFolder="$(VersionOutputPath)\TemplateCollections" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(SpriteFileToCopy)" DestinationFiles="@(SpriteFileToCopy->'$(VersionOutputPath)Sprites\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(SoundFileToCopy)" DestinationFolder="$(VersionOutputPath)\Sounds" SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(RootDirFilesToCopy)" DestinationFolder="$(BeaverBuddiesModsPath)" SkipUnchangedFiles="true" />
   </Target>
 

@@ -487,6 +487,16 @@ namespace BeaverBuddies.DevTools
                     if (a.Contains("click")) tool.ActionCallback(new[] { placement });
                     break;
                 }
+                case "hastool":
+                {
+                    // Whether the toolbar has a build tool for a template, without opening it: a linked
+                    // building's tool (a District Crossing's) previews both halves, which "tool" can't give it
+                    bool has = Get<Timberborn.ToolButtonSystem.ToolButtonService>().ToolButtons.Select(b => b.Tool)
+                        .OfType<Timberborn.BlockObjectTools.BlockObjectTool>()
+                        .Any(t => t.Template.GetSpec<Timberborn.TemplateSystem.TemplateSpec>().TemplateName == a[1]);
+                    Plugin.Log($"[Test] Has tool {a[1]}: {has}");
+                    break;
+                }
                 case "plantables":
                 {
                     // The crops and trees this player's planting tools offer

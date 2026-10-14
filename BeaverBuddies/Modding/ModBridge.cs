@@ -155,6 +155,22 @@ namespace BeaverBuddies.Modding
         public static void PlaceFor(BlockObjectPlacerService placers, BuildingSpec spec, Placement placement, string playerID) =>
             PlacementHooks.PlaceFor(placers, spec, placement, playerID);
 
+        // Who owns a district, and a player's name: only a district's owner
+        // sets up its side of a Trading Post, Power Exchange or toll station
+        public static void SetDistrictOwners(Func<Timberborn.GameDistricts.DistrictCenter, string> owner, Func<string, string> playerName)
+        {
+            DistrictOwners.OwnerOf = owner;
+            DistrictOwners.NameOf = playerName;
+        }
+
+        // Whether this is a toll station, which anyone can place on another district's roads
+        public static bool IsTollStation(Timberborn.BaseComponentSystem.BaseComponent component) =>
+            component && component.GetComponent<Ziplines.TollStation>();
+
+        // The tiles of other districts' ziplines and tubeways ridden through an open toll station, and who rides them
+        public static IEnumerable<(Vector3Int Tile, Timberborn.GameDistricts.DistrictCenter Rider)> RiddenTiles() =>
+            System.Linq.Enumerable.Concat(Ziplines.ShadowZiplines.RiddenTiles, Ziplines.ShadowTubeways.RiddenTiles);
+
         // Whether another player's cursor at this world position may show; any false hides it
         public static void AddShowCursorAt(Func<Vector3, bool> hook) => PlayerCursorOverlay.ShowAt.Add(hook);
 

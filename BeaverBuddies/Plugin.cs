@@ -41,6 +41,12 @@ namespace BeaverBuddies
 
             MultiStartConfigurator.Configure(containerDefinition);
 
+            // Buildings that work between districts, alone or not
+            Trading.TradingConfigurator.Configure(containerDefinition);
+            Power.PowerExchangeConfigurator.Configure(containerDefinition);
+            Ziplines.TollStationConfigurator.Configure(containerDefinition);
+            containerDefinition.Bind<ModSounds>().AsSingleton();
+
             // A match's host saves and hosts its new game, which starts alone
             containerDefinition.Bind<RehostingService>().AsSingleton();
             containerDefinition.Bind<NewGameHosting>().AsSingleton();
@@ -139,6 +145,7 @@ namespace BeaverBuddies
             logger = new UnityLogger();
 
             Log($"{Name} v{Version} is loaded!");
+            BeaverBuddies.Util.ModSounds.ModPath = modEnvironment.ModPath;
 
             // Load the player ID on the main thread, since events can be
             // created on other threads and PlayerPrefs only works here

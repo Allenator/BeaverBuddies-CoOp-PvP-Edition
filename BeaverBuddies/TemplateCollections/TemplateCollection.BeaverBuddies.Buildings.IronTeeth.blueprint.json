@@ -1,0 +1,10 @@
+{
+  "TemplateCollectionSpec": {
+    "CollectionId": "BeaverBuddies.Buildings.IronTeeth",
+    "Blueprints": [
+      "Buildings/TradingPost/TradingPost.IronTeeth.blueprint",
+      "Buildings/PowerExchange/PowerExchange.IronTeeth.blueprint",
+      "Buildings/TollTubeway/TollTubeStation.IronTeeth.blueprint"
+    ]
+  }
+}
