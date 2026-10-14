@@ -177,6 +177,7 @@ Add these once, when your mod starts. Each one combines with every other mod's: 
 | `AddGameToggle(id, groupLocKey, labelLocKey, tooltipLocKey, defaultOn, modes)` | Adds a checkbox to the game settings on the New Game screens (see below) |
 | `AddGameChoice(id, groupLocKey, labelLocKey, tooltipLocKey, values, valueLocKeys, defaultValue, modes)` | The same for one of a few values |
 | `AddGameSlider(id, groupLocKey, labelLocKey, tooltipLocKey, min, max, step, defaultValue, valueLocKey, modes)` | The same for a whole number on a slider, from `min` to `max` in steps of `step`, its value shown beside it by `valueLocKey` (`"{0} %"`) or at `min` by `valueLocKey` with `.Min` added where the mod translates that ("None"), and saved as the number |
+| `SetGameSettingNote(id, noteLocKey)` | A line of small print right under one of your settings' names ("still in beta"), for a setting added before; null takes it away |
 | `GetGameSetting(id)` | Your setting's pick for the new game loading on this machine (`on` or `off` for a toggle), or null |
 
 Hooks get your own events as you sent them and BeaverBuddies' events as they are, so a hook can tell them apart by type.
