@@ -1,3 +1,4 @@
+using BeaverBuddies.Steam;
 using HarmonyLib;
 using System;
 using System.Collections.Generic;
@@ -182,7 +183,7 @@ namespace BeaverBuddies.Connect
 
         private static bool FindMatchAvailable =>
 #if IS_STEAM
-            Matchmaking.MatchmakingUI.Available;
+            (SteamSupport.Installed && Matchmaking.MatchmakingUI.Available);
 #else
             false;
 #endif
@@ -291,7 +292,7 @@ namespace BeaverBuddies.Connect
             if (__instance._root == null) return;
             NewGameIntent intent = MultiplayerMenu.Intent;
 #if IS_STEAM
-            if (intent == NewGameIntent.Match && !Matchmaking.MatchmakingUI.Available) intent = NewGameIntent.Play;
+            if (intent == NewGameIntent.Match && !(SteamSupport.Installed && Matchmaking.MatchmakingUI.Available)) intent = NewGameIntent.Play;
             Show(__instance, Matchmaking.MatchmakingUI.ButtonName, intent == NewGameIntent.Match);
 #else
             if (intent == NewGameIntent.Match) intent = NewGameIntent.Play;

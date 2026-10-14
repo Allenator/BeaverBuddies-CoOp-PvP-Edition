@@ -59,7 +59,7 @@ namespace BeaverBuddies.Players
                 if (!string.IsNullOrWhiteSpace(name) && name != Settings.DefaultPingPlayerName) return name;
                 try
                 {
-                    if (SteamOverlayConnectionService.IsSteamEnabled)
+                    if (SteamSupport.IsSteamEnabled)
                     {
                         return SteamFriends.GetPersonaName();
                     }

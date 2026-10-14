@@ -11,6 +11,7 @@ using BeaverBuddies.Util;
 using BeaverBuddies.Util.Logging;
 using Bindito.Core;
 using HarmonyLib;
+using System;
 using System.Diagnostics;
 using System.Reflection;
 using Timberborn.ModManagerScene;
@@ -33,9 +34,12 @@ namespace BeaverBuddies
             // playing co-op right now).
             containerDefinition.Bind<ClientConnectionService>().AsSingleton();
             containerDefinition.Bind<ClientConnectionUI>().AsSingleton();
-            containerDefinition.Bind<Steam.PauseMenuInvite>().AsSingleton();
             containerDefinition.Bind<StartConfirmation>().AsSingleton();
-            containerDefinition.Bind<SteamOverlayConnectionService>().AsSingleton();
+            if (Steam.SteamSupport.Installed)
+            {
+                containerDefinition.Bind<Steam.PauseMenuInvite>().AsSingleton();
+                containerDefinition.Bind<SteamOverlayConnectionService>().AsSingleton();
+            }
             containerDefinition.Bind<RegisteredLocalizationService>().AsSingleton();
             containerDefinition.Bind<Settings>().AsSingleton();
 
@@ -52,8 +56,11 @@ namespace BeaverBuddies
             containerDefinition.Bind<NewGameHosting>().AsSingleton();
             if (DevTools.TestHarness.Active) containerDefinition.Bind<DevTools.TestHarness>().AsSingleton();
 #if IS_STEAM
-            containerDefinition.Bind<Matchmaking.MatchHosting>().AsSingleton();
-            containerDefinition.Bind<Matchmaking.HostedGameInfo>().AsSingleton();
+            if (Steam.SteamSupport.Installed)
+            {
+                containerDefinition.Bind<Matchmaking.MatchHosting>().AsSingleton();
+                containerDefinition.Bind<Matchmaking.HostedGameInfo>().AsSingleton();
+            }
 #endif
 
             // What the game was created with, saved with it whether it's
@@ -112,10 +119,15 @@ namespace BeaverBuddies
             containerDefinition.Bind<RegisteredLocalizationService>().AsSingleton();
             containerDefinition.Bind<MultiplayerMapMetadataService>().AsSingleton();
             containerDefinition.Bind<Settings>().AsSingleton();
-            containerDefinition.Bind<SteamOverlayConnectionService>().AsSingleton();
 #if IS_STEAM
-            containerDefinition.Bind<Matchmaking.MatchmakingUI>().AsSingleton();
-            containerDefinition.Bind<Matchmaking.HostBrowser>().AsSingleton();
+            if (Steam.SteamSupport.Installed)
+            {
+                containerDefinition.Bind<SteamOverlayConnectionService>().AsSingleton();
+                containerDefinition.Bind<Matchmaking.MatchmakingUI>().AsSingleton();
+                containerDefinition.Bind<Matchmaking.HostBrowser>().AsSingleton();
+            }
+#else
+            containerDefinition.Bind<SteamOverlayConnectionService>().AsSingleton();
 #endif
 
             //ReflectionUtils.PrintChildClasses(typeof(MonoBehaviour),
@@ -161,7 +173,7 @@ namespace BeaverBuddies
 
             // apply all harmony patches automatically.
             Harmony harmony = new Harmony(ID);
-            harmony.PatchAll();
+            PatchAll(harmony);
             AutomationEvent.ApplyAutomationPatches(harmony);
 
             // apply each advanced monomod patch manually.
@@ -178,6 +190,24 @@ namespace BeaverBuddies
         public static string GetWithDate(string message)
         {
             return $"[{System.DateTime.Now.ToString("HH-mm-ss.ff")}] {message}";
+        }
+
+        // Harmony's PatchAll, but a patch whose target isn't in this copy of
+        // the game (Steam's, on the Epic Games build) is skipped instead of
+        // stopping every patch after it
+        private static void PatchAll(Harmony harmony)
+        {
+            foreach (Type type in AccessTools.GetTypesFromAssembly(typeof(Plugin).Assembly))
+            {
+                try
+                {
+                    if (type.HasHarmonyAttribute()) harmony.CreateClassProcessor(type).Patch();
+                }
+                catch (Exception) when (!Steam.SteamSupport.Installed)
+                {
+                    Log($"Skipped {type.Name}: no Steam in this copy of the game");
+                }
+            }
         }
 
         public static void Log(string message)

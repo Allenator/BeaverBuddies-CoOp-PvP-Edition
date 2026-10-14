@@ -68,7 +68,7 @@ namespace BeaverBuddies.Matchmaking
         }
 
         // Only when the game can reach Steam, and the player lets it
-        public static bool Available => SteamOverlayConnectionService.IsSteamEnabled && Settings.EnableSteam;
+        public static bool Available => SteamSupport.IsSteamEnabled && Settings.EnableSteam;
 
         public void AddButton(NewGameModePanel panel)
         {

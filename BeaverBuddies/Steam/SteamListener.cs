@@ -21,7 +21,7 @@ namespace BeaverBuddies.Steam
 
         public SteamListener()
         {
-            if (!SteamOverlayConnectionService.IsSteamEnabled)
+            if (!SteamSupport.IsSteamEnabled)
             {
                 throw new Exception("SteamListener created when Steam is not enabled!");
             }

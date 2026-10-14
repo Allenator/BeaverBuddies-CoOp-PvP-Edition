@@ -197,7 +197,7 @@ namespace BeaverBuddies.Modding
         public static void AddSetWorkingHoursInstead(Func<string, int, bool> hook) => WorkingHoursChangedEvent.SetHoursInstead.Add(hook);
 
         // Whether this machine hosts a game in a Steam lobby friends can be invited to
-        public static bool CanInvite() => Steam.PauseMenuInvite.CanInvite;
+        public static bool CanInvite() => Steam.SteamSupport.Installed && Steam.PauseMenuInvite.CanInvite;
 
         // Opens the friends to invite, as the game menu's Invite Friends does
         public static void Invite() => SingletonManager.GetSingleton<Steam.PauseMenuInvite>()?.Invite();

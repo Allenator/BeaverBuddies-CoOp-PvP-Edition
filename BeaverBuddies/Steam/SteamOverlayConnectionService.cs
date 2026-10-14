@@ -16,13 +16,13 @@ namespace BeaverBuddies.Steam
 {
     class SteamOverlayConnectionService : IUpdatableSingleton
     {
-        public static bool IsSteamEnabled { get; private set; } = false;
-
 #if IS_STEAM
-        private SteamManager _steamManager;
+        // Typed object: Timberborn checks every class of a mod when it loads it,
+        // and a field of a Steam type fails that on the Epic Games build
+        private object _steamManager;
         private ClientConnectionService _clientConnectionService;
         private PanelStack _panelStack;
-        private SteamOverlayInputBlocker _inputBlocker;
+        private object _inputBlocker;
         private EventBus _eventBus;
         private Settings _settings;
 
@@ -53,9 +53,9 @@ namespace BeaverBuddies.Steam
             //Read();
             if (!done)
             {
-                if (_steamManager.Initialized)
+                if (((SteamManager)_steamManager).Initialized)
                 {
-                    IsSteamEnabled = true;
+                    SteamSupport.IsSteamEnabled = true;
 
                     foreach (var callback in callbacks)
                     {
@@ -173,7 +173,7 @@ namespace BeaverBuddies.Steam
             {
                 Plugin.Log("Joining another's lobby...");
                 bool success = _clientConnectionService.TryToConnect(owner);
-                if (_panelStack.IsPanelOnTop(_inputBlocker))
+                if (_panelStack.IsPanelOnTop((SteamOverlayInputBlocker)_inputBlocker))
                 {
                     WaitForSteamOverlayToClose(success);
                 }
