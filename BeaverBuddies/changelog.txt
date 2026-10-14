@@ -1,3 +1,8 @@
+v1.1.0-1.5.0
+* New: the Trading Post, Power Exchange and toll stations, in any game, co-op too.
+* Fix a desync in the first ticks of a match started after leaving another one.
+* Mods can add slider settings to a game's setup and read the game mode picked on the New Game screens.
+
 v1.1.0-1.4.2
 * Fix the crash when demolishing a building.
 
