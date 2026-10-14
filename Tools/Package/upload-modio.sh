@@ -43,7 +43,7 @@ printf '%s\n' "$note"
 # The token goes in a config file, not on the command line where ps shows it
 cfg=$(mktemp); trap 'rm -f "$cfg"' EXIT
 printf 'header = "Authorization: Bearer %s"\n' "$(cat "$tokenfile")" > "$cfg"
-resp=$(curl -sS -K "$cfg" -w '\n%{http_code}' "https://api.mod.io/v1/games/$game/mods/$mod/files" \
+resp=$(curl -sS -K "$cfg" -w '\n%{http_code}' "https://g-$game.modapi.io/v1/games/$game/mods/$mod/files" \
     -F "filedata=@$zip" -F "version=$have" -F "changelog=$note" -F "active=true")
 code=${resp##*$'\n'}
 body=${resp%$'\n'*}
