@@ -642,6 +642,12 @@ namespace BeaverBuddies
             SpeedChangePatcher.SetSpeedSilentlyNow(_speedManager, 0);
         }
 
+        // The hosting box was cancelled: the game plays on, as it did before
+        public void UnfreezeForHosting()
+        {
+            _frozenForHosting = false;
+        }
+
         public void SetTargetSpeed(float speed)
         {
             TargetSpeed = speed;

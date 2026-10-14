@@ -232,8 +232,13 @@ namespace BeaverBuddies.Connect
 #if IS_STEAM
                     Matchmaking.HostedListing.Unlist();
 #endif
-                    io.Close();
-                });
+                    // The game behind the box plays on, alone, instead of
+                    // sitting frozen with events (the options menu's among
+                    // them) recorded and never replayed
+                    if (EventIO.Get() == io) EventIO.Set(new LocalEventIO());
+                    else io.Close();
+                    SingletonManager.GetSingleton<ReplayService>()?.UnfreezeForHosting();
+                }, loc.T(CommonLocKeys.CancelKey));
             if (steamListener != null)
             {
                 boxCreator.SetInfoButton(() =>
@@ -241,7 +246,6 @@ namespace BeaverBuddies.Connect
                     SteamInvites.Show(shower, steamListener.LobbyID);
                 }, loc.T("BeaverBuddies.Host.InviteFriends"));
             }
-            boxCreator.SetDefaultCancelButton(loc.T(CommonLocKeys.CancelKey));
 
             DialogBox box = boxCreator.Show();
             coroutine = behavior.StartCoroutine(UpdateDialogBox(box, io, shower._loc, start));
