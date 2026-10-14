@@ -6,7 +6,7 @@
 # Bumps the version in the manifest and the csproj, drafts the changelog
 # entry from the commit subjects since the last release tag and opens it in
 # $VISUAL or $EDITOR (nano without either; used as drafted when there's no
-# terminal), then builds, installs into Mods and zips through package.sh,
+# terminal; RELEASE_NOTES=<file> uses that file as the entry instead), then builds, installs into Mods and zips through package.sh,
 # commits "Release <version>", tags v<version> and pushes both. It prints
 # the entry at the end, for the uploader's change note.
 #
@@ -76,7 +76,8 @@ if [ "$dry" = 1 ]; then
     echo "(dry run: nothing changed)"
     exit 0
 fi
-if [ -t 0 ] && [ -t 1 ]; then "${VISUAL:-${EDITOR:-nano}}" "$notes"; fi
+if [ -n "${RELEASE_NOTES:-}" ]; then cp "$RELEASE_NOTES" "$notes"
+elif [ -t 0 ] && [ -t 1 ]; then "${VISUAL:-${EDITOR:-nano}}" "$notes"; fi
 entry=$(grep -v '^#' "$notes" | sed '/^[[:space:]]*$/d')
 [ -n "$entry" ] || die "empty changelog entry: cancelled"
 
