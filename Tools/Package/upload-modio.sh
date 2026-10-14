@@ -34,7 +34,7 @@ note=$(sed -n '2,/^$/p' "$changelog" | sed '/^$/d')
 zip=$(ls -t "$HOME"/Downloads/$prefix-[0-9]*.zip 2>/dev/null | head -1)
 [ -n "$zip" ] || die "no $prefix zip in Downloads: run release.sh first"
 have=$(unzip -p "$zip" "$prefix/version-*/manifest.json" 2>/dev/null | sed -nE 's/.*"Version": *"([^"]+)".*/\1/p' | head -1)
-[ "${have##*-}" = "$version" ] || die "$zip holds ${have:-no manifest}, the changelog is at $version: run release.sh first"
+[ "$have" = "$version" ] || die "$zip holds ${have:-no manifest}, the changelog is at $version: run release.sh first"
 
 echo "uploading $(basename "$zip") to mod.io as $have with:"
 printf '%s\n' "$note"

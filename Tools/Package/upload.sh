@@ -40,7 +40,7 @@ version=$(sed -n '1s/^v//p' "$changelog")
 note=$(sed -n '2,/^$/p' "$changelog" | sed '/^$/d')
 [ -n "$version" ] && [ -n "$note" ] || die "no entry at the top of $changelog"
 have=$(sed -nE 's/.*"Version": *"([^"]+)".*/\1/p' "$installed" | head -1)
-[ "${have##*-}" = "$version" ] || die "Mods has $id ${have:-nothing}, the changelog is at $version: run release.sh first"
+[ "$have" = "$version" ] || die "Mods has $id ${have:-nothing}, the changelog is at $version: run release.sh first"
 
 echo "uploading $id $version with:"
 printf '%s\n' "$note"
