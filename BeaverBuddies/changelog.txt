@@ -1,3 +1,7 @@
+v1.1.0-1.5.2
+* You can't join a host with different mods or a different build of BeaverBuddies anymore, so those games no longer fall out of sync right away. Install the same ones from the same place as the host.
+* Loads on the Epic Games version of Timberborn.
+
 v1.1.0-1.5.1
 * Cancelling the hosting box plays on alone, instead of leaving the game frozen.
 * A game setting can have a line of small print under its name.
