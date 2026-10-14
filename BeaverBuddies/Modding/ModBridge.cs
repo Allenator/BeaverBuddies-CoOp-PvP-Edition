@@ -74,6 +74,21 @@ namespace BeaverBuddies.Modding
             });
 
         /**
+         * The same for a mod's dev tools: refused when the host has dev tools
+         * off (the player is told), and dropped by the host from a client
+         * whose setting is out of date.
+         */
+        public static bool DoDevPrefix(string mod, Func<object> getEvent) =>
+            DevTools.DevToolsPolicy.DoPrefix(() =>
+            {
+                object payload = getEvent();
+                return payload == null ? null : new ModEvent() { mod = mod, payload = payload, dev = true };
+            });
+
+        // A dev panel method of a mod that sends its own events with DoDevPrefix: allowed in a shared game, where an unknown one is blocked
+        public static void AddDevMethod(string name) => DevTools.DevMethodClassifier.AddAlreadySynced(name);
+
+        /**
          * What's done inside runs as is on every machine rather than going
          * out as an event: for game logic on ticks calling methods that are
          * patched to send events.

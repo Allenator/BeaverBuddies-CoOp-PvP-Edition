@@ -79,6 +79,7 @@ namespace BeaverBuddies.DevTools
             // Only the dev mode deletion tool removes terrain, though its event
             // is the ordinary deconstruction one
             return replayEvent is DevToolEvent
+                || replayEvent is Modding.ModEvent { dev: true }
                 || replayEvent is Events.BuildingsDeconstructedEvent { terrainCoordinates.Count: > 0 };
         }
 

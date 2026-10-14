@@ -82,6 +82,12 @@ namespace BeaverBuddies.DevTools
             "Multithreading: ",
         };
 
+        /**
+         * For mods: a dev method of theirs that sends its own events through
+         * ModBridge.DoDevPrefix, so it only has to be allowed.
+         */
+        public static void AddAlreadySynced(string name) => AlreadySynced.Add(name);
+
         public static DevMethodSync Classify(string name)
         {
             if (Replayed.Contains(name)) return DevMethodSync.Replayed;

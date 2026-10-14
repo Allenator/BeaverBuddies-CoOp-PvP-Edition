@@ -13,6 +13,8 @@ namespace BeaverBuddies.Modding
     {
         public string mod;
         public object payload;
+        // Sent by one of the mod's dev tools, so the host drops it when dev tools are off
+        public bool dev;
 
         public override void Replay(IReplayContext context) => ModBridge.Play(this, context);
 
