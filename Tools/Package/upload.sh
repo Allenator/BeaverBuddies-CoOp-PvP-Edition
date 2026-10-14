@@ -57,7 +57,7 @@ trap cleanup EXIT
 if ! pgrep -x Timberborn >/dev/null; then
     pgrep -x steam_osx >/dev/null || die "Steam isn't running"
     echo "starting Timberborn..."
-    open "steam://rungameid/1062090"
+    open -a "$HOME/Library/Application Support/Steam/steamapps/common/Timberborn/Timberborn.app" --args -skipModManager
     started=1
 fi
 waited=0
