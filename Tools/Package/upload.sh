@@ -25,7 +25,7 @@ cd "$repo"
 timberborn="$HOME/Documents/Timberborn"
 # The newest version-x.y folder holds the manifest
 installed=$(ls -d "$timberborn/Mods/$id"/version-*/manifest.json 2>/dev/null | sort -V | tail -1)
-flag="$timberborn/ModUploader-request"
+flag="$timberborn/ModUploader-request.json"
 result="$flag.result"
 
 dry=0
@@ -50,14 +50,15 @@ printf '%s\n' "$note"
 
 rm -f "$result"
 zip=$(ls -t "$HOME"/Downloads/$id-[0-9]*.zip 2>/dev/null | head -1 || true)
-{
-    echo "mod: $id"
-    if [ -n "$zip" ] && [ -s "$HOME/.config/timberempires/modio-token" ]; then
-        echo "modio-game: $modio_game"; echo "modio-mod: $modio_mod"; echo "modio-zip: $zip"; echo "version: $version"
-    fi
-    echo
-    printf '%s\n' "$note"
-} > "$flag"
+[ -s "$HOME/.config/timberempires/modio-token" ] || zip=""
+python3 - "$flag" "$id" "$note" "$zip" "$version" "$modio_game" "$modio_mod" <<'PY'
+import json, sys
+flag, mod, note, zip, version, game, modio = sys.argv[1:]
+request = {"mod": mod, "changelog": note}
+if zip:
+    request["modio"] = {"game": int(game), "mod": int(modio), "zip": zip, "version": version}
+json.dump(request, open(flag, "w"))
+PY
 started=0
 cleanup() {
     rm -f "$flag"
