@@ -4,7 +4,7 @@
 #
 #   Tools/Package/upload-modio.sh [--dry-run]
 #
-# Needs an OAuth2 access token with write access in ~/.config/timberempires/modio-token
+# Needs an OAuth2 access token with write access in ~/.config/timberborn-mod-uploader/modio-token
 # (an API key alone can only read). upload.sh runs this after the Workshop upload.
 set -euo pipefail
 
@@ -17,7 +17,7 @@ changelog="BeaverBuddies/changelog.txt"
 
 repo="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$repo"
-tokenfile="$HOME/.config/timberempires/modio-token"
+tokenfile="$HOME/.config/timberborn-mod-uploader/modio-token"
 dry=0
 for a in "$@"; do
     case "$a" in

@@ -50,7 +50,7 @@ printf '%s\n' "$note"
 
 rm -f "$result"
 zip=$(ls -t "$HOME"/Downloads/$id-[0-9]*.zip 2>/dev/null | head -1 || true)
-[ -s "$HOME/.config/timberempires/modio-token" ] || zip=""
+[ -s "$HOME/.config/timberborn-mod-uploader/modio-token" ] || zip=""
 python3 - "$flag" "$id" "$note" "$zip" "$version" "$modio_game" "$modio_mod" <<'PY'
 import json, sys
 flag, mod, note, zip, version, game, modio = sys.argv[1:]
