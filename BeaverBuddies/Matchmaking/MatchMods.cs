@@ -46,8 +46,19 @@ namespace BeaverBuddies.Matchmaking
         // Set by the main menu's matchmaking (see MatchmakingUI)
         internal static ModRepository Repository;
 
+        // Mods that only change the player's own tools, so one player can run
+        // them without the other: they're left out of the list a match needs
+        private static readonly HashSet<string> Ignored = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "Timberborn.Editor.ExtendedTerrainTools", // Extra Terrain Tools
+            "MapTransformer",                         // Map Transformer
+            "ModdableTimberborn",                     // Moddable Timberborn
+            "TimberUi",                               // TimberUI
+            "modUploader",                            // Mod Uploader
+        };
+
         public static List<Entry> Local => Repository == null ? new List<Entry>()
-            : Repository.EnabledMods.Select(m => new Entry
+            : Repository.EnabledMods.Where(m => !Ignored.Contains(m.Manifest.Id)).Select(m => new Entry
             {
                 id = m.Manifest.Id, name = m.Manifest.Name, version = m.Manifest.Version.ToString(), workshop = WorkshopIdOf(m),
                 local = m.ModDirectory.DisplaySource != SteamWorkshopSource,
