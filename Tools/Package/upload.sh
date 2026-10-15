@@ -4,17 +4,19 @@
 #
 #   Tools/Package/upload.sh [--dry-run]
 #
-# Goes through the game's own uploader, which lives in the Timber Empires mod
-# (DevTools/WorkshopUpload.cs there), so that has to be in Mods too. It
-# starts Timberborn if it isn't running, waits for the upload at the main menu
-# and closes the game again if it was the one to start it. Steam has to be
-# running and signed in. Then it uploads to mod.io through upload-modio.sh,
-# when there's a token for it. It refuses when the installed version isn't the one
-# the changelog's newest entry is for: run release.sh first.
+# Goes through the Mod Uploader mod (~/Developer/TimberbornModUploader, it has
+# to be in Mods): it starts Timberborn if it isn't running, waits for the
+# upload at the main menu and closes the game again if it was the one to start
+# it. Steam has to be running and signed in. The same request uploads the
+# release zip to mod.io when there's a token for it. It refuses when the
+# installed version isn't the one the changelog's newest entry is for: run
+# release.sh first.
 set -euo pipefail
 
 # ---- This repo ---------------------------------------------------------------
 id="BeaverBuddies"
+modio_game=3659
+modio_mod=6446808
 changelog="BeaverBuddies/changelog.txt"
 # -----------------------------------------------------------------------------
 
@@ -23,7 +25,7 @@ cd "$repo"
 timberborn="$HOME/Documents/Timberborn"
 # The newest version-x.y folder holds the manifest
 installed=$(ls -d "$timberborn/Mods/$id"/version-*/manifest.json 2>/dev/null | sort -V | tail -1)
-flag="$timberborn/TimberEmpires-upload"
+flag="$timberborn/ModUploader-request"
 result="$flag.result"
 
 dry=0
@@ -47,7 +49,15 @@ printf '%s\n' "$note"
 [ "$dry" = 0 ] || { echo "(dry run: nothing uploaded)"; exit 0; }
 
 rm -f "$result"
-{ echo "$id"; printf '%s\n' "$note"; } > "$flag"
+zip=$(ls -t "$HOME"/Downloads/$id-[0-9]*.zip 2>/dev/null | head -1 || true)
+{
+    echo "mod: $id"
+    if [ -n "$zip" ] && [ -s "$HOME/.config/timberempires/modio-token" ]; then
+        echo "modio-game: $modio_game"; echo "modio-mod: $modio_mod"; echo "modio-zip: $zip"; echo "version: $version"
+    fi
+    echo
+    printf '%s\n' "$note"
+} > "$flag"
 started=0
 cleanup() {
     rm -f "$flag"
@@ -62,16 +72,18 @@ if ! pgrep -x Timberborn >/dev/null; then
 fi
 waited=0
 until [ -f "$result" ]; do
-    [ "$waited" -lt 300 ] || die "no answer from Timberborn after 5 minutes: is the mod enabled in it?"
+    [ "$waited" -lt 300 ] || die "no answer from Timberborn after 5 minutes: is Mod Uploader enabled in it?"
     sleep 1
     waited=$((waited + 1))
 done
 outcome=$(cat "$result")
 rm -f "$result"
-case "$outcome" in
-    ok*) echo "uploaded: https://steamcommunity.com/sharedfiles/filedetails/?id=${outcome#ok }" ;;
-    *) die "$outcome" ;;
-esac
-if [ -s "$HOME/.config/timberempires/modio-token" ]; then
-    "$repo/Tools/Package/upload-modio.sh"
-fi
+failed=0
+while read -r target status rest; do
+    case "$target $status" in
+        "steam ok") echo "uploaded: https://steamcommunity.com/sharedfiles/filedetails/?id=$rest" ;;
+        "modio ok") echo "uploaded to mod.io: file $rest" ;;
+        *) echo "$target $status $rest" >&2; failed=1 ;;
+    esac
+done <<< "$outcome"
+[ "$failed" = 0 ] || exit 1
