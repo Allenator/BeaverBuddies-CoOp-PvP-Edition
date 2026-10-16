@@ -1,3 +1,6 @@
+v1.1.0-1.5.4
+* You pick a preferred color in the settings, and every player in a match gets a different one.
+
 v1.1.0-1.5.3
 * New "Steam friends only" box when you host a game. It keeps the game off the list of open matches, so only your Steam friends and the players you invite can join.
 * Players no longer need the same tool-only mods to play together.
