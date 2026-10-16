@@ -35,9 +35,9 @@ namespace BeaverBuddies
             containerDefinition.Bind<ClientConnectionService>().AsSingleton();
             containerDefinition.Bind<ClientConnectionUI>().AsSingleton();
             containerDefinition.Bind<StartConfirmation>().AsSingleton();
+            containerDefinition.Bind<PauseMenuInvite>().AsSingleton();
             if (Steam.SteamSupport.Installed)
             {
-                containerDefinition.Bind<Steam.PauseMenuInvite>().AsSingleton();
                 containerDefinition.Bind<SteamOverlayConnectionService>().AsSingleton();
             }
             containerDefinition.Bind<RegisteredLocalizationService>().AsSingleton();

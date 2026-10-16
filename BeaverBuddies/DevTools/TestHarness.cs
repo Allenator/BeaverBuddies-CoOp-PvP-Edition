@@ -108,6 +108,60 @@ namespace BeaverBuddies.DevTools
             }
         }
 
+        // The made-up hosts of "mockmatches": one for every way a match can read
+        private List<Matchmaking.OpenMatch> MockMatches()
+        {
+            string normal = _gameModeSpecService?.GetDefaultSpec().DisplayNameLocKey;
+            var mine = Matchmaking.MatchMods.Local;
+            Matchmaking.MatchMods.Entry Mod(string id, string name, string version) => new() { id = id, name = name, version = version };
+            List<Matchmaking.MatchMods.Entry> Mods(Func<List<Matchmaking.MatchMods.Entry>, IEnumerable<Matchmaking.MatchMods.Entry>> change) =>
+                change(mine.Select(m => new Matchmaking.MatchMods.Entry { id = m.id, name = m.name, version = m.version, workshop = m.workshop }).ToList()).ToList();
+            var gameMode = Matchmaking.MatchOptions.All.FirstOrDefault(o => o.Id == Matchmaking.MatchOptions.GameModeId);
+            string Option(int index) => gameMode == null || gameMode.Values.Length == 0 ? null : gameMode.Values[Math.Min(index, gameMode.Values.Length - 1)];
+            var changed = NewGame.GameSettings.All.Where(g => g.Values?.Length > 1).Take(3)
+                .ToDictionary(g => g.Id, g => g.Values.First(v => v != g.Default));
+            Matchmaking.MatchPicks Picks(string name, string map, int option, Dictionary<string, string> settings = null, int players = 0) => new()
+            {
+                name = name, mapTitle = map, faction = "Folktails", modeLocKey = normal,
+                options = Option(option) == null ? new() : new() { [Matchmaking.MatchOptions.GameModeId] = Option(option) },
+                settings = settings ?? new(),
+                mode = players > 0 ? new() { [nameof(MultiStart.MultiplayerNewGameModeSpec.Players)] = players } : new(),
+            };
+            string game = Timberborn.Versioning.GameVersions.CurrentVersion.ToString();
+            string protocol = Matchmaking.MatchmakingSession.Protocol.ToString();
+            Matchmaking.OpenMatch Match(Matchmaking.MatchPicks picks, string platform, bool hosted, int players, List<Matchmaking.MatchMods.Entry> mods = null,
+                bool compatible = true, bool otherMods = false, string gameVersion = null, string protocolVersion = "same") => new()
+            {
+                lobby = (ulong)(picks.name.GetHashCode() & 0x7fffffff), joinCode = hosted ? "MOCK" + picks.name.Length : null, platform = platform,
+                picks = picks, hosted = hosted, players = players, maxPlayers = Matchmaking.MatchList.MaxPlayers(picks),
+                mods = mods ?? Mods(m => m), otherMods = otherMods, compatible = compatible,
+                game = gameVersion ?? game, protocol = protocolVersion == "same" ? protocol : protocolVersion, debug = Settings.Debug ? "1" : "0",
+            };
+            string bb = mine.FirstOrDefault(m => m.id == Plugin.ID)?.version ?? "1.1.0-1.5.4";
+            return new List<Matchmaking.OpenMatch>
+            {
+                // Joinable: a full-ish multi-start game, and a co-op one with no cap
+                Match(Picks("Ana", "Waterfalls", 1, players: 4), "steam", true, 2),
+                Match(Picks("Bjorn", "Lakes", 0, changed), "epic", true, 3),
+                // A Quick match with other mods: a Steam player gets them first
+                Match(Picks("Chiara", "Meander", 1), "steam", false, 1, Mods(m => m.Append(Mod("Ladders", "Ladders", "2.0.1"))), otherMods: true),
+                // Can't join: other mods in a hosted game
+                Match(Picks("Dmitri", "Waterfalls", 0), "epic", true, 1,
+                    Mods(m => m.Where(e => e.id != Plugin.ID).Take(1).Select(e => Mod(e.id, e.name, e.version + "-old"))
+                        .Concat(new[] { Mod(Plugin.ID, "BeaverBuddies", bb), Mod("Ladders", "Ladders", "2.0.1"), Mod("BetterBeavers", "Better Beavers", "0.9.3") })),
+                    compatible: false, otherMods: true),
+                // Can't join: an older BeaverBuddies
+                Match(Picks("Emil", "Lakes", 1, players: 2), "steam", true, 1, Mods(m => m.Select(e => e.id == Plugin.ID ? Mod(e.id, e.name, "1.1.0-1.4.9") : e)),
+                    compatible: false, otherMods: true, protocolVersion: "5"),
+                // Can't join: another version of Timberborn
+                Match(Picks("Fatima", "Meander", 0), "epic", false, 1, gameVersion: "1.0.12.4", compatible: false),
+                // Can't join: a BeaverBuddies too old to say why
+                Match(Picks("Gus", "Waterfalls", 0), "other", true, 1, mods: null, compatible: false, protocolVersion: null),
+                // Can't join: the same mods, but a different build
+                Match(Picks("Hana with a rather long name for a beaver", "Lakes", 1), "steam", true, 1, compatible: false, otherMods: true),
+            };
+        }
+
         private static int I(string s) => int.Parse(s, CultureInfo.InvariantCulture);
 
         // A built-in map by name, or one of the player's own as user:Name
@@ -181,6 +235,21 @@ namespace BeaverBuddies.DevTools
                     browser._list.SetSelection(index);
                     break;
                 }
+                case "mockmatches":
+                    // Made-up hosts for each case the list has to explain, to look at (see Tools/Tests/scenarios/open-matches-mock.sh)
+                    Matchmaking.MatchList.ShowMock(MockMatches());
+                    break;
+                case "templogging":
+                    // templogging on|off: this copy's detailed logging, as the setting would, without touching the shared preferences
+                    Settings.TemporarilyDebug = a[1] == "on";
+                    break;
+                case "showincompatible":
+                {
+                    // Ticks "Show incompatible matches", as a click does
+                    var panel = _panelStack._stack.Peek().PanelController.GetPanel();
+                    UnityEngine.UIElements.UQueryExtensions.Q<UnityEngine.UIElements.Toggle>(panel, "TutorialToggle").value = true;
+                    break;
+                }
                 case "joinpicked":
                     // The list's Join button
                     SingletonManager.GetSingleton<Matchmaking.HostBrowser>().OnUIConfirmed();
@@ -188,7 +257,7 @@ namespace BeaverBuddies.DevTools
                 case "matchmods":
                     foreach (var match in Matchmaking.MatchList.Matches)
                     {
-                        Plugin.Log($"[Test] {match.picks.name}: {SingletonManager.GetSingleton<Matchmaking.HostBrowser>().Mods(match)}");
+                        Plugin.Log($"[Test] {match.picks.name}: {SingletonManager.GetSingleton<Matchmaking.HostBrowser>().Mods(match.mods == null ? null : Matchmaking.MatchMods.Compare(match.mods, Matchmaking.MatchMods.Local))}");
                     }
                     break;
 #endif

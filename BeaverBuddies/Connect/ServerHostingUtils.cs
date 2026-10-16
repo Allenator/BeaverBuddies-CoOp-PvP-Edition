@@ -202,14 +202,6 @@ namespace BeaverBuddies.Connect
             var behavior = GetMonoBehaviour(sceneLoader._sceneLoader);
             Coroutine coroutine = null;
 
-            var socketListener = io.SocketListener;
-            SteamListener steamListener = socketListener as SteamListener;
-            if (socketListener is MultiSocketListener)
-            {
-                steamListener = ((MultiSocketListener)socketListener).GetListener<SteamListener>();
-            }
-            Plugin.Log($"Steam listener: {steamListener}");
-
             var loc = shower._loc;
             Action start = () =>
             {
@@ -245,12 +237,10 @@ namespace BeaverBuddies.Connect
                     else io.Close();
                     SingletonManager.GetSingleton<ReplayService>()?.UnfreezeForHosting();
                 }, loc.T(CommonLocKeys.CancelKey));
-            if (steamListener != null)
+            // The join code to pass on, and Steam friends with Steam
+            if (WebRtc.JoinCode.Current != null)
             {
-                boxCreator.SetInfoButton(() =>
-                {
-                    SteamInvites.Show(shower, steamListener.LobbyID);
-                }, loc.T("BeaverBuddies.Host.InviteFriends"));
+                boxCreator.SetInfoButton(() => Invites.Show(shower), loc.T("BeaverBuddies.Host.InviteFriends"));
             }
 
             DialogBox box = boxCreator.Show();

@@ -20,7 +20,7 @@ namespace BeaverBuddies.Connect
     {
         public static void Postfix(IPanelController __instance, ref VisualElement __result)
         {
-            SingletonManager.GetSingleton<Steam.PauseMenuInvite>()?.AddButton(__result);
+            SingletonManager.GetSingleton<PauseMenuInvite>()?.AddButton(__result);
         }
     }
 

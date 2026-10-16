@@ -45,6 +45,7 @@ namespace BeaverBuddies.Matchmaking
         // Bumped whenever the listing ends, so a Worker lobby still on its way is left at once
         private static int generation;
         private static bool listed;
+        private static int players;
 
         public static void HostingNewGame(NewGameConfiguration configuration, string mapTitle, string modeLocKey)
         {
@@ -104,6 +105,7 @@ namespace BeaverBuddies.Matchmaking
         {
             if (!Listable || WebRtc.JoinCode.Current == null) return;
             listed = true;
+            players = 1;
             OpenWorkerLobby(WebRtc.JoinCode.Current);
         }
 
@@ -126,6 +128,7 @@ namespace BeaverBuddies.Matchmaking
                 foreach (var pair in MatchKeys.Describe(hosting, MatchKeys.HostedKind)) created.SetData(pair.Key, pair.Value);
                 created.SetData(MatchKeys.Code, code);
                 if (lobby != 0) created.SetData(MatchKeys.SteamLobby, lobby.ToString());
+                PublishPlayers();
                 // The Worker restarted, or the network dropped: listed again
                 created.Lost += () =>
                 {
@@ -144,6 +147,7 @@ namespace BeaverBuddies.Matchmaking
             lobby = server;
             listed = true;
             HostedLobby.MakePublic(lobby, hosting);
+            PublishPlayers();
             workerLobby?.SetData(MatchKeys.SteamLobby, lobby.ToString());
             Plugin.Log($"[Match] Listing the hosted game {lobby}: {hosting.mapTitle}");
         }
@@ -151,9 +155,22 @@ namespace BeaverBuddies.Matchmaking
         // How many have joined: it's off the list once the map has no room left
         public static void Joined(int clients)
         {
-            if (hosting?.mode == null || !listed) return;
-            if (!hosting.mode.TryGetValue(nameof(MultiStart.MultiplayerNewGameModeSpec.Players), out float players)) return;
-            if (clients + 1 >= players) Unlist();
+            if (!listed) return;
+            if (clients + 1 != players)
+            {
+                players = clients + 1;
+                PublishPlayers();
+            }
+            if (hosting?.mode == null) return;
+            if (!hosting.mode.TryGetValue(nameof(MultiStart.MultiplayerNewGameModeSpec.Players), out float room)) return;
+            if (clients + 1 >= room) Unlist();
+        }
+
+        // How many play now, wherever the game is listed
+        private static void PublishPlayers()
+        {
+            workerLobby?.SetData(MatchKeys.Players, players.ToString());
+            if (lobby != 0) HostedLobby.SetData(lobby, MatchKeys.Players, players.ToString());
         }
 
         // The game started, or hosting stopped
@@ -182,10 +199,12 @@ namespace BeaverBuddies.Matchmaking
         public static void MakePublic(ulong lobby, MatchPicks picks)
         {
             SteamLobbies.MakePublic(lobby);
-            foreach (var pair in MatchKeys.Describe(picks, MatchKeys.HostedKind)) SteamMatchmaking.SetLobbyData(new CSteamID(lobby), pair.Key, pair.Value);
+            foreach (var pair in MatchKeys.Describe(picks, MatchKeys.HostedKind)) SetData(lobby, pair.Key, pair.Value);
         }
 
-        public static void Close(ulong lobby) => SteamMatchmaking.SetLobbyData(new CSteamID(lobby), MatchmakingSession.OpenKey, "0");
+        public static void SetData(ulong lobby, string key, string value) => SteamMatchmaking.SetLobbyData(new CSteamID(lobby), key, value);
+
+        public static void Close(ulong lobby) => SetData(lobby, MatchKeys.Open, "0");
     }
 
     // What the loaded game is, for listing it when it's hosted

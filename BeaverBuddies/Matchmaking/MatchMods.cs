@@ -92,6 +92,30 @@ namespace BeaverBuddies.Matchmaking
             return 0;
         }
 
+        // How another player's mods differ from this one's: theirs we lack, theirs in another version, and ours they lack
+        public class Difference
+        {
+            public readonly List<Entry> Missing = new(), OnlyMine = new();
+            public readonly List<(Entry theirs, Entry mine)> OtherVersion = new();
+            public int Same;
+            public bool None => Missing.Count == 0 && OnlyMine.Count == 0 && OtherVersion.Count == 0;
+        }
+
+        public static Difference Compare(List<Entry> theirs, List<Entry> local)
+        {
+            var difference = new Difference();
+            var mine = local.GroupBy(m => m.id).ToDictionary(g => g.Key, g => g.First());
+            var theirIds = new HashSet<string>(theirs.Select(m => m.id));
+            foreach (Entry their in theirs)
+            {
+                if (!mine.TryGetValue(their.id, out Entry have)) difference.Missing.Add(their);
+                else if (have.version != their.version) difference.OtherVersion.Add((their, have));
+                else difference.Same++;
+            }
+            difference.OnlyMine.AddRange(mine.Values.Where(m => !theirIds.Contains(m.id) && !Ignored.Contains(m.id)));
+            return difference;
+        }
+
         public static string ToJson(List<Entry> mods) => JsonConvert.SerializeObject(mods);
 
         public static List<Entry> FromJson(string json)

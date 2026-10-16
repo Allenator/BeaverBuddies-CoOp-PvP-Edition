@@ -1,3 +1,4 @@
+using BeaverBuddies.IO;
 using Steamworks;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,29 +9,24 @@ using UnityEngine.UIElements;
 namespace BeaverBuddies.Steam
 {
     /**
-     * Inviting Steam friends to the hosted game's lobby. Steam's own
-     * invite dialog lives in its overlay, which often isn't there (it
-     * rarely attaches to games on macOS, and players can turn it off), and
-     * then the call does nothing. So without the overlay this shows the
-     * online friends in a box of our own, friends already playing first,
-     * and invites the one picked straight to the lobby: the invite lands
-     * in their Steam chat all the same.
+     * Steam friends to invite to the hosted game's lobby, for the invite box
+     * (see Connect.Invites). Our own list rather than Steam's invite dialog:
+     * that lives in its overlay, which often isn't there (it rarely attaches
+     * to games on macOS, and players can turn it off), and it has no room
+     * for the game's join code. The invite lands in their Steam chat.
      */
     public static class SteamInvites
     {
-        public static void Show(DialogBoxShower shower, CSteamID lobby)
+        /** The online friends, friends already playing first, as buttons that invite them; false without a lobby to invite to. */
+        public static bool AddFriends(VisualElement content, ILoc loc, out string message)
         {
-            if (SteamUtils.IsOverlayEnabled())
-            {
-                SteamFriends.ActivateGameOverlayInviteDialog(lobby);
-                return;
-            }
-            ILoc loc = shower._loc;
+            message = null;
+            if (!TryGetLobby(out CSteamID lobby)) return false;
             List<CSteamID> friends = OnlineFriends();
-            Plugin.Log($"No Steam overlay: inviting from our own list of {friends.Count} online friends, of {SteamFriends.GetFriendCount(EFriendFlags.k_EFriendFlagImmediate)}");
+            Plugin.Log($"Inviting from {friends.Count} online friends, of {SteamFriends.GetFriendCount(EFriendFlags.k_EFriendFlagImmediate)}");
+            message = loc.T(friends.Count > 0 ? "BeaverBuddies.Host.PickFriend" : "BeaverBuddies.Host.NoFriendsOnline");
             var rows = new ScrollView();
-            rows.style.maxHeight = 420;
-            rows.style.marginTop = 12;
+            rows.style.maxHeight = 360;
             foreach (CSteamID friend in friends)
             {
                 var row = new LocalizableButton { text = Name(friend, loc) };
@@ -45,11 +41,20 @@ namespace BeaverBuddies.Steam
                 });
                 rows.Add(row);
             }
-            shower.Create()
-                .SetMessage(loc.T(friends.Count > 0 ? "BeaverBuddies.Host.PickFriend" : "BeaverBuddies.Host.NoFriendsOnline"))
-                .AddContent(rows)
-                .SetConfirmButton(() => { }, loc.T("BeaverBuddies.Menu.Back"))
-                .Show();
+            content.Add(rows);
+            return true;
+        }
+
+        // The hosted game's Steam lobby
+        private static bool TryGetLobby(out CSteamID lobby)
+        {
+            lobby = CSteamID.Nil;
+            if (EventIO.Get() is not ServerEventIO server) return false;
+            SteamListener listener = server.SocketListener as SteamListener
+                ?? (server.SocketListener as TimberNet.MultiSocketListener)?.GetListener<SteamListener>();
+            if (listener == null || !listener.LobbyID.IsValid()) return false;
+            lobby = listener.LobbyID;
+            return true;
         }
 
         // Online friends, those playing this game first, then by name

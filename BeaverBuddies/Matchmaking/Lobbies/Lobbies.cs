@@ -59,10 +59,22 @@ namespace BeaverBuddies.Matchmaking
 
         public static bool SteamUp => SteamSupport.IsSteamEnabled && Settings.EnableSteam;
 
-        // This copy's store, for the icon beside a player's name
-        public static readonly string Platform = SteamSupport.Installed ? "steam"
-            : AppDomain.CurrentDomain.GetAssemblies().Any(a => a.GetName().Name.IndexOf("Epic", StringComparison.OrdinalIgnoreCase) >= 0) ? "epic"
-            : "other";
+        /**
+         * This copy's store, for the icon beside a player's name: the game's own
+         * store module says (Timberborn.SteamStoreSystem in the Steam build), never
+         * a mod's assembly. One we don't know gets no icon rather than a wrong one.
+         */
+        public static readonly string Platform = DetectPlatform();
+
+        private static string DetectPlatform()
+        {
+            if (SteamSupport.Installed) return "steam";
+            string[] store = AppDomain.CurrentDomain.GetAssemblies().Select(a => a.GetName().Name)
+                .Where(n => n.StartsWith("Timberborn.", StringComparison.Ordinal) && n.EndsWith("StoreSystem", StringComparison.Ordinal) && n != "Timberborn.StoreSystem")
+                .ToArray();
+            Plugin.Log($"[Match] Store module: {(store.Length == 0 ? "none" : string.Join(", ", store))}");
+            return store.Any(n => n.IndexOf("Epic", StringComparison.OrdinalIgnoreCase) >= 0) ? "epic" : "other";
+        }
 
         public static ulong Me => SteamUp ? SteamMe() : WorkerLobbies.Me;
 

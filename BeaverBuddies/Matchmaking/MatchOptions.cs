@@ -230,10 +230,10 @@ namespace BeaverBuddies.Matchmaking
             FriendsOnlyBox = wrapper;
         }
 
-        // Only when hosting, and only where Steam is: the box is hidden on builds without it
+        // Only when hosting: invites or the join code are the ways in, Steam or not
         public static void ShowFriendsOnly(NewGameModePanel panel, bool visible)
         {
-            panel._root?.Q(FriendsOnlyWrapper)?.ToggleDisplayStyle(visible && SteamSupport.IsSteamEnabled);
+            panel._root?.Q(FriendsOnlyWrapper)?.ToggleDisplayStyle(visible);
         }
 
         public void AddTo(NewGameModePanel panel)

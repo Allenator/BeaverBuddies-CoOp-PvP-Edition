@@ -25,6 +25,8 @@ namespace BeaverBuddies.Matchmaking
         public const string Platform = "bb.match.platform";
         // A hosted game's ways in: its join code, and its Steam lobby when it has one
         public const string Code = "bb.match.code", SteamLobby = "bb.match.steam";
+        // How many play in a hosted game now, its host too
+        public const string Players = "bb.match.players";
         // A player waiting for a Quick match, or a hosted game (see
         // HostedListing): both are listed, only the first is searched
         public const string Kind = "bb.match.kind", QuickKind = "quick", HostedKind = "hosted";

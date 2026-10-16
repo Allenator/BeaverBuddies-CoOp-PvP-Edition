@@ -19,6 +19,8 @@ namespace BeaverBuddies.Matchmaking
         // The host's store: steam, epic or other
         public string platform;
         public MatchPicks picks;
+        // How many play in a hosted game now, and how many its map has room for: 0 where it doesn't say
+        public int players, maxPlayers;
         // A hosted game (see HostedListing): joining it connects to it
         public bool hosted;
         // Whether joining needs their mods from the Workshop first
@@ -65,9 +67,21 @@ namespace BeaverBuddies.Matchmaking
         private static List<OpenMatch> fromSteam, fromWorker;
         private static bool steamPending, workerPending, steamFailed, workerFailed;
 
+        // Made-up matches the test harness shows instead (see DevTools.TestHarness): no refresh replaces them while the list is open
+        internal static bool Mocked { get; set; }
+
+        internal static void ShowMock(List<OpenMatch> matches)
+        {
+            Mocked = true;
+            Loading = Failed = false;
+            Matches.Clear();
+            Matches.AddRange(matches.Where(m => m.compatible).Concat(matches.Where(m => !m.compatible)));
+            Changed?.Invoke();
+        }
+
         public static void Refresh()
         {
-            if (Loading) return;
+            if (Loading || Mocked) return;
             Loading = true;
             Failed = false;
             steamFailed = workerFailed = false;
@@ -116,6 +130,8 @@ namespace BeaverBuddies.Matchmaking
             {
                 // A hosted game is joined by its Steam lobby or its code, never its Worker lobby
                 lobby = hosted ? steamLobby : lobby.Id,
+                players = int.TryParse(Data(MatchKeys.Players), out int players) ? players : 0,
+                maxPlayers = MaxPlayers(picks),
                 joinCode = hosted ? Data(MatchKeys.Code) : null,
                 platform = Data(MatchKeys.Platform) ?? "other",
                 picks = picks,
@@ -130,9 +146,13 @@ namespace BeaverBuddies.Matchmaking
             };
         }
 
+        // A map's room: the players its multiplayer mode was made for; 2 for a Quick match, 0 when a hosted save doesn't say
+        internal static int MaxPlayers(MatchPicks picks) =>
+            picks.mode != null && picks.mode.TryGetValue(nameof(MultiStart.MultiplayerNewGameModeSpec.Players), out float players) ? (int)players : 0;
+
         private static void Merge()
         {
-            if (steamPending || workerPending) return;
+            if (steamPending || workerPending || Mocked) return;
             Loading = false;
             Failed = (steamFailed || !SteamListed) && workerFailed;
             var all = new List<OpenMatch>(fromSteam ?? new List<OpenMatch>());
@@ -198,6 +218,8 @@ namespace BeaverBuddies.Matchmaking
                 {
                     lobby = id.m_SteamID,
                     platform = "steam",
+                    players = int.TryParse(SteamMatchmaking.GetLobbyData(id, MatchKeys.Players), out int players) ? players : 0,
+                    maxPlayers = MatchList.MaxPlayers(picks),
                     picks = picks,
                     hosted = hosted,
                     otherMods = otherMods,

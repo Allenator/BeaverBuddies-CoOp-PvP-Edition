@@ -22,7 +22,7 @@ namespace BeaverBuddies.Matchmaking
      * faction chosen at the bottom, and a game's address can be typed in
      * to join it directly (see ClientConnectionUI). Built on the game's Load Game screen,
      * so it looks like the rest of the menus, and kept fresh while open.
-     * A checkbox under the list shows the players this one can't match with
+     * A checkbox at the bottom shows the players this one can't match with
      * too, greyed out, with what keeps them apart.
      *
      * Each row has the host's store beside their name, Steam or Epic Games:
@@ -40,8 +40,8 @@ namespace BeaverBuddies.Matchmaking
         private readonly PanelStack _panelStack;
         private readonly ILoc _loc;
         private readonly FactionSpecService _factionSpecService;
-        private readonly ITooltipRegistrar _tooltipRegistrar;
         private readonly Connect.ClientConnectionService _clientConnectionService;
+        private readonly ITooltipRegistrar _tooltipRegistrar;
         private readonly Connect.ClientConnectionUI _clientConnectionUI;
         private readonly DropdownListDrawer _dropdownListDrawer;
         private readonly DropdownItemsSetter _dropdownItemsSetter;
@@ -67,8 +67,8 @@ namespace BeaverBuddies.Matchmaking
             _panelStack = panelStack;
             _loc = loc;
             _factionSpecService = factionSpecService;
-            _tooltipRegistrar = tooltipRegistrar;
             _clientConnectionService = clientConnectionService;
+            _tooltipRegistrar = tooltipRegistrar;
         }
 
         public void Open()
@@ -105,7 +105,27 @@ namespace BeaverBuddies.Matchmaking
             _list.virtualizationMethod = CollectionVirtualizationMethod.DynamicHeight;
             _list.selectionChanged += _ => ShowDetails();
             _list.itemsChosen += _ => Join();
-            hosts.Add(IncompatibleToggle());
+            // A row of its own at the bottom, left of joining by code or address
+            var bottom = new VisualElement();
+            bottom.style.flexDirection = FlexDirection.Row;
+            bottom.style.alignItems = Align.Center;
+            bottom.style.justifyContent = Justify.SpaceBetween;
+            address.parent.Insert(address.parent.IndexOf(address), bottom);
+            VisualElement toggle = IncompatibleToggle();
+            // Both on one line, centered on it: the link keeps no margins of its own above or below
+            bottom.style.height = 24;
+            toggle.style.marginTop = toggle.style.marginBottom = 0;
+            toggle.style.paddingTop = toggle.style.paddingBottom = 0;
+            toggle.style.height = 24;
+            // The link's text sits low in its button: down to its line
+            toggle.style.translate = new Translate(0, 12);
+            toggle.style.alignItems = Align.Center;
+            address.style.marginTop = address.style.marginBottom = 0;
+            address.style.paddingTop = address.style.paddingBottom = 0;
+            address.style.height = 24;
+            address.style.unityTextAlign = TextAnchor.MiddleRight;
+            bottom.Add(toggle);
+            bottom.Add(address);
 
             // The picked one in detail, on the right, where the saves are
             VisualElement details = _root.Q<VisualElement>("SavesWrapper");
@@ -120,6 +140,9 @@ namespace BeaverBuddies.Matchmaking
             _details.style.whiteSpace = WhiteSpace.Normal;
             _details.style.paddingLeft = _details.style.paddingRight = 12;
             _details.style.paddingTop = 8;
+            // The column's width whatever the text, so it doesn't move from one pick to the next
+            _details.style.alignSelf = Align.Stretch;
+            _details.style.unityTextAlign = TextAnchor.UpperLeft;
             scroll.Add(_details);
             details.Add(scroll);
 
@@ -198,6 +221,9 @@ namespace BeaverBuddies.Matchmaking
             ShowDetails();
         }
 
+        // A warm orange the game uses for warnings, readable on the panels' dark green
+        private const string Warning = "#F2B36F";
+
         private void Bind(VisualElement element, int index)
         {
             OpenMatch match = _matches[index];
@@ -205,14 +231,22 @@ namespace BeaverBuddies.Matchmaking
             Label name = element.Q<Label>("DisplayName");
             name.text = picks.name;
             PlatformIcon(name, match.platform);
-            string options = string.Join(", ", MatchOptions.All.Where(o => picks.options?.ContainsKey(o.Id) == true).Select(o => o.Label(_loc, picks.options[o.Id])));
-            string game = string.Join(", ", new[] { options, picks.mapTitle, Mode(picks) }.Where(s => !string.IsNullOrEmpty(s)));
-            element.Q<Label>("GameTime").text = game;
-            element.Q<Label>("Timestamp").text = !match.compatible ? _loc.T("BeaverBuddies.Match.Incompatible")
-                : match.otherMods ? _loc.T("BeaverBuddies.Match.GetsMods") : picks.faction != null ? Faction(picks.faction) : "";
+            element.Q<Label>("GameTime").text = string.Join(" · ", new[] { picks.mapTitle, Mode(picks) }.Concat(OptionLabels(picks)).Where(s => !string.IsNullOrEmpty(s)));
+            element.Q<Label>("Timestamp").text = match.compatible ? Seats(match) : $"<color={Warning}>{_loc.T("BeaverBuddies.Match.CantJoin")}</color>";
             // Rows are reused, so every row sets it
-            element.style.opacity = match.compatible ? 1f : 0.55f;
-            _tooltipRegistrar.Register(element, () => Mods(match));
+            element.style.opacity = match.compatible ? 1f : 0.6f;
+        }
+
+        // The match's multiplayer options, by their values alone: Horde, PvP
+        private IEnumerable<string> OptionLabels(MatchPicks picks) =>
+            MatchOptions.All.Where(o => picks.options?.ContainsKey(o.Id) == true).Select(o => o.Label(_loc, picks.options[o.Id]));
+
+        // Who's in: 2/4 players for a hosted game, 1v1 for a Quick match
+        private string Seats(OpenMatch match)
+        {
+            if (!match.hosted) return _loc.T("BeaverBuddies.Match.OneVersusOne");
+            int players = Math.Max(match.players, 1);
+            return match.maxPlayers > 0 ? _loc.T("BeaverBuddies.Match.Players", players, match.maxPlayers) : _loc.T("BeaverBuddies.Match.PlayersNoRoom", players);
         }
 
         private void ShowDetails()
@@ -232,57 +266,83 @@ namespace BeaverBuddies.Matchmaking
                 return;
             }
             MatchPicks picks = match.picks;
-            _details.text = _loc.T("BeaverBuddies.Match.Host", picks.name) + "\n"
-                + _loc.T("BeaverBuddies.Match.Map", picks.mapTitle) + "\n"
-                + (Mode(picks) is string mode ? _loc.T("BeaverBuddies.Match.Difficulty", mode) + "\n" : "")
-                + (picks.faction != null ? _loc.T("BeaverBuddies.Match.HostFaction", Faction(picks.faction)) + "\n" : "")
-                + (picks.options?.Count > 0 ? MatchOptions.Describe(_loc, picks.options) + "\n" : "")
-                + GameSettingsText(picks) + "\n\n"
-                + (match.compatible ? "" : Incompatibility(match) + "\n\n")
-                + (match.otherMods && match.compatible ? _loc.T("BeaverBuddies.Match.GetsMods") + "\n\n" : "")
-                + Mods(match);
+            // Theirs against this player's, once for the whole panel: listing the local mods isn't free
+            List<MatchMods.Entry> mine = MatchMods.Local;
+            MatchMods.Difference difference = match.mods == null ? null : MatchMods.Compare(match.mods, mine);
+            var text = new System.Text.StringBuilder();
+            text.Append($"<size=120%><b>{picks.name}</b></size>\n");
+            text.Append(match.hosted ? _loc.T("BeaverBuddies.Match.HostedGame", Seats(match)) : _loc.T("BeaverBuddies.Match.WaitingQuick")).Append("\n");
+
+            if (!match.compatible)
+            {
+                text.Append($"\n<color={Warning}><b>{_loc.T("BeaverBuddies.Match.IncompatibleTitle")}</b></color>\n");
+                foreach (string reason in Incompatibility(match, difference, mine)) text.Append("• ").Append(reason).Append("\n");
+            }
+            else if (match.otherMods)
+            {
+                text.Append("\n").Append(_loc.T("BeaverBuddies.Match.GetsModsFirst")).Append("\n");
+            }
+
+            text.Append($"\n<b>{_loc.T("BeaverBuddies.Match.Section.Game")}</b>\n");
+            text.Append(_loc.T("BeaverBuddies.Match.Map", picks.mapTitle)).Append("\n");
+            if (Mode(picks) is string mode) text.Append(_loc.T("BeaverBuddies.Match.Difficulty", mode)).Append("\n");
+            if (picks.options?.Count > 0) text.Append(MatchOptions.Describe(_loc, picks.options)).Append("\n");
+            if (picks.faction != null) text.Append(_loc.T("BeaverBuddies.Match.HostFaction", Faction(picks.faction))).Append("\n");
+
+            // Only what differs from the defaults: a list of all of them buries the ones that matter
+            var settings = NewGame.GameSettings.Describe(_loc, picks.settings, NewGame.GameRecord.ModeOf(picks.options), onlyChanged: true);
+            text.Append($"\n<b>{_loc.T("BeaverBuddies.Match.Section.Settings")}</b>\n");
+            text.Append(settings.Count == 0 ? _loc.T("BeaverBuddies.Match.SettingsDefault") : string.Join("\n", settings)).Append("\n");
+
+            text.Append($"\n<b>{_loc.T("BeaverBuddies.Match.Section.Mods")}</b>\n").Append(Mods(difference));
+            _details.text = text.ToString();
         }
 
-        // Every game setting of the host's that applies to the match's mode, one per line
-        private string GameSettingsText(MatchPicks picks)
-        {
-            var lines = NewGame.GameSettings.Describe(_loc, picks.settings, NewGame.GameRecord.ModeOf(picks.options), onlyChanged: false);
-            return lines.Count == 0 ? "" : _loc.T("BeaverBuddies.GameSettings.Heading") + "\n" + string.Join("\n", lines) + "\n";
-        }
-
-        // Why this player can't play a match, one line for each thing that differs
-        private string Incompatibility(OpenMatch match)
+        // Why this player can't play a match: one line for each thing that differs, saying what each has
+        private List<string> Incompatibility(OpenMatch match, MatchMods.Difference difference, List<MatchMods.Entry> mine)
         {
             var reasons = new List<string>();
+            if (match.protocol == null) return new List<string> { _loc.T("BeaverBuddies.Match.Incompatible.OldMod") };
             string myGame = Timberborn.Versioning.GameVersions.CurrentVersion.ToString();
-            if (match.protocol == null)
+            if (match.game != myGame) reasons.Add(_loc.T("BeaverBuddies.Match.Incompatible.Game", match.game, myGame));
+            bool myLogging = Settings.Debug, theirLogging = match.debug == "1";
+            if (theirLogging != myLogging) reasons.Add(_loc.T(theirLogging ? "BeaverBuddies.Match.Incompatible.LoggingTheirs" : "BeaverBuddies.Match.Incompatible.LoggingMine"));
+            // Their BeaverBuddies' version is in their list of mods
+            string theirBB = BeaverBuddiesVersion(match.mods), myBB = BeaverBuddiesVersion(mine);
+            bool otherBB = theirBB != null && myBB != null && theirBB != myBB;
+            if (otherBB) reasons.Add(_loc.T("BeaverBuddies.Match.Incompatible.BeaverBuddies", theirBB, myBB));
+            else if (match.protocol != MatchmakingSession.Protocol.ToString()) reasons.Add(_loc.T("BeaverBuddies.Match.Incompatible.Protocol"));
+            if (reasons.Count == 0 && match.otherMods)
             {
-                reasons.Add(_loc.T("BeaverBuddies.Match.Incompatible.OldMod"));
+                reasons.Add(difference != null && difference.None ? _loc.T("BeaverBuddies.Match.Incompatible.Build")
+                    : _loc.T(match.hosted ? "BeaverBuddies.Match.Incompatible.ModsHosted" : "BeaverBuddies.Match.Incompatible.ModsNoWorkshop"));
             }
-            else
-            {
-                if (match.game != myGame) reasons.Add(_loc.T("BeaverBuddies.Match.Incompatible.Game", match.game, myGame));
-                bool mine = Settings.Debug, theirs = match.debug == "1";
-                if (theirs != mine) reasons.Add(_loc.T(theirs ? "BeaverBuddies.Match.Incompatible.LoggingTheirs" : "BeaverBuddies.Match.Incompatible.LoggingMine"));
-                if (match.protocol != MatchmakingSession.Protocol.ToString()) reasons.Add(_loc.T("BeaverBuddies.Match.Incompatible.Protocol"));
-                if (reasons.Count == 0 && match.hosted && match.otherMods) reasons.Add(_loc.T("BeaverBuddies.Match.Incompatible.Mods"));
-                if (reasons.Count == 0) reasons.Add(_loc.T("BeaverBuddies.Match.Incompatible.OldMod"));
-            }
-            return _loc.T("BeaverBuddies.Match.IncompatibleTitle") + "\n" + string.Join("\n", reasons.Select(r => "• " + r));
+            if (reasons.Count == 0) reasons.Add(_loc.T("BeaverBuddies.Match.Incompatible.OldMod"));
+            return reasons;
         }
 
-        // The mods a match plays with, and which of them this player lacks or has in another version
-        internal string Mods(OpenMatch match)
+        private static string BeaverBuddiesVersion(List<MatchMods.Entry> mods) =>
+            mods?.FirstOrDefault(m => string.Equals(m.id, Plugin.ID, StringComparison.OrdinalIgnoreCase))?.version;
+
+        // How their mods differ from this player's: only the differences, or that there are none
+        internal string Mods(MatchMods.Difference difference)
         {
-            if (match.mods == null) return _loc.T("BeaverBuddies.Match.ModsUnknown");
-            var mine = MatchMods.Local.GroupBy(m => m.id).ToDictionary(g => g.Key, g => g.First().version);
-            var lines = match.mods.Select(m =>
+            if (difference == null) return _loc.T("BeaverBuddies.Match.ModsUnknown");
+            if (difference.None) return _loc.T("BeaverBuddies.Match.ModsSame", difference.Same);
+            var text = new System.Text.StringBuilder();
+            string Name(MatchMods.Entry m) => m.name ?? m.id;
+            void Group(string titleKey, IEnumerable<string> lines)
             {
-                string line = $"• {m.name ?? m.id} {m.version}";
-                if (!mine.TryGetValue(m.id, out string version)) return line + " " + _loc.T("BeaverBuddies.Match.ModMissing");
-                return version != m.version ? line + " " + _loc.T("BeaverBuddies.Match.ModOtherVersion", version) : line;
-            });
-            return _loc.T("BeaverBuddies.Match.ModsTitle") + "\n" + string.Join("\n", lines);
+                var list = lines.ToList();
+                if (list.Count == 0) return;
+                text.Append(_loc.T(titleKey)).Append("\n");
+                foreach (string line in list) text.Append("• ").Append(line).Append("\n");
+            }
+            Group("BeaverBuddies.Match.ModsMissing", difference.Missing.Select(m => $"{Name(m)} {m.version}"));
+            Group("BeaverBuddies.Match.ModsOtherVersion", difference.OtherVersion.Select(p => _loc.T("BeaverBuddies.Match.ModVersions", Name(p.theirs), p.theirs.version, p.mine.version)));
+            Group("BeaverBuddies.Match.ModsOnlyMine", difference.OnlyMine.Select(m => $"{Name(m)} {m.version}"));
+            if (difference.Same > 0) text.Append(_loc.T("BeaverBuddies.Match.ModsAlsoSame", difference.Same));
+            return text.ToString().TrimEnd();
         }
 
         // The faction dropdown
@@ -338,8 +398,10 @@ namespace BeaverBuddies.Matchmaking
             if (icon == null)
             {
                 icon = new VisualElement { name = IconName };
-                icon.style.width = icon.style.height = 18;
-                icon.style.marginRight = 6;
+                // No taller than the name's own line, so it stays clear of the row's lines
+                icon.style.width = icon.style.height = 14;
+                icon.style.marginRight = 5;
+                icon.style.marginTop = icon.style.marginBottom = 0;
                 icon.style.flexShrink = 0;
                 icon.style.alignSelf = Align.Center;
                 // Beside the name, on its line
@@ -349,7 +411,10 @@ namespace BeaverBuddies.Matchmaking
                 name.parent.Insert(name.parent.IndexOf(name), line);
                 line.Add(icon);
                 line.Add(name);
+                // The store's name on hover: the mark alone is small
+                _tooltipRegistrar.Register(icon, () => icon.userData as string ?? "");
             }
+            icon.userData = platform switch { "steam" => "Steam", "epic" => "Epic Games", _ => null };
             Sprite sprite = PlatformSprite(platform);
             icon.style.backgroundImage = sprite != null ? new StyleBackground(sprite) : new StyleBackground(StyleKeyword.None);
             icon.ToggleDisplayStyle(sprite != null);
@@ -385,6 +450,7 @@ namespace BeaverBuddies.Matchmaking
             if (!_open) return;
             _open = false;
             MatchList.Changed -= Fill;
+            MatchList.Mocked = false;
             _panelStack.Pop(this);
         }
 

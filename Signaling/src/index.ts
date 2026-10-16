@@ -143,18 +143,32 @@ export class Room extends DurableObject<Env> {
 // A lobby nobody relisted for this long is gone (see lobby.ts, which relists every minute)
 const LOBBY_LIFETIME = 150 * 1000;
 
-// Where the lobbies list themselves, for search
+// Where the lobbies list themselves, for search. Kept in storage too: the
+// object can be restarted at any time, and a lobby only relists once a minute.
 export class Directory extends DurableObject<Env> {
-	// In memory only: each lobby relists itself every minute
 	private lobbies = new Map<string, LobbySummary & { until: number }>();
+	private loaded = false;
+
+	private async load() {
+		if (this.loaded) return;
+		this.loaded = true;
+		for (const [id, lobby] of await this.ctx.storage.list<LobbySummary & { until: number }>({ prefix: "lobby:" })) {
+			this.lobbies.set(id.slice(6), lobby);
+		}
+	}
 
 	// From the lobbies themselves (see lobby.ts), never from outside
 	async putLobby(summary: LobbySummary) {
-		this.lobbies.set(summary.id, { ...summary, until: Date.now() + LOBBY_LIFETIME });
+		await this.load();
+		const listed = { ...summary, until: Date.now() + LOBBY_LIFETIME };
+		this.lobbies.set(summary.id, listed);
+		await this.ctx.storage.put("lobby:" + summary.id, listed);
 	}
 
 	async deleteLobby(id: string) {
+		await this.load();
 		this.lobbies.delete(id);
+		await this.ctx.storage.delete("lobby:" + id);
 	}
 
 	/**
@@ -172,6 +186,7 @@ export class Directory extends DurableObject<Env> {
 		for (const [id, lobby] of this.lobbies) {
 			if (lobby.until <= now) {
 				this.lobbies.delete(id);
+				this.ctx.storage.delete("lobby:" + id);
 				continue;
 			}
 			if (!lobby.joinable || lobby.members >= lobby.max) continue;
@@ -185,6 +200,7 @@ export class Directory extends DurableObject<Env> {
 
 	async fetch(request: Request): Promise<Response> {
 		if (request.method !== "GET") return new Response("Use GET", { status: 405 });
+		await this.load();
 		return this.searchLobbies(new URL(request.url));
 	}
 }
