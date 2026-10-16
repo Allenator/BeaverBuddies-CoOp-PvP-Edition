@@ -196,6 +196,9 @@ namespace BeaverBuddies.Modding
         // Sets a player's working hours some other way; true when it did
         public static void AddSetWorkingHoursInstead(Func<string, int, bool> hook) => WorkingHoursChangedEvent.SetHoursInstead.Add(hook);
 
+        // Told when the main menu switches to the Multiplayer buttons (true) or back, with the element holding the buttons
+        public static void AddMultiplayerMenuShown(Action<bool, UnityEngine.UIElements.VisualElement> hook) => Connect.MultiplayerMenu.Shown.Add(hook);
+
         // Whether this machine hosts a game in a Steam lobby friends can be invited to
         public static bool CanInvite() => Connect.Invites.CanInvite;
 

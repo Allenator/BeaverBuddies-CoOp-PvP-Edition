@@ -161,6 +161,9 @@ namespace BeaverBuddies.Connect
         }
 
         // The multiplayer buttons in place of the menu's, or the menu back
+        // Told when the main menu switches to the Multiplayer buttons or back, with the buttons' container (see ModBridge)
+        internal static readonly List<Action<bool, VisualElement>> Shown = new();
+
         private void ShowMultiplayer(bool multiplayer)
         {
             if (_container == null) return;
@@ -181,6 +184,7 @@ namespace BeaverBuddies.Connect
             }
             _discord?.ToggleDisplayStyle(multiplayer);
             foreach (Button button in _buttons) button.ToggleDisplayStyle(multiplayer && (_matchButtons.Contains(button) ? FindMatchAvailable : button != _joinButton || _openMatchesButton == null));
+            foreach (var hook in Shown) hook(multiplayer, _container);
         }
 
         private static bool FindMatchAvailable =>
