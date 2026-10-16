@@ -1,3 +1,7 @@
+v1.1.0-1.5.3
+* New "Steam friends only" box when you host a game. It keeps the game off the list of open matches, so only your Steam friends and the players you invite can join.
+* Players no longer need the same tool-only mods to play together.
+
 v1.1.0-1.5.2
 * You can't join a host with different mods or a different build of BeaverBuddies anymore, so those games no longer fall out of sync right away. Install the same ones from the same place as the host.
 * Loads on the Epic Games version of Timberborn.
