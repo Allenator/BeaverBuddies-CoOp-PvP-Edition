@@ -114,11 +114,10 @@ namespace BeaverBuddies.Matchmaking
          * it, as an invite does (see SteamOverlayConnectionService). The
          * faction picked goes to mods that let each player pick their own.
          */
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
         private void JoinHosted(OpenMatch match, string faction)
         {
             Plugin.Log($"[Match] Joining the hosted game {match.lobby} as {faction}");
-            SteamLobbies.EnterHostedGame(match.lobby, entered =>
+            Lobbies.Steam?.EnterHostedGame(match.lobby, entered =>
             {
                 if (!entered)
                 {

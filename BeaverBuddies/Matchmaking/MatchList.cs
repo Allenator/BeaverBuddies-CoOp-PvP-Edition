@@ -1,10 +1,8 @@
 #if IS_STEAM
 using BeaverBuddies.Steam;
-using Steamworks;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 namespace BeaverBuddies.Matchmaking
@@ -63,9 +61,9 @@ namespace BeaverBuddies.Matchmaking
 
         public static bool SteamListed => Lobbies.SteamUp;
 
-        // What each place last gave, merged once both are in. Null while waiting, or when it failed
+        // What each place last gave, merged once both are in; null where it failed
         private static List<OpenMatch> fromSteam, fromWorker;
-        private static bool steamPending, workerPending, steamFailed, workerFailed;
+        private static int waiting;
 
         // Made-up matches the test harness shows instead (see DevTools.TestHarness): no refresh replaces them while the list is open
         internal static bool Mocked { get; set; }
@@ -84,56 +82,50 @@ namespace BeaverBuddies.Matchmaking
             if (Loading || Mocked) return;
             Loading = true;
             Failed = false;
-            steamFailed = workerFailed = false;
             fromSteam = fromWorker = null;
-            steamPending = SteamListed;
-            workerPending = true;
-            if (steamPending) RequestSteam();
             var filter = new LobbyFilter { Most = 50 };
             filter.Equal[MatchKeys.Match] = "1";
             filter.Equal[MatchKeys.Open] = "1";
             if (!ShowIncompatible) filter.Equal[MatchKeys.Base] = MatchKeys.BaseValue;
+            ISteamLobbies steam = Lobbies.Steam;
+            waiting = steam != null ? 2 : 1;
+            steam?.Search(filter, ids =>
+            {
+                fromSteam = ids?.Select(id => Read(id, steam.Owner(id), key => steam.Data(id, key), fromSteamLobby: true)).Where(m => m != null).ToList();
+                Merge();
+            });
             WorkerLobbies.Search(filter, lobbies =>
             {
-                workerPending = false;
-                workerFailed = lobbies == null;
-                fromWorker = lobbies?.Select(FromLobby).Where(m => m != null).ToList();
+                fromWorker = lobbies?.Select(l => Read(l.Id, l.Owner, key => l.Data.TryGetValue(key, out string value) ? value : null, fromSteamLobby: false))
+                    .Where(m => m != null).ToList();
                 Merge();
             });
             Changed?.Invoke();
         }
 
-        // Apart, so that compiling Refresh never loads Steam's types in a copy without them
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        private static void RequestSteam() => SteamLobbyList.Request(ShowIncompatible, OnSteamListed);
-
-        private static void OnSteamListed(List<OpenMatch> matches)
-        {
-            steamPending = false;
-            steamFailed = matches == null;
-            fromSteam = matches;
-            Merge();
-        }
-
-        private static OpenMatch FromLobby(LobbySummary lobby)
+        /**
+         * An open match from a lobby's data, Steam's or the Worker's. A hosted
+         * game's Worker lobby only lists it: it's joined by its Steam lobby or
+         * its join code.
+         */
+        private static OpenMatch Read(ulong id, ulong owner, Func<string, string> raw, bool fromSteamLobby)
         {
             // Two test copies list theirs side by side (see DevTools.TestHarness)
-            if (lobby.Owner == Lobbies.Me && !DevTools.TestHarness.Active) return null;
-            string Data(string key) => lobby.Data.TryGetValue(key, out string value) && !string.IsNullOrEmpty(value) ? value : null;
+            if (owner == Lobbies.Me && !DevTools.TestHarness.Active) return null;
+            string Data(string key) => raw(key) is string value && value != "" ? value : null;
             MatchPicks picks = MatchPicks.FromJson(Data(MatchKeys.Picks));
             if (picks == null) return null;
             bool hosted = Data(MatchKeys.Kind) == MatchKeys.HostedKind;
-            if (hosted && Data(MatchKeys.Code) == null) return null;
+            if (hosted && !fromSteamLobby && Data(MatchKeys.Code) == null) return null;
             bool otherMods = Data(MatchKeys.Compat) != MatchKeys.CompatValue;
             ulong.TryParse(Data(MatchKeys.SteamLobby), out ulong steamLobby);
             return new OpenMatch
             {
-                // A hosted game is joined by its Steam lobby or its code, never its Worker lobby
-                lobby = hosted ? steamLobby : lobby.Id,
+                lobby = fromSteamLobby || !hosted ? id : steamLobby,
+                joinCode = hosted ? Data(MatchKeys.Code) : null,
+                platform = Data(MatchKeys.Platform) ?? (fromSteamLobby ? "steam" : "other"),
                 players = int.TryParse(Data(MatchKeys.Players), out int players) ? players : 0,
                 maxPlayers = MaxPlayers(picks),
-                joinCode = hosted ? Data(MatchKeys.Code) : null,
-                platform = Data(MatchKeys.Platform) ?? "other",
                 picks = picks,
                 hosted = hosted,
                 otherMods = otherMods,
@@ -152,9 +144,9 @@ namespace BeaverBuddies.Matchmaking
 
         private static void Merge()
         {
-            if (steamPending || workerPending || Mocked) return;
+            if (--waiting > 0 || Mocked) return;
             Loading = false;
-            Failed = (steamFailed || !SteamListed) && workerFailed;
+            Failed = fromSteam == null && fromWorker == null;
             var all = new List<OpenMatch>(fromSteam ?? new List<OpenMatch>());
             foreach (OpenMatch listed in fromWorker ?? new List<OpenMatch>())
             {
@@ -176,68 +168,5 @@ namespace BeaverBuddies.Matchmaking
         }
     }
 
-    // The Steam lobbies listed, only asked for with Steam there
-    internal static class SteamLobbyList
-    {
-        private const int Most = 50;
-        private static CallResult<LobbyMatchList_t> listed;
-        private static Action<List<OpenMatch>> done;
-
-        public static void Request(bool showIncompatible, Action<List<OpenMatch>> then)
-        {
-            done = then;
-            listed ??= CallResult<LobbyMatchList_t>.Create(OnListed);
-            SteamMatchmaking.AddRequestLobbyListStringFilter(MatchmakingSession.MatchKey, "1", ELobbyComparison.k_ELobbyComparisonEqual);
-            if (!showIncompatible) SteamMatchmaking.AddRequestLobbyListStringFilter(MatchmakingSession.BaseKey, MatchmakingSession.Base, ELobbyComparison.k_ELobbyComparisonEqual);
-            SteamMatchmaking.AddRequestLobbyListStringFilter(MatchmakingSession.OpenKey, "1", ELobbyComparison.k_ELobbyComparisonEqual);
-            SteamMatchmaking.AddRequestLobbyListFilterSlotsAvailable(1);
-            SteamMatchmaking.AddRequestLobbyListDistanceFilter(ELobbyDistanceFilter.k_ELobbyDistanceFilterWorldwide);
-            SteamMatchmaking.AddRequestLobbyListResultCountFilter(Most);
-            listed.Set(SteamMatchmaking.RequestLobbyList());
-        }
-
-        private static void OnListed(LobbyMatchList_t list, bool failed)
-        {
-            if (failed)
-            {
-                done?.Invoke(null);
-                return;
-            }
-            var matches = new List<OpenMatch>();
-            ulong me = SteamUser.GetSteamID().m_SteamID;
-            for (int i = 0; i < list.m_nLobbiesMatching; i++)
-            {
-                CSteamID id = SteamMatchmaking.GetLobbyByIndex(i);
-                // Two test copies of the game share one Steam account (see DevTools.TestHarness)
-                if (SteamMatchmaking.GetLobbyOwner(id).m_SteamID == me && !DevTools.TestHarness.Active) continue;
-                MatchPicks picks = MatchPicks.FromJson(SteamMatchmaking.GetLobbyData(id, MatchmakingSession.PicksKey));
-                if (picks == null) continue;
-                bool hosted = SteamMatchmaking.GetLobbyData(id, MatchmakingSession.KindKey) == MatchmakingSession.HostedKind;
-                bool otherMods = SteamMatchmaking.GetLobbyData(id, MatchmakingSession.CompatKey) != MatchmakingSession.Compat;
-                matches.Add(new OpenMatch
-                {
-                    lobby = id.m_SteamID,
-                    platform = "steam",
-                    players = int.TryParse(SteamMatchmaking.GetLobbyData(id, MatchKeys.Players), out int players) ? players : 0,
-                    maxPlayers = MatchList.MaxPlayers(picks),
-                    picks = picks,
-                    hosted = hosted,
-                    otherMods = otherMods,
-                    mods = MatchMods.FromJson(SteamMatchmaking.GetLobbyData(id, MatchmakingSession.ModsKey)),
-                    compatible = SteamMatchmaking.GetLobbyData(id, MatchmakingSession.BaseKey) == MatchmakingSession.Base && !(hosted && otherMods),
-                    protocol = Data(id, MatchmakingSession.ProtocolKey),
-                    game = Data(id, MatchmakingSession.GameKey),
-                    debug = Data(id, MatchmakingSession.DebugKey),
-                });
-            }
-            done?.Invoke(matches);
-        }
-
-        private static string Data(CSteamID id, string key)
-        {
-            string value = SteamMatchmaking.GetLobbyData(id, key);
-            return string.IsNullOrEmpty(value) ? null : value;
-        }
-    }
 }
 #endif

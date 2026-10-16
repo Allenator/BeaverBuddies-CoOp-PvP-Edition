@@ -4,10 +4,7 @@ using BeaverBuddies.MultiStart;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 using Timberborn.NewGameConfigurationSystem;
-using Timberborn.Versioning;
 using UnityEngine;
 
 namespace BeaverBuddies.Matchmaking
@@ -70,12 +67,8 @@ namespace BeaverBuddies.Matchmaking
         // How long a lobby's owner waits for a player getting its mods and restarting
         private const float UpdateWait = 420;
 
-        // Lobby data (see MatchKeys)
-        internal const string MatchKey = MatchKeys.Match, BaseKey = MatchKeys.Base, CompatKey = MatchKeys.Compat, ModsKey = MatchKeys.Mods,
-            OpenKey = MatchKeys.Open, MapKey = MatchKeys.Map, ModeKey = MatchKeys.Mode, OptionsKey = MatchKeys.Options, PicksKey = MatchKeys.Picks, ResultKey = "bb.match.result";
-        internal const string ProtocolKey = MatchKeys.Protocol, GameKey = MatchKeys.Game, DebugKey = MatchKeys.Debug;
-        internal const string KindKey = MatchKeys.Kind, QuickKind = MatchKeys.QuickKind, HostedKind = MatchKeys.HostedKind;
-        internal const int Protocol = MatchKeys.ProtocolVersion;
+        // Lobby data beyond what the lists read (see MatchKeys): the owner's settling of the match
+        private const string ResultKey = "bb.match.result";
         // Member data: the hosting player's game (its Steam lobby, and its
         // join code), who may not own the lobby, and a player getting the
         // owner's mods to come back with
@@ -99,7 +92,7 @@ namespace BeaverBuddies.Matchmaking
         // How many times this player restarted for the match they're going back into
         private static int restarts;
         // Lobbies whose owner's mods this player can't match: not joined again this search
-        private static readonly System.Collections.Generic.HashSet<ulong> skipped = new();
+        private static readonly HashSet<ulong> skipped = new();
         private static bool looking;
         // A match this player picked from the list of open ones (see
         // MatchList): if it's gone, they go back to the list rather than on
@@ -148,7 +141,7 @@ namespace BeaverBuddies.Matchmaking
             looking = false;
             startedAt = Time.realtimeSinceStartup;
             // Only players with the same of all of these play together: to compare when two can't
-            Plugin.Log($"[Match] Compatible with {Compat}: {MatchKeys.CompatParts}; detailed logging {(Settings.Debug ? "on" : "off")}");
+            Plugin.Log($"[Match] Compatible with {MatchKeys.CompatValue}: {MatchKeys.CompatParts}; detailed logging {(Settings.Debug ? "on" : "off")}");
         }
 
         // Into one of the open matches, picked from the list
@@ -196,22 +189,20 @@ namespace BeaverBuddies.Matchmaking
             if (awaiting != 0 && Time.realtimeSinceStartup > awaitUntil) StopAwaiting();
         }
 
-        internal static string Base => MatchKeys.BaseValue;
-        internal static string Compat => MatchKeys.CompatValue;
 
 
         private static void Look()
         {
             looking = true;
             var filter = new LobbyFilter { Most = 20 };
-            filter.Equal[MatchKey] = "1";
-            filter.Equal[BaseKey] = Base;
-            filter.Equal[OpenKey] = "1";
-            filter.Equal[KindKey] = QuickKind;
+            filter.Equal[MatchKeys.Match] = "1";
+            filter.Equal[MatchKeys.Base] = MatchKeys.BaseValue;
+            filter.Equal[MatchKeys.Open] = "1";
+            filter.Equal[MatchKeys.Kind] = MatchKeys.QuickKind;
             // Mods' options always have to match, however long the wait
-            filter.Equal[OptionsKey] = Mine.OptionsKey;
-            if (Waited < AnyoneAfter) filter.Equal[MapKey] = Mine.MapKey;
-            if (Waited < SameMapAfter) filter.Equal[ModeKey] = Mine.ModeKey;
+            filter.Equal[MatchKeys.Options] = Mine.OptionsKey;
+            if (Waited < AnyoneAfter) filter.Equal[MatchKeys.Map] = Mine.MapKey;
+            if (Waited < SameMapAfter) filter.Equal[MatchKeys.Mode] = Mine.ModeKey;
             Lobbies.Search(filter, OnListed);
         }
 
@@ -255,7 +246,7 @@ namespace BeaverBuddies.Matchmaking
                 return;
             }
             Attach(created);
-            Describe(lobby, Mine, QuickKind);
+            Describe(lobby, Mine, MatchKeys.QuickKind);
             State = MatchState.Waiting;
             nextLookAt = Time.realtimeSinceStartup + LookEvery;
             Plugin.Log($"[Match] Waiting in {lobby.Id}");
@@ -273,7 +264,7 @@ namespace BeaverBuddies.Matchmaking
         // What the list and the search read of a lobby, and open
         internal static void Describe(ILobby described, MatchPicks picks, string kind)
         {
-            foreach (var pair in MatchKeys.Describe(picks, kind)) described.SetData(pair.Key, pair.Value);
+            described.SetData(MatchKeys.Describe(picks, kind));
         }
 
         private static void OnEntered(ulong id, ILobby entered)
@@ -298,14 +289,14 @@ namespace BeaverBuddies.Matchmaking
             }
             Attach(entered);
             opponent = lobby.Owner;
-            Theirs = MatchPicks.FromJson(lobby.GetData(PicksKey));
-            string theirCompat = lobby.GetData(CompatKey);
-            if (theirCompat != Compat)
+            Theirs = MatchPicks.FromJson(lobby.GetData(MatchKeys.Picks));
+            string theirCompat = lobby.GetData(MatchKeys.Compat);
+            if (theirCompat != MatchKeys.CompatValue)
             {
                 ModsDiffer(theirCompat);
                 return;
             }
-            lobby.SetMemberData(PicksKey, Mine.ToJson());
+            lobby.SetMemberData(MatchKeys.Picks, Mine.ToJson());
             State = MatchState.Matched;
             Plugin.Log($"[Match] Matched with {OpponentName} in {lobby.Id}");
             Changed?.Invoke();
@@ -319,11 +310,11 @@ namespace BeaverBuddies.Matchmaking
          */
         private static void ModsDiffer(string theirCompat)
         {
-            List<MatchMods.Entry> theirs = MatchMods.FromJson(lobby.GetData(ModsKey));
+            List<MatchMods.Entry> theirs = MatchMods.FromJson(lobby.GetData(MatchKeys.Mods));
             MatchMods.Plan plan = theirs == null ? null : MatchMods.PlanFor(theirs);
             // Their mods come from the Steam Workshop: without Steam there's no getting them
             if (plan != null && !Lobbies.SteamUp) plan.Unfixable.Add("Steam Workshop");
-            Plugin.Log($"[Match] {OpponentName} plays with other mods ({theirCompat} against our {Compat}): {plan?.ToString() ?? "their list is missing"}");
+            Plugin.Log($"[Match] {OpponentName} plays with other mods ({theirCompat} against our {MatchKeys.CompatValue}): {plan?.ToString() ?? "their list is missing"}");
             if ((plan == null || !plan.Fixable || restarts > 0) && Chosen)
             {
                 Fail(restarts > 0 ? "BeaverBuddies.Match.ModsStillDiffer" : "BeaverBuddies.Match.ModsDiffer");
@@ -373,7 +364,7 @@ namespace BeaverBuddies.Matchmaking
             Theirs = null;
             Result = null;
             Problem = "BeaverBuddies.Match.OpponentLeft";
-            lobby.SetData(OpenKey, "1");
+            lobby.SetData(MatchKeys.Open, "1");
             lobby.SetJoinable(true);
             State = MatchState.Waiting;
             nextLookAt = Time.realtimeSinceStartup;
@@ -390,7 +381,7 @@ namespace BeaverBuddies.Matchmaking
             Theirs = null;
             Result = null;
             opponent = user;
-            lobby.SetData(OpenKey, "0");
+            lobby.SetData(MatchKeys.Open, "0");
             lobby.SetJoinable(false);
             State = MatchState.Matched;
             Plugin.Log($"[Match] {lobby.MemberName(user)} joined {lobby.Id}");
@@ -458,7 +449,7 @@ namespace BeaverBuddies.Matchmaking
         private static void Settle()
         {
             if (State != MatchState.Matched || Result != null || !IsOwner) return;
-            Theirs ??= MatchPicks.FromJson(lobby.GetMemberData(opponent, PicksKey));
+            Theirs ??= MatchPicks.FromJson(lobby.GetMemberData(opponent, MatchKeys.Picks));
             if (Theirs == null) return;
             Result = MatchResult.Settle(Me, Mine, opponent, Theirs, MatchHooks.FactionsMix, random);
             lobby.SetData(ResultKey, Result.ToJson());
@@ -528,7 +519,7 @@ namespace BeaverBuddies.Matchmaking
         public static void ServerReady(ulong server)
         {
             if (State != MatchState.Hosting || lobby == null) return;
-            SteamLobbies.MakePublic(server);
+            Lobbies.Steam?.MakePublic(server);
             lobby.SetMemberData(CodeKey, WebRtc.JoinCode.Current ?? "");
             lobby.SetMemberData(ServerKey, server.ToString());
             Plugin.Log($"[Match] Hosting the game in {server}");
@@ -557,7 +548,7 @@ namespace BeaverBuddies.Matchmaking
                 State = MatchState.Joined;
                 // Entering the game's lobby connects to its owner, as for a
                 // friend's game (see SteamOverlayConnectionService)
-                EnterOverSteam(server);
+                Lobbies.Steam.EnterHostedGame(server);
             }
             else if (!string.IsNullOrEmpty(code))
             {
@@ -569,10 +560,6 @@ namespace BeaverBuddies.Matchmaking
             Leave();
             Changed?.Invoke();
         }
-
-        // Apart, so that compiling ReadServer never loads Steam's types in a copy without them
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
-        private static void EnterOverSteam(ulong server) => SteamLobbies.EnterHostedGame(server);
 
         // Whether the hosted game should start: the other player is in
         public static bool ShouldStartWith(int clients) => State == MatchState.Hosting && clients >= 1;

@@ -15,7 +15,7 @@ namespace TimberNet
         int MaxChunkSize { get; }
         int MaxBytesPerSecond { get; }
 
-        // How long connecting may take before it counts as failed
+        // How long connecting may take before it counts as failed (it runs in the background, see TimberClient.Start)
         int ConnectTimeoutMs => 3000;
 
         int Read(byte[] buffer, int offset, int count);

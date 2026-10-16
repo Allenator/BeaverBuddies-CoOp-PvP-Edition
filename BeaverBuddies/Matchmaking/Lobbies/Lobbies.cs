@@ -22,6 +22,8 @@ namespace BeaverBuddies.Matchmaking
         // What the owner says about the lobby: only they write it
         string GetData(string key);
         void SetData(string key, string value);
+        // Many at once: the Worker's lobby takes them in one message
+        void SetData(IReadOnlyDictionary<string, string> values);
         // What each member says about themselves
         string GetMemberData(ulong member, string key);
         void SetMemberData(string key, string value);
@@ -35,6 +37,24 @@ namespace BeaverBuddies.Matchmaking
         event Action DataChanged;
         // This player lost the lobby without leaving it (the Worker's: the connection dropped)
         event Action Lost;
+    }
+
+    /** What matchmaking needs of Steam (see Lobbies.Steam), in types a copy without Steam has too. */
+    public interface ISteamLobbies
+    {
+        ulong Me { get; }
+        void Search(LobbyFilter filter, Action<List<ulong>> found);
+        void Create(int max, Action<ILobby> created);
+        void Join(ulong id, Action<ILobby> entered);
+        // A listed lobby's data, which a search brings along, and its owner
+        string Data(ulong lobby, string key);
+        ulong Owner(ulong lobby);
+        // A hosted game's lobby: listed, described, entered to join the game
+        void MakePublic(ulong lobby);
+        void SetData(ulong lobby, IReadOnlyDictionary<string, string> values);
+        void EnterHostedGame(ulong lobby, Action<bool> done = null);
+        // Online friends to invite to the hosted game, as buttons; false without a lobby to invite to
+        bool AddFriends(UnityEngine.UIElements.VisualElement content, Timberborn.Localization.ILoc loc, out string message);
     }
 
     // Lobbies whose data has each of these, with room for one more
@@ -76,43 +96,41 @@ namespace BeaverBuddies.Matchmaking
             return store.Any(n => n.IndexOf("Epic", StringComparison.OrdinalIgnoreCase) >= 0) ? "epic" : "other";
         }
 
-        public static ulong Me => SteamUp ? SteamMe() : WorkerLobbies.Me;
+        /**
+         * Steam's half of matchmaking, when Steam is up; null when not. The one
+         * way to Steam from code that also runs without it: only the factory
+         * names the Steam class, so a copy without Steam never loads it.
+         */
+        public static ISteamLobbies Steam => SteamUp ? steam ??= CreateSteam() : null;
+        private static ISteamLobbies steam;
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static ISteamLobbies CreateSteam() => new SteamLobbies();
+
+        public static ulong Me => Steam?.Me ?? WorkerLobbies.Me;
 
         public static bool IsWorker(ulong id) => id < WorkerIdsBelow;
-
-        // What only Steam knows of, apart so a copy without Steam never compiles them
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        private static ulong SteamMe() => SteamLobbies.Me;
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        private static void SteamSearch(LobbyFilter filter, Action<List<ulong>> found) => SteamLobbies.Search(filter, found);
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        private static void SteamCreate(int max, Action<ILobby> created) => SteamLobbies.Create(max, created);
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        private static void SteamJoin(ulong id, Action<ILobby> entered) => SteamLobbies.Join(id, entered);
 
         /** Every lobby the filter finds, lowest id first; null if no place could be searched. */
         public static void Search(LobbyFilter filter, Action<List<ulong>> found)
         {
-            bool steam = SteamUp;
+            ISteamLobbies steam = Steam;
             List<ulong> fromSteam = null, fromWorker = null;
-            int waiting = steam ? 2 : 1;
+            int waiting = steam != null ? 2 : 1;
             void Done()
             {
                 if (--waiting > 0) return;
                 found(fromSteam == null && fromWorker == null ? null
                     : (fromSteam ?? new List<ulong>()).Concat(fromWorker ?? new List<ulong>()).Distinct().OrderBy(id => id).ToList());
             }
-            if (steam) SteamSearch(filter, ids => { fromSteam = ids; Done(); });
+            steam?.Search(filter, ids => { fromSteam = ids; Done(); });
             WorkerLobbies.Search(filter, lobbies => { fromWorker = lobbies?.Select(l => l.Id).ToList(); Done(); });
         }
 
         /** A new lobby this player owns, public and joinable; null if it couldn't be made. */
         public static void Create(int max, Action<ILobby> created)
         {
-            if (SteamUp) SteamCreate(max, created);
+            if (Steam != null) Steam.Create(max, created);
             else WorkerLobbies.Create(max, created);
         }
 
@@ -120,7 +138,7 @@ namespace BeaverBuddies.Matchmaking
         public static void Join(ulong id, Action<ILobby> entered)
         {
             if (IsWorker(id)) WorkerLobbies.Join(id, entered);
-            else if (SteamUp) SteamJoin(id, entered);
+            else if (Steam != null) Steam.Join(id, entered);
             else entered(null);
         }
 

@@ -123,7 +123,7 @@ namespace BeaverBuddies
                 containerDefinition.Bind<SteamOverlayConnectionService>().AsSingleton();
             }
             containerDefinition.Bind<Matchmaking.MatchmakingUI>().AsSingleton();
-            // Steam's lobbies or not, it lists the hosted games in the directory (see MatchList)
+            // With Steam or not: it lists Steam's lobbies and the Worker's (see MatchList)
             containerDefinition.Bind<Matchmaking.HostBrowser>().AsSingleton();
 #else
             containerDefinition.Bind<SteamOverlayConnectionService>().AsSingleton();

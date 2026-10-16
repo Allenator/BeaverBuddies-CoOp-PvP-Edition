@@ -73,9 +73,7 @@ namespace BeaverBuddies.Matchmaking
 
         public static void Create(int max, Action<ILobby> created)
         {
-            byte[] bytes = new byte[8];
-            using (var random = RandomNumberGenerator.Create()) random.GetBytes(bytes);
-            ulong id = Math.Max(BitConverter.ToUInt64(bytes, 0) % Lobbies.WorkerIdsBelow, 1);
+            ulong id = Math.Max(BitConverter.ToUInt64(JoinCode.RandomBytes(8), 0) % Lobbies.WorkerIdsBelow, 1);
             Open(id, $"&create=1&max={max}", created);
         }
 
@@ -181,7 +179,7 @@ namespace BeaverBuddies.Matchmaking
                     break;
                 }
                 case "data":
-                    data[(string)message["key"]] = (string)message["value"];
+                    foreach (var pair in (JObject)message["values"] ?? new JObject()) data[pair.Key] = (string)pair.Value;
                     DataChanged?.Invoke();
                     break;
                 case "memberData":
@@ -214,11 +212,18 @@ namespace BeaverBuddies.Matchmaking
 
         public string GetData(string key) => data.TryGetValue(key, out string value) ? value : "";
 
-        public void SetData(string key, string value)
+        public void SetData(string key, string value) => SetData(new Dictionary<string, string> { [key] = value });
+
+        public void SetData(IReadOnlyDictionary<string, string> values)
         {
             if (Owner != Lobbies.Me) return;
-            data[key] = value;
-            Send(new JObject { ["type"] = "data", ["key"] = key, ["value"] = value });
+            var sent = new JObject();
+            foreach (var pair in values)
+            {
+                data[pair.Key] = pair.Value;
+                sent[pair.Key] = pair.Value;
+            }
+            Send(new JObject { ["type"] = "data", ["values"] = sent });
         }
 
         public string GetMemberData(ulong member, string key) =>

@@ -22,12 +22,18 @@ namespace BeaverBuddies.WebRtc
             // Test copies agree on a code ahead of time (see DevTools.TestHarness)
             string forced = Environment.GetEnvironmentVariable("BB_RTC_CODE");
             if (!string.IsNullOrEmpty(forced)) return Current = forced.ToUpperInvariant();
-            byte[] bytes = new byte[6];
-            using (var random = RandomNumberGenerator.Create()) random.GetBytes(bytes);
-            return Current = new string(bytes.Select(b => Alphabet[b % Alphabet.Length]).ToArray());
+            return Current = new string(RandomBytes(6).Select(b => Alphabet[b % Alphabet.Length]).ToArray());
         }
 
         public static void Clear() => Current = null;
+
+        // Not Guid.NewGuid or Unity's random: those are the game's, which every copy has to draw from alike (see GuidPatcher)
+        internal static byte[] RandomBytes(int count)
+        {
+            byte[] bytes = new byte[count];
+            using (var random = RandomNumberGenerator.Create()) random.GetBytes(bytes);
+            return bytes;
+        }
 
         public static string Display(string code) => code.Length == 6 ? code.Substring(0, 3) + "-" + code.Substring(3) : code;
 

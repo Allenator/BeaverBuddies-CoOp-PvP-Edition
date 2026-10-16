@@ -24,9 +24,8 @@ namespace BeaverBuddies.WebRtc
         // it. There's no TURN relay: the few players behind NATs that can't be
         // punched through join by address instead.
         internal static readonly string[] StunServers = { "stun:stun.cloudflare.com:3478", "stun:stun.l.google.com:19302" };
-        // TimberClient waits for this on Unity's thread, so the game stands still while it does: two
-        // copies connect in a second or two, and one that takes much longer won't connect at all
-        private static readonly TimeSpan ConnectTimeout = TimeSpan.FromSeconds(8);
+        // Two copies connect in a second or two; through a hard NAT it can take a while longer, or never happen
+        private static readonly TimeSpan ConnectTimeout = TimeSpan.FromSeconds(15);
         // A match's host passes its code on as it starts hosting, a moment before its room is open
         private static readonly TimeSpan RoomWait = TimeSpan.FromSeconds(4);
 
@@ -62,7 +61,7 @@ namespace BeaverBuddies.WebRtc
             iceServers = StunServers.Select(url => new RTCIceServer { urls = url }).ToList(),
         });
 
-        // Off Unity's thread: TimberClient waits for this on it, so awaits resuming there would never run
+        // Off Unity's thread, whoever calls it: nothing here needs to resume there
         public Task ConnectAsync() => Task.Run(Connect);
 
         private async Task Connect()
@@ -100,7 +99,8 @@ namespace BeaverBuddies.WebRtc
         {
             using Signaling signaling = await OpenRoom();
             peer = NewPeer();
-            var opened = new TaskCompletionSource<bool>();
+            // Not inline on SIPSorcery's thread, which delivers the channel's messages: whatever awaits this mustn't hold it
+            var opened = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
             peer.onicecandidate += candidate =>
             {
                 if (candidate == null) return;

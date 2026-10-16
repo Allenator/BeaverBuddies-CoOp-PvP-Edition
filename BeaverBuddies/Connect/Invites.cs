@@ -1,5 +1,4 @@
 using BeaverBuddies.IO;
-using System.Runtime.CompilerServices;
 using Timberborn.CoreUI;
 using Timberborn.Localization;
 using UnityEngine;
@@ -47,7 +46,10 @@ namespace BeaverBuddies.Connect
             content.Add(codeRow);
 
             string message = loc.T("BeaverBuddies.Host.InviteByCode");
-            if (Matchmaking.Lobbies.SteamUp && AddSteamFriends(content, loc, out string friendsMessage)) message += "\n\n" + friendsMessage;
+#if IS_STEAM
+            string friendsMessage = null;
+            if (Matchmaking.Lobbies.Steam?.AddFriends(content, loc, out friendsMessage) == true) message += "\n\n" + friendsMessage;
+#endif
 
             shower.Create()
                 .SetMessage(message)
@@ -55,10 +57,5 @@ namespace BeaverBuddies.Connect
                 .SetConfirmButton(() => { }, loc.T("BeaverBuddies.Menu.Back"))
                 .Show();
         }
-
-        // Apart, so a copy without Steam never compiles what touches it
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        private static bool AddSteamFriends(VisualElement content, ILoc loc, out string message) =>
-            Steam.SteamInvites.AddFriends(content, loc, out message);
     }
 }

@@ -34,7 +34,8 @@ namespace BeaverBuddies.Matchmaking
      */
     public class HostBrowser : RegisteredSingleton, IPanelController, IUpdatableSingleton, IExtendedDropdownProvider
     {
-        private const float RefreshEvery = 10;
+        // A lobby relists itself once a minute: refreshing much more often only costs Worker requests
+        private const float RefreshEvery = 20;
 
         private readonly VisualElementLoader _visualElementLoader;
         private readonly PanelStack _panelStack;
@@ -311,7 +312,7 @@ namespace BeaverBuddies.Matchmaking
             string theirBB = BeaverBuddiesVersion(match.mods), myBB = BeaverBuddiesVersion(mine);
             bool otherBB = theirBB != null && myBB != null && theirBB != myBB;
             if (otherBB) reasons.Add(_loc.T("BeaverBuddies.Match.Incompatible.BeaverBuddies", theirBB, myBB));
-            else if (match.protocol != MatchmakingSession.Protocol.ToString()) reasons.Add(_loc.T("BeaverBuddies.Match.Incompatible.Protocol"));
+            else if (match.protocol != MatchKeys.ProtocolVersion.ToString()) reasons.Add(_loc.T("BeaverBuddies.Match.Incompatible.Protocol"));
             if (reasons.Count == 0 && match.otherMods)
             {
                 reasons.Add(difference != null && difference.None ? _loc.T("BeaverBuddies.Match.Incompatible.Build")

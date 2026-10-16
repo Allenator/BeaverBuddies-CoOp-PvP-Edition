@@ -6,62 +6,64 @@ using System.Collections.Generic;
 namespace BeaverBuddies.Matchmaking
 {
     /**
-     * Steam's lobbies, behind ILobby. The only part of matchmaking that
-     * touches Steam: only called when Steam is up (see Lobbies), so the Epic
-     * Games build never loads it. Steam's callbacks come on Unity's thread.
+     * Steam's lobbies, behind ILobby and ISteamLobbies. The only part of
+     * matchmaking that touches Steam: made by Lobbies.Steam when Steam is up,
+     * so the Epic Games build never loads it. Steam's callbacks come on
+     * Unity's thread.
      */
-    internal static class SteamLobbies
+    internal class SteamLobbies : ISteamLobbies
     {
-        private static CallResult<LobbyMatchList_t> listed;
+        // Searches in flight: each has its own call, so the list of open matches and Quick match can search at once
+        private static readonly HashSet<CallResult<LobbyMatchList_t>> searching = new();
         private static CallResult<LobbyCreated_t> created;
         private static CallResult<LobbyEnter_t> entered;
         private static CallResult<LobbyEnter_t> hostedEntered;
         private static Callback<LobbyChatUpdate_t> chatUpdated;
         private static Callback<LobbyDataUpdate_t> dataUpdated;
-        private static Action<List<ulong>> onListed;
         private static Action<ILobby> onCreated, onEntered;
         private static Action<bool> onHostedEntered;
         // The lobbies this player is in, for Steam's callbacks to reach
         private static readonly Dictionary<ulong, SteamLobby> open = new();
 
-        public static ulong Me => SteamUser.GetSteamID().m_SteamID;
+        public ulong Me => SteamUser.GetSteamID().m_SteamID;
 
         private static void Listen()
         {
             if (chatUpdated != null) return;
-            listed = CallResult<LobbyMatchList_t>.Create(OnListed);
             created = CallResult<LobbyCreated_t>.Create(OnCreated);
             entered = CallResult<LobbyEnter_t>.Create(OnEntered);
             chatUpdated = Callback<LobbyChatUpdate_t>.Create(OnChatUpdated);
             dataUpdated = Callback<LobbyDataUpdate_t>.Create(OnDataUpdated);
         }
 
-        public static void Search(LobbyFilter filter, Action<List<ulong>> found)
+        public void Search(LobbyFilter filter, Action<List<ulong>> found)
         {
-            Listen();
-            onListed = found;
             foreach (var pair in filter.Equal) SteamMatchmaking.AddRequestLobbyListStringFilter(pair.Key, pair.Value, ELobbyComparison.k_ELobbyComparisonEqual);
             SteamMatchmaking.AddRequestLobbyListFilterSlotsAvailable(1);
             SteamMatchmaking.AddRequestLobbyListDistanceFilter(ELobbyDistanceFilter.k_ELobbyDistanceFilterWorldwide);
             SteamMatchmaking.AddRequestLobbyListResultCountFilter(filter.Most);
-            listed.Set(SteamMatchmaking.RequestLobbyList());
-        }
-
-        private static void OnListed(LobbyMatchList_t list, bool failed)
-        {
-            var found = onListed;
-            onListed = null;
-            if (failed)
+            CallResult<LobbyMatchList_t> call = null;
+            call = CallResult<LobbyMatchList_t>.Create((list, failed) =>
             {
-                found?.Invoke(null);
-                return;
-            }
-            var ids = new List<ulong>();
-            for (int i = 0; i < list.m_nLobbiesMatching; i++) ids.Add(SteamMatchmaking.GetLobbyByIndex(i).m_SteamID);
-            found?.Invoke(ids);
+                searching.Remove(call);
+                if (failed)
+                {
+                    found(null);
+                    return;
+                }
+                var ids = new List<ulong>();
+                for (int i = 0; i < list.m_nLobbiesMatching; i++) ids.Add(SteamMatchmaking.GetLobbyByIndex(i).m_SteamID);
+                found(ids);
+            });
+            searching.Add(call);
+            call.Set(SteamMatchmaking.RequestLobbyList());
         }
 
-        public static void Create(int max, Action<ILobby> done)
+        // A listed lobby's data, which a search brings along, and its owner
+        public string Data(ulong lobby, string key) => SteamMatchmaking.GetLobbyData(new CSteamID(lobby), key);
+        public ulong Owner(ulong lobby) => SteamMatchmaking.GetLobbyOwner(new CSteamID(lobby)).m_SteamID;
+
+        public void Create(int max, Action<ILobby> done)
         {
             Listen();
             onCreated = done;
@@ -81,7 +83,7 @@ namespace BeaverBuddies.Matchmaking
             done?.Invoke(Track(result.m_ulSteamIDLobby));
         }
 
-        public static void Join(ulong id, Action<ILobby> done)
+        public void Join(ulong id, Action<ILobby> done)
         {
             Listen();
             onEntered = done;
@@ -123,6 +125,14 @@ namespace BeaverBuddies.Matchmaking
             if (open.TryGetValue(update.m_ulSteamIDLobby, out SteamLobby lobby)) lobby.DataUpdated();
         }
 
+        public void SetData(ulong lobby, IReadOnlyDictionary<string, string> values)
+        {
+            foreach (var pair in values) SteamMatchmaking.SetLobbyData(new CSteamID(lobby), pair.Key, pair.Value);
+        }
+
+        public bool AddFriends(UnityEngine.UIElements.VisualElement content, Timberborn.Localization.ILoc loc, out string message) =>
+            Steam.SteamInvites.AddFriends(content, loc, out message);
+
         // ---- Hosted games ----
 
         // A match's lobby rather than a hosted game's: entering it doesn't connect to its owner
@@ -130,13 +140,13 @@ namespace BeaverBuddies.Matchmaking
             SteamMatchmaking.GetLobbyData(id, MatchKeys.Match) == "1" && SteamMatchmaking.GetLobbyData(id, MatchKeys.Kind) != MatchKeys.HostedKind;
 
         // A hosted game's lobby anyone can join by its id
-        public static void MakePublic(ulong lobby) => SteamMatchmaking.SetLobbyType(new CSteamID(lobby), ELobbyType.k_ELobbyTypePublic);
+        public void MakePublic(ulong lobby) => SteamMatchmaking.SetLobbyType(new CSteamID(lobby), ELobbyType.k_ELobbyTypePublic);
 
         /**
          * Into a hosted game's lobby, which connects to the game as an invite
          * does (see SteamOverlayConnectionService): false if it's gone.
          */
-        public static void EnterHostedGame(ulong lobby, Action<bool> done = null)
+        public void EnterHostedGame(ulong lobby, Action<bool> done = null)
         {
             hostedEntered ??= CallResult<LobbyEnter_t>.Create((result, failed) =>
             {
@@ -187,6 +197,11 @@ namespace BeaverBuddies.Matchmaking
 
         public string GetData(string key) => SteamMatchmaking.GetLobbyData(id, key);
         public void SetData(string key, string value) => SteamMatchmaking.SetLobbyData(id, key, value);
+
+        public void SetData(IReadOnlyDictionary<string, string> values)
+        {
+            foreach (var pair in values) SetData(pair.Key, pair.Value);
+        }
         public string GetMemberData(ulong member, string key) => SteamMatchmaking.GetLobbyMemberData(id, new CSteamID(member), key);
         public void SetMemberData(string key, string value) => SteamMatchmaking.SetLobbyMemberData(id, key, value);
         public string MemberName(ulong member) => SteamFriends.GetFriendPersonaName(new CSteamID(member));

@@ -152,17 +152,21 @@ export class Directory extends DurableObject<Env> {
 	private async load() {
 		if (this.loaded) return;
 		this.loaded = true;
+		// Alive until their next relisting proves otherwise: the stored time is from their last change, not their last relist
 		for (const [id, lobby] of await this.ctx.storage.list<LobbySummary & { until: number }>({ prefix: "lobby:" })) {
-			this.lobbies.set(id.slice(6), lobby);
+			this.lobbies.set(id.slice(6), { ...lobby, until: Date.now() + LOBBY_LIFETIME });
 		}
 	}
 
 	// From the lobbies themselves (see lobby.ts), never from outside
 	async putLobby(summary: LobbySummary) {
 		await this.load();
+		const before = this.lobbies.get(summary.id);
 		const listed = { ...summary, until: Date.now() + LOBBY_LIFETIME };
 		this.lobbies.set(summary.id, listed);
-		await this.ctx.storage.put("lobby:" + summary.id, listed);
+		// A relist that changes nothing only moves the time, which needn't survive a restart (see load)
+		const { until, ...was } = before ?? { until: 0 };
+		if (!before || JSON.stringify(was) !== JSON.stringify(summary)) await this.ctx.storage.put("lobby:" + summary.id, listed);
 	}
 
 	async deleteLobby(id: string) {
@@ -183,10 +187,11 @@ export class Directory extends DurableObject<Env> {
 		}
 		const most = Math.min(Math.max(parseInt(url.searchParams.get("most") ?? "50") || 50, 1), 100);
 		const found: LobbySummary[] = [];
+		const expired: string[] = [];
 		for (const [id, lobby] of this.lobbies) {
 			if (lobby.until <= now) {
 				this.lobbies.delete(id);
-				this.ctx.storage.delete("lobby:" + id);
+				expired.push("lobby:" + id);
 				continue;
 			}
 			if (!lobby.joinable || lobby.members >= lobby.max) continue;
@@ -195,6 +200,8 @@ export class Directory extends DurableObject<Env> {
 			found.push(summary);
 			if (found.length >= most) break;
 		}
+		// In one go, at most 128 keys a call
+		for (let i = 0; i < expired.length; i += 128) this.ctx.storage.delete(expired.slice(i, i + 128));
 		return Response.json({ lobbies: found }, { headers: { "Cache-Control": "no-store" } });
 	}
 

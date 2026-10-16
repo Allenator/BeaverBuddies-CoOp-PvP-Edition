@@ -3,7 +3,6 @@ using BeaverBuddies.NewGame;
 using BeaverBuddies.Players;
 using BeaverBuddies.Steam;
 using Newtonsoft.Json.Linq;
-using Steamworks;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -30,7 +29,7 @@ namespace BeaverBuddies.Matchmaking
      * It has a Worker lobby too (see WorkerLobbies), with the game's join
      * code, for players without Steam. Only the host is in it, and it lasts
      * as long as they host. The Epic Games build can host and list a game as
-     * well, so nothing here may touch Steam but HostedLobby.
+     * well, so it reaches Steam only through Lobbies.Steam.
      */
     public static class HostedListing
     {
@@ -98,7 +97,7 @@ namespace BeaverBuddies.Matchmaking
         }
 
         // Anyone can find it: not kept to invites or Steam friends, and not a match's game, which only its other player joins
-        private static bool Listable => hosting != null && !friendsOnly && Settings.LobbyJoinable && !(SteamSupport.Installed && HostedLobby.HostsMatch);
+        private static bool Listable => hosting != null && !friendsOnly && Settings.LobbyJoinable && MatchmakingSession.State != MatchState.Hosting;
 
         /** Hosting started: in a Worker lobby with the join code, Steam or not. */
         public static void Publish()
@@ -125,10 +124,12 @@ namespace BeaverBuddies.Matchmaking
                     return;
                 }
                 workerLobby = created;
-                foreach (var pair in MatchKeys.Describe(hosting, MatchKeys.HostedKind)) created.SetData(pair.Key, pair.Value);
-                created.SetData(MatchKeys.Code, code);
-                if (lobby != 0) created.SetData(MatchKeys.SteamLobby, lobby.ToString());
-                PublishPlayers();
+                // All in one message: the lobby lists itself once
+                var data = MatchKeys.Describe(hosting, MatchKeys.HostedKind);
+                data[MatchKeys.Code] = code;
+                data[MatchKeys.Players] = players.ToString();
+                if (lobby != 0) data[MatchKeys.SteamLobby] = lobby.ToString();
+                created.SetData(data);
                 // The Worker restarted, or the network dropped: listed again
                 created.Lost += () =>
                 {
@@ -146,7 +147,8 @@ namespace BeaverBuddies.Matchmaking
             if (!Listable) return;
             lobby = server;
             listed = true;
-            HostedLobby.MakePublic(lobby, hosting);
+            Lobbies.Steam?.MakePublic(lobby);
+            Lobbies.Steam?.SetData(lobby, MatchKeys.Describe(hosting, MatchKeys.HostedKind));
             PublishPlayers();
             workerLobby?.SetData(MatchKeys.SteamLobby, lobby.ToString());
             Plugin.Log($"[Match] Listing the hosted game {lobby}: {hosting.mapTitle}");
@@ -170,7 +172,7 @@ namespace BeaverBuddies.Matchmaking
         private static void PublishPlayers()
         {
             workerLobby?.SetData(MatchKeys.Players, players.ToString());
-            if (lobby != 0) HostedLobby.SetData(lobby, MatchKeys.Players, players.ToString());
+            if (lobby != 0) Lobbies.Steam?.SetData(lobby, new Dictionary<string, string> { [MatchKeys.Players] = players.ToString() });
         }
 
         // The game started, or hosting stopped
@@ -186,25 +188,9 @@ namespace BeaverBuddies.Matchmaking
             }
             if (lobby == 0) return;
             Plugin.Log($"[Match] {lobby} is off the list");
-            HostedLobby.Close(lobby);
+            Lobbies.Steam?.SetData(lobby, new Dictionary<string, string> { [MatchKeys.Open] = "0" });
             lobby = 0;
         }
-    }
-
-    // The Steam side of HostedListing, only called with Steam there
-    internal static class HostedLobby
-    {
-        public static bool HostsMatch => MatchmakingSession.State == MatchState.Hosting;
-
-        public static void MakePublic(ulong lobby, MatchPicks picks)
-        {
-            SteamLobbies.MakePublic(lobby);
-            foreach (var pair in MatchKeys.Describe(picks, MatchKeys.HostedKind)) SetData(lobby, pair.Key, pair.Value);
-        }
-
-        public static void SetData(ulong lobby, string key, string value) => SteamMatchmaking.SetLobbyData(new CSteamID(lobby), key, value);
-
-        public static void Close(ulong lobby) => SetData(lobby, MatchKeys.Open, "0");
     }
 
     // What the loaded game is, for listing it when it's hosted

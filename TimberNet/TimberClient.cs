@@ -46,17 +46,31 @@ namespace TimberNet
             AddEventToHash(message);
         }
 
+        /**
+         * Connects in the background, so the game doesn't stand still while
+         * it does (a WebRTC connection takes seconds): a failure arrives as
+         * OnError on the Update() thread, like any other.
+         */
         public override void Start()
         {
             base.Start();
-            // TODO: Handle async properly and cleanup
-            // TODO: Make wait configurable?
-            if (!client.ConnectAsync().Wait(client.ConnectTimeoutMs))
+            Task.Run(async () =>
             {
-                throw new ConnectionFailureException();
-            }
-            // Connect a TCP socket at the address
-            Task.Run(() => StartListening(client, true));
+                try
+                {
+                    Task connect = client.ConnectAsync();
+                    if (await Task.WhenAny(connect, Task.Delay(client.ConnectTimeoutMs)) != connect) throw new ConnectionFailureException();
+                    await connect;
+                }
+                catch (Exception e)
+                {
+                    client.Close();
+                    ReportError((e as AggregateException)?.InnerException?.Message ?? e.Message);
+                    return;
+                }
+                // On a thread of its own: this one may be the connection's, which delivers what's read
+                _ = Task.Run(() => StartListening(client, true));
+            });
         }
 
 

@@ -29,18 +29,21 @@ if ((await status("9")) !== 404) throw new Error("joined a lobby that doesn't ex
 const a = await open("111", "Alice", true);
 await until(() => has(a, (m) => m.type === "state" && m.owner === "111"), "state for the owner");
 a.socket.send(JSON.stringify({ type: "data", key: "test", value: tag }));
-await until(() => has(a, (m) => m.type === "data" && m.key === "test"), "data echo");
+await until(() => has(a, (m) => m.type === "data" && m.values?.test === tag), "data echo");
+// Many at once, as a lobby is described
+a.socket.send(JSON.stringify({ type: "data", values: { one: "1", two: "2" } }));
+await until(() => has(a, (m) => m.type === "data" && m.values?.one === "1" && m.values?.two === "2"), "batched data");
 await new Promise((r) => setTimeout(r, 300));
 const found = await search();
 if (found.length !== 1 || found[0].id !== lobbyId || found[0].members !== 1) throw new Error("search: " + JSON.stringify(found));
 
 const b = await open("222", "Bob", false);
-await until(() => has(b, (m) => m.type === "state" && m.data.test === tag && m.members.length === 2), "state for the guest");
+await until(() => has(b, (m) => m.type === "state" && m.data.test === tag && m.data.two === "2" && m.members.length === 2), "state for the guest");
 await until(() => has(a, (m) => m.type === "entered" && m.member === "222" && m.name === "Bob"), "entered");
 b.socket.send(JSON.stringify({ type: "data", key: "test", value: "hijack" }));
 b.socket.send(JSON.stringify({ type: "memberData", key: "picks", value: "{}" }));
 await until(() => has(a, (m) => m.type === "memberData" && m.member === "222" && m.key === "picks"), "member data");
-if (has(a, (m) => m.type === "data" && m.value === "hijack")) throw new Error("a guest wrote lobby data");
+if (has(a, (m) => m.type === "data" && m.values?.test === "hijack")) throw new Error("a guest wrote lobby data");
 if ((await search()).length !== 0) throw new Error("a full lobby is still found");
 if ((await status("333")) !== 409) throw new Error("joined a full lobby");
 

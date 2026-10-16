@@ -108,6 +108,7 @@ namespace BeaverBuddies.DevTools
             }
         }
 
+#if IS_STEAM
         // The made-up hosts of "mockmatches": one for every way a match can read
         private List<Matchmaking.OpenMatch> MockMatches()
         {
@@ -128,7 +129,7 @@ namespace BeaverBuddies.DevTools
                 mode = players > 0 ? new() { [nameof(MultiStart.MultiplayerNewGameModeSpec.Players)] = players } : new(),
             };
             string game = Timberborn.Versioning.GameVersions.CurrentVersion.ToString();
-            string protocol = Matchmaking.MatchmakingSession.Protocol.ToString();
+            string protocol = Matchmaking.MatchKeys.ProtocolVersion.ToString();
             Matchmaking.OpenMatch Match(Matchmaking.MatchPicks picks, string platform, bool hosted, int players, List<Matchmaking.MatchMods.Entry> mods = null,
                 bool compatible = true, bool otherMods = false, string gameVersion = null, string protocolVersion = "same") => new()
             {
@@ -161,6 +162,7 @@ namespace BeaverBuddies.DevTools
                 Match(Picks("Hana with a rather long name for a beaver", "Lakes", 1), "steam", true, 1, compatible: false, otherMods: true),
             };
         }
+#endif
 
         private static int I(string s) => int.Parse(s, CultureInfo.InvariantCulture);
 

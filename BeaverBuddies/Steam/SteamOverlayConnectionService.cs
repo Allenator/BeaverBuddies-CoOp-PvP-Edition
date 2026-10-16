@@ -172,10 +172,10 @@ namespace BeaverBuddies.Steam
             var owner = SteamMatchmaking.GetLobbyOwner(lobby);
             if (owner == SteamUser.GetSteamID()) return;
             // Hosts from before it was set don't have it
-            string theirCompat = SteamMatchmaking.GetLobbyData(lobby, Matchmaking.MatchmakingSession.CompatKey);
-            if (theirCompat != "" && theirCompat != Matchmaking.MatchmakingSession.Compat)
+            string theirCompat = SteamMatchmaking.GetLobbyData(lobby, Matchmaking.MatchKeys.Compat);
+            if (theirCompat != "" && theirCompat != Matchmaking.MatchKeys.CompatValue)
             {
-                Plugin.LogWarning($"Not joining {lobby}: the host's mods or build ({theirCompat}) differ from ours ({Matchmaking.MatchmakingSession.Compat})");
+                Plugin.LogWarning($"Not joining {lobby}: the host's mods or build ({theirCompat}) differ from ours ({Matchmaking.MatchKeys.CompatValue})");
                 SteamMatchmaking.LeaveLobby(lobby);
                 _clientConnectionService.ShowIncompatible();
                 return;

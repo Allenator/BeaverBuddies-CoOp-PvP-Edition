@@ -319,6 +319,9 @@ namespace TimberNet
             return CompressionUtils.Decompress(buffer);
         }
 
+        // From any thread: raised as OnError on the Update() thread, which can show it
+        protected void ReportError(string message) => errorQueue.Enqueue(message);
+
         private void ReadErrorMessage(ISocketStream stream)
         {
             if (TryReadLength(stream, out int length))
