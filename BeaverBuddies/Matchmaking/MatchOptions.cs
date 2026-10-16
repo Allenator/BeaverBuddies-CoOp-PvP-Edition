@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using BeaverBuddies.Connect;
+using BeaverBuddies.Steam;
 using Timberborn.CoreUI;
 using Timberborn.GameSceneLoading;
 using Timberborn.Localization;
@@ -198,9 +199,47 @@ namespace BeaverBuddies.Matchmaking
             _loc = loc;
         }
 
+        // Hosted games are listed for anyone unless the host ticks this; the box beside Tutorial
+        public static bool FriendsOnly { get; private set; }
+        public const string FriendsOnlyWrapper = "BeaverBuddiesFriendsOnlyWrapper";
+        // The box on the New Game page, for the test harness
+        internal static VisualElement FriendsOnlyBox;
+
+        // A copy of the game's Tutorial checkbox, under it
+        private void AddFriendsOnly(NewGameModePanel panel)
+        {
+            if (panel._root.Q(FriendsOnlyWrapper) != null) return;
+            VisualElement tutorial = panel._root.Q("TutorialToggleWrapper");
+            if (tutorial?.parent == null) return;
+            VisualElement wrapper = _visualElementLoader.LoadVisualElement("MainMenu/NewGameModePanel").Q("TutorialToggleWrapper");
+            if (wrapper == null) return;
+            for (VisualElement e = wrapper.parent; e != null; e = e.parent)
+            {
+                for (int i = 0; i < e.styleSheets.count; i++) wrapper.styleSheets.Add(e.styleSheets[i]);
+            }
+            wrapper.RemoveFromHierarchy();
+            wrapper.name = FriendsOnlyWrapper;
+            wrapper.Q<Label>(className: "new-game-mode-panel__tutorial-label").text = _loc.T("BeaverBuddies.Match.FriendsOnly");
+            Toggle toggle = wrapper.Q<Toggle>("TutorialToggle");
+            toggle.name = "FriendsOnlyToggle";
+            toggle.tooltip = _loc.T("BeaverBuddies.Match.FriendsOnly.Tooltip");
+            toggle.SetValueWithoutNotify(FriendsOnly);
+            toggle.RegisterValueChangedCallback(e => FriendsOnly = e.newValue);
+            wrapper.ToggleDisplayStyle(false);
+            tutorial.parent.Insert(tutorial.parent.IndexOf(tutorial) + 1, wrapper);
+            FriendsOnlyBox = wrapper;
+        }
+
+        // Only when hosting, and only where Steam is: the box is hidden on builds without it
+        public static void ShowFriendsOnly(NewGameModePanel panel, bool visible)
+        {
+            panel._root?.Q(FriendsOnlyWrapper)?.ToggleDisplayStyle(visible && SteamSupport.IsSteamEnabled);
+        }
+
         public void AddTo(NewGameModePanel panel)
         {
             _panel = panel;
+            AddFriendsOnly(panel);
             if (!MatchOptions.All.Any(o => o.Values.Length > 1) || panel._root.Q(ContainerName) != null) return;
             VisualElement difficulties = panel._root.Q("Modes");
             if (difficulties?.parent == null) return;

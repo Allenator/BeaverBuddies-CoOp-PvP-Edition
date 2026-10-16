@@ -31,6 +31,7 @@ namespace BeaverBuddies.Matchmaking
         // The game hosted from the New Game screens, for when it's saved and hosted
         private static MatchPicks newGame;
         private static string newGameSettlement;
+        private static bool newGameFriendsOnly, friendsOnly;
         // The game about to be hosted, for its lobby
         private static MatchPicks hosting;
         private static CSteamID lobby = CSteamID.Nil;
@@ -39,6 +40,7 @@ namespace BeaverBuddies.Matchmaking
         {
             newGame = MatchPicks.Create(PlayerIdentity.LocalName, configuration, mapTitle, null, modeLocKey);
             newGameSettlement = configuration.SettlementName;
+            newGameFriendsOnly = MatchOptionsPanel.FriendsOnly;
         }
 
         // The save about to be hosted, read before its lobby exists
@@ -46,7 +48,9 @@ namespace BeaverBuddies.Matchmaking
         {
             lobby = CSteamID.Nil;
             string settlement = save.SettlementReference.SettlementName;
-            hosting = newGame != null && newGameSettlement == settlement ? newGame : FromSave(settlement, saveFile);
+            bool fromNewGame = newGame != null && newGameSettlement == settlement;
+            hosting = fromNewGame ? newGame : FromSave(settlement, saveFile);
+            friendsOnly = fromNewGame && newGameFriendsOnly;
         }
 
         private static MatchPicks FromSave(string settlement, byte[] saveFile)
@@ -84,12 +88,12 @@ namespace BeaverBuddies.Matchmaking
 
         /**
          * The hosted game's lobby is up: listed for anyone, unless the host
-         * keeps it to invites, or it's a match's game, which only its other
+         * keeps it to invites or Steam friends, or it's a match's game, which only its other
          * player joins.
          */
         public static void Advertise(CSteamID server)
         {
-            if (hosting == null || !Settings.LobbyJoinable || MatchmakingSession.State == MatchState.Hosting) return;
+            if (hosting == null || friendsOnly || !Settings.LobbyJoinable || MatchmakingSession.State == MatchState.Hosting) return;
             lobby = server;
             SteamMatchmaking.SetLobbyType(lobby, ELobbyType.k_ELobbyTypePublic);
             MatchmakingSession.Describe(lobby, hosting, MatchmakingSession.HostedKind);

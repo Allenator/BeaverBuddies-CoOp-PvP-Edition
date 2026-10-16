@@ -19,7 +19,8 @@ mkdir -p "$BB_TEST_DIR/shots"
 # The game's display settings: windowed for the run, then the player's own back
 # (and any other preference a mod's scenario changes: BB_PREF_KEYS_EXTRA, a space-free list separated by '|')
 BB_PREF_KEYS=("FullScreen" "ResolutionWidth" "ResolutionHeight" "Screenmanager Fullscreen mode" \
-    "Screenmanager Resolution Use Native" "Screenmanager Resolution Width" "Screenmanager Resolution Height")
+    "Screenmanager Resolution Use Native" "Screenmanager Resolution Width" "Screenmanager Resolution Height" \
+    "MasterVolume" "MusicVolume")
 if [ -n "${BB_PREF_KEYS_EXTRA:-}" ]; then IFS='|' read -ra _extra <<< "$BB_PREF_KEYS_EXTRA"; BB_PREF_KEYS+=("${_extra[@]}"); fi
 
 prefs_save() {
@@ -39,6 +40,9 @@ prefs_windowed() {
     defaults write $BB_PREFS_DOMAIN "Screenmanager Resolution Use Native" -int 0
     defaults write $BB_PREFS_DOMAIN "Screenmanager Resolution Width" -int 1400
     defaults write $BB_PREFS_DOMAIN "Screenmanager Resolution Height" -int 880
+    # The copies run silent
+    defaults write $BB_PREFS_DOMAIN MasterVolume -float 0
+    defaults write $BB_PREFS_DOMAIN MusicVolume -float 0
 }
 
 prefs_restore() {
