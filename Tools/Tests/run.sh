@@ -97,6 +97,12 @@ trap 'exit 130' INT TERM
 
 # A run that didn't finish may have left a mod off
 mod_enable_all
+# Run from here rather than from a mod built on BeaverBuddies (see Timber Empires' run.sh, which sets its own):
+# it builds BeaverBuddies, so a run never plays an older build than the code it's testing
+if [ -z "${BB_BUILD:-}" ]; then
+    export BB_BUILD_SOURCES="$ROOT/BeaverBuddies:$ROOT/TimberNet"
+    export BB_BUILD="(cd '$ROOT/BeaverBuddies' && dotnet build -c Release -nologo -v q 2>&1 | tail -3)"
+fi
 # The build is skipped when nothing it's made from changed since this checkout's
 # last one, and nothing else has installed into the Mods folder since (another
 # checkout's run, a package): BB_BUILD_SOURCES lists the folders it's made from
@@ -124,6 +130,27 @@ if [ $BUILD -eq 1 ] && [ -n "${BB_BUILD:-}" ]; then
         ( export BB_HOLDS_LOCK=1; eval "$BB_BUILD" ) || { echo "The build failed."; exit 1; }
         [ -n "${BB_BUILD_SOURCES:-}" ] && echo "$BB_BUILD_SOURCES" > "$BB_TEST_DIR/.build-stamp"
     fi
+fi
+# Whatever built it: the copies must play the code as it is now, not an install older than it.
+# A source file newer than an installed mod's DLL means that change isn't in the game
+stale_install() {
+    local d dll src
+    IFS=: read -ra dirs <<< "${BB_BUILD_SOURCES:-}"
+    for d in "${dirs[@]}"; do
+        case "$(basename "$d")" in
+            BeaverBuddies|TimberNet) dll=$(ls "$(bb_mods_dir)"/BeaverBuddies/version-*/BeaverBuddies.dll 2>/dev/null | head -1) ;;
+            *) dll=$(ls "$(bb_mods_dir)/$(basename "$d")"/version-*/"$(basename "$d")".dll 2>/dev/null | head -1) ;;
+        esac
+        [ -n "$dll" ] || { echo "$(basename "$d") isn't installed"; return 0; }
+        src=$(find "$d" \( -name bin -o -name obj \) -prune -o -type f \( -name '*.cs' -o -name '*.csproj' -o -name '*.csv' -o -name '*.json' \) -newer "$dll" -print -quit)
+        [ -n "$src" ] && { echo "${src#$d/} changed after $(basename "$dll") was installed"; return 0; }
+    done
+    return 1
+}
+if why=$(stale_install); then
+    echo "The installed mod is older than its code ($why): this run would test old code."
+    [ $BUILD -eq 0 ] && echo "Run without --no-build to build it first." || echo "The build didn't install it: is the test lock held by another run?"
+    exit 1
 fi
 prefs_save
 rm -f "$BB_RESULTS"; rm -f "$BB_TEST_DIR"/shots/*.png
