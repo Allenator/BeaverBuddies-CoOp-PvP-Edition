@@ -58,7 +58,9 @@ namespace BeaverBuddies.IO
             try
             {
                 List<ISocketListener> listeners = [
-                    new TCPListenerWrapper(Settings.Port)
+                    new TCPListenerWrapper(Settings.Port),
+                    // Anyone, Steam or not, joins by the game's code
+                    new WebRtc.WebRtcListener(WebRtc.JoinCode.New()),
                 ];
                 if (SteamSupport.IsSteamEnabled && Settings.EnableSteam)
                 {
@@ -181,6 +183,15 @@ namespace BeaverBuddies.IO
         private float _nextListingCheck;
 
         // A hosted game stays listed while it runs, until it has no room left
+        // Nobody can join a game no longer hosted: off the directory, where it would linger until it expired
+        protected override void Closed()
+        {
+#if IS_STEAM
+            Matchmaking.HostedListing.Unlist();
+#endif
+            WebRtc.JoinCode.Clear();
+        }
+
         protected override void Updated()
         {
 #if IS_STEAM

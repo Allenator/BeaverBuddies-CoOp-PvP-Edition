@@ -24,7 +24,10 @@ namespace BeaverBuddies.IO
         {
             if (NetBase == null) return;
             NetBase.Close();
+            Closed();
         }
+
+        protected virtual void Closed() { }
 
         public void Update()
         {

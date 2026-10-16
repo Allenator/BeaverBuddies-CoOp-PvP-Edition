@@ -55,6 +55,7 @@ namespace BeaverBuddies.Connect
         private VisualElement _discord;
         // Matchmaking's, only shown when Steam is reachable
         private readonly List<Button> _matchButtons = new();
+        private Button _openMatchesButton;
         // Join game: in the list of hosts when there is one, here otherwise
         private Button _joinButton;
         // The menu's own elements and how they showed, while the multiplayer buttons are up
@@ -116,8 +117,9 @@ namespace BeaverBuddies.Connect
             _joinButton = Add("JoinGameButton", "BeaverBuddies.Menu.JoinGame", () => _clientConnectionUI.ShowBox(), "BeaverBuddies.Menu.JoinGame.Tooltip");
 #if IS_STEAM
             _matchButtons.Add(Add("FindMatchMenuButton", "BeaverBuddies.Match.FindMatch", () => OpenNewGame(NewGameIntent.Match), "BeaverBuddies.Match.FindMatch.Tooltip"));
-            _matchButtons.Add(Add("OpenMatchesMenuButton", "BeaverBuddies.Match.OpenMatches",
-                () => SingletonManager.GetSingleton<Matchmaking.HostBrowser>()?.Open(), "BeaverBuddies.Match.OpenMatches.Tooltip"));
+            // The list works without Steam too (see MatchList), and has joining by code or address in it
+            _openMatchesButton = Add("OpenMatchesMenuButton", "BeaverBuddies.Match.OpenMatches",
+                () => SingletonManager.GetSingleton<Matchmaking.HostBrowser>()?.Open(), "BeaverBuddies.Match.OpenMatches.Tooltip");
 #endif
             Add("MultiplayerBackButton", "BeaverBuddies.Menu.Back", () => ShowMultiplayer(false));
             _discord = DiscordRow(mainMenu);
@@ -178,7 +180,7 @@ namespace BeaverBuddies.Connect
                 _hidden.Clear();
             }
             _discord?.ToggleDisplayStyle(multiplayer);
-            foreach (Button button in _buttons) button.ToggleDisplayStyle(multiplayer && (_matchButtons.Contains(button) ? FindMatchAvailable : button != _joinButton || !FindMatchAvailable));
+            foreach (Button button in _buttons) button.ToggleDisplayStyle(multiplayer && (_matchButtons.Contains(button) ? FindMatchAvailable : button != _joinButton || _openMatchesButton == null));
         }
 
         private static bool FindMatchAvailable =>

@@ -60,6 +60,7 @@
       <PublicizeCompilerGenerated>false</PublicizeCompilerGenerated>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="SIPSorcery" Version="10.0.17" />
     <PackageReference Include="System.Collections.Immutable" Version="8.0.0" />
     <PackageReference Include="MonoMod.Core" Version="1.3.4" />
     <PackageReference Include="MonoMod.RuntimeDetour" Version="25.3.4" />
@@ -127,6 +128,26 @@
   </ItemGroup>
 
   <!-- PreBuild -->
+  <!-- SIPSorcery's older dependencies bring netstandard 1.x facades of the base library along. The
+       game has those types already, and it loads every DLL in the mod's folder: one of these stops
+       the whole mod from loading (a ReflectionTypeLoadException for System.Collections 4.0.10). -->
+  <PropertyGroup>
+    <DroppedFacades>;Microsoft.CSharp;Microsoft.Win32.Registry;System.AppContext;System.Collections.Concurrent;System.Dynamic.Runtime;System.IO.Compression.ZipFile;System.IO.FileSystem.Primitives;System.Linq;System.Linq.Expressions;System.ObjectModel;System.Reflection.Emit;System.Reflection.TypeExtensions;System.Runtime.InteropServices.RuntimeInformation;System.Runtime.Numerics;System.Security.Cryptography.OpenSsl;System.Security.Cryptography.Primitives;System.Text.RegularExpressions;System.Xml.ReaderWriter;System.Xml.XDocument;</DroppedFacades>
+  </PropertyGroup>
+  <!-- SIPSorcery and its dependencies go in lib\, where the game doesn't look (see WebRtc/Libraries.cs) -->
+  <PropertyGroup>
+    <WebRtcLibraries>;BouncyCastle.Cryptography;Common.Logging;Common.Logging.Core;Concentus;DnsClient;Makaretu.Dns;Makaretu.Dns.Multicast;Microsoft.Extensions.DependencyInjection.Abstractions;Microsoft.Extensions.Logging.Abstractions;SIPSorcery;SIPSorceryMedia.Abstractions;SimpleBase;System.Diagnostics.DiagnosticSource;System.Net.IPNetwork;System.Threading.Tasks.Extensions;websocket-sharp;</WebRtcLibraries>
+  </PropertyGroup>
+  <Target Name="ArrangeLibraries" BeforeTargets="PostBuildEvent">
+    <ItemGroup>
+      <OutputDll Include="$(ProjectDir)$(OutDir)*.dll" />
+      <WebRtcDll Include="@(OutputDll)" Condition="$(WebRtcLibraries.Contains(';%(Filename);'))" />
+    </ItemGroup>
+    <Delete Files="@(OutputDll)" Condition="$(DroppedFacades.Contains(';%(Filename);'))" />
+    <Copy SourceFiles="@(WebRtcDll)" DestinationFolder="$(ProjectDir)$(OutDir)lib" />
+    <Delete Files="@(WebRtcDll)" />
+  </Target>
+
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
     <!-- Empty -->
   </Target>
@@ -154,6 +175,7 @@
       <!-- The buildings and what they need, with their folders -->
       <BuildingFileToCopy Include="$(ProjectDir)$(OutDir)Buildings\**\*" />
       <TemplateCollectionFileToCopy Include="$(ProjectDir)$(OutDir)TemplateCollections\*" />
+      <LibraryFileToCopy Include="$(ProjectDir)$(OutDir)lib\*" />
       <SpriteFileToCopy Include="$(ProjectDir)$(OutDir)Sprites\**\*" />
       <SoundFileToCopy Include="$(ProjectDir)$(OutDir)Sounds\*" />
       <RootDirFilesToCopy Include="$(ProjectDir)thumbnail.png" />
@@ -169,6 +191,7 @@
     <Copy SourceFiles="@(KeyBindingGroupFileToCopy)" DestinationFolder="$(VersionOutputPath)\KeyBindingGroups" SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(BuildingFileToCopy)" DestinationFiles="@(BuildingFileToCopy->'$(VersionOutputPath)Buildings\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(TemplateCollectionFileToCopy)" DestinationFolder="$(VersionOutputPath)\TemplateCollections" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(LibraryFileToCopy)" DestinationFolder="$(VersionOutputPath)\lib" SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(SpriteFileToCopy)" DestinationFiles="@(SpriteFileToCopy->'$(VersionOutputPath)Sprites\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(SoundFileToCopy)" DestinationFolder="$(VersionOutputPath)\Sounds" SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(RootDirFilesToCopy)" DestinationFolder="$(BeaverBuddiesModsPath)" SkipUnchangedFiles="true" />

@@ -124,8 +124,9 @@ namespace BeaverBuddies
             {
                 containerDefinition.Bind<SteamOverlayConnectionService>().AsSingleton();
                 containerDefinition.Bind<Matchmaking.MatchmakingUI>().AsSingleton();
-                containerDefinition.Bind<Matchmaking.HostBrowser>().AsSingleton();
             }
+            // Steam's lobbies or not, it lists the hosted games in the directory (see MatchList)
+            containerDefinition.Bind<Matchmaking.HostBrowser>().AsSingleton();
 #else
             containerDefinition.Bind<SteamOverlayConnectionService>().AsSingleton();
 #endif
@@ -157,6 +158,8 @@ namespace BeaverBuddies
             logger = new UnityLogger();
 
             Log($"{Name} v{Version} is loaded!");
+            BeaverBuddies.WebRtc.Libraries.Install(modEnvironment.ModPath);
+            GuidPatcher.UnityThread = System.Threading.Thread.CurrentThread;
             BeaverBuddies.Util.ModSounds.ModPath = modEnvironment.ModPath;
 
             // Load the player ID on the main thread, since events can be

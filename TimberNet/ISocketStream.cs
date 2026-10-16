@@ -15,6 +15,9 @@ namespace TimberNet
         int MaxChunkSize { get; }
         int MaxBytesPerSecond { get; }
 
+        // How long connecting may take before it counts as failed
+        int ConnectTimeoutMs => 3000;
+
         int Read(byte[] buffer, int offset, int count);
         void Write(byte[] buffer, int offset, int count);
         void Close();

@@ -1,0 +1,16 @@
+{
+	"name": "beaverbuddies-signaling",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-10-01",
+	"durable_objects": {
+		"bindings": [
+			{ "name": "ROOMS", "class_name": "Room" },
+			{ "name": "DIRECTORY", "class_name": "Directory" }
+		]
+	},
+	// SQLite-backed Durable Objects are the ones available on the free plan.
+	"migrations": [
+		{ "tag": "v1", "new_sqlite_classes": ["Room"] },
+		{ "tag": "v2", "new_sqlite_classes": ["Directory"] }
+	]
+}

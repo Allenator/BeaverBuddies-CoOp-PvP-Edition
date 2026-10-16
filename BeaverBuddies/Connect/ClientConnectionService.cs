@@ -49,6 +49,12 @@ namespace BeaverBuddies.Connect
 
         public bool TryToConnect(string address)
         {
+            // A host's join code connects over WebRTC, with no address or port
+            if (WebRtc.JoinCode.TryParse(address, out string code))
+            {
+                Plugin.Log("Joining by code: " + code);
+                return TryToConnect(new WebRtc.WebRtcSocket(code));
+            }
             int port = _settings.DefaultPort.Value;
             Plugin.Log("Try to resolve address: " + address);
             // Parse address and port
@@ -94,7 +100,9 @@ namespace BeaverBuddies.Connect
             Plugin.Log("Connecting client");
             client = ClientEventIO.Create(socket, LoadMap, (error) =>
             {
-                ShowError("BeaverBuddies.JoinCoopGame.Error.CouldNotConnect", error);
+                // A code has no address or port to check
+                ShowError(socket is WebRtc.WebRtcSocket ? "BeaverBuddies.JoinCoopGame.Error.CodeCouldNotConnect"
+                    : "BeaverBuddies.JoinCoopGame.Error.CouldNotConnect", error);
             });
             
             if (client == null)

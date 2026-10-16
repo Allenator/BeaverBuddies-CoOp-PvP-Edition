@@ -1,15 +1,23 @@
 #if IS_STEAM
+using BeaverBuddies.Steam;
 using Steamworks;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 
 namespace BeaverBuddies.Matchmaking
 {
     // A player waiting in a match lobby of their own, or a hosted game, for anyone to join
     public class OpenMatch
     {
+        // Its Steam lobby, 0 for a game only in the directory
         public ulong lobby;
+        // Its WebRTC join code, null for a Quick match, which only Steam lists
+        public string joinCode;
+        // The host's store: steam, epic or other
+        public string platform;
         public MatchPicks picks;
         // A hosted game (see HostedListing): joining it connects to it
         public bool hosted;
@@ -23,6 +31,9 @@ namespace BeaverBuddies.Matchmaking
         // has for each, null where their BeaverBuddies is too old to say.
         public bool compatible = true;
         public string protocol, game, debug;
+
+        // Which one it is, wherever it's listed
+        public string Key => lobby != 0 ? lobby.ToString() : joinCode;
     }
 
     /**
@@ -33,42 +44,158 @@ namespace BeaverBuddies.Matchmaking
      * can pick one to join instead of letting the search pick for them.
      * With ShowIncompatible on, those who differ in any of those are listed
      * too, after the rest, so a player can see why they can't play them.
+     *
+     * Two places list them: Steam's lobbies, for players with Steam, and the
+     * directory (see OpenListings), where every hosted game is, Steam or not.
+     * A game in both shows once, as its Steam lobby when this player has
+     * Steam. Without Steam (the Epic Games build, or Steam networking off)
+     * it's the directory alone, and nothing here may touch Steam.
      */
     public static class MatchList
     {
-        private const int Most = 50;
-
         public static bool Loading { get; private set; }
         public static bool Failed { get; private set; }
         public static List<OpenMatch> Matches { get; } = new();
         public static event Action Changed;
         public static bool ShowIncompatible { get; set; }
 
-        private static CallResult<LobbyMatchList_t> listed;
+        public static bool SteamListed => SteamSupport.IsSteamEnabled && Settings.EnableSteam;
+
+        // What each place last gave, merged once both are in. Null while waiting, or when it failed
+        private static List<OpenMatch> fromSteam, fromDirectory;
+        private static bool steamPending, directoryPending, steamFailed, directoryFailed;
+        // The directory answers on another thread: picked up on Unity's, at the next Poll
+        private static volatile bool directoryArrived;
+        private static List<DirectoryListing> arrived;
 
         public static void Refresh()
         {
             if (Loading) return;
-            listed ??= CallResult<LobbyMatchList_t>.Create(OnListed);
             Loading = true;
             Failed = false;
+            steamFailed = directoryFailed = false;
+            fromSteam = fromDirectory = null;
+            steamPending = SteamListed;
+            directoryPending = true;
+            if (steamPending) RequestSteam();
+            Task.Run(async () =>
+            {
+                arrived = await OpenListings.Fetch();
+                directoryArrived = true;
+            });
+            Changed?.Invoke();
+        }
+
+        // Apart, so that compiling Refresh never loads Steam's types in a copy without them
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void RequestSteam() => SteamLobbyList.Request(ShowIncompatible, OnSteamListed);
+
+        /** Every frame the list is open (see HostBrowser): takes in the directory's answer. */
+        public static void Poll()
+        {
+            if (!directoryArrived) return;
+            directoryArrived = false;
+            directoryPending = false;
+            directoryFailed = arrived == null;
+            fromDirectory = arrived?.Select(FromListing).Where(m => m != null).ToList();
+            Merge();
+        }
+
+        private static void OnSteamListed(List<OpenMatch> matches)
+        {
+            steamPending = false;
+            steamFailed = matches == null;
+            fromSteam = matches;
+            Merge();
+        }
+
+        private static OpenMatch FromListing(DirectoryListing listing)
+        {
+            // Two test copies list their games side by side (see DevTools.TestHarness)
+            if (listing.id == OpenListings.MineId && !DevTools.TestHarness.Active) return null;
+            var data = listing.data ?? new Dictionary<string, string>();
+            string Data(string key) => data.TryGetValue(key, out string value) && !string.IsNullOrEmpty(value) ? value : null;
+            if (Data(MatchKeys.Open) != "1") return null;
+            MatchPicks picks = MatchPicks.FromJson(Data(MatchKeys.Picks));
+            if (picks == null) return null;
+            bool sameBase = Data(MatchKeys.Base) == MatchKeys.BaseValue;
+            if (!sameBase && !ShowIncompatible) return null;
+            bool otherMods = Data(MatchKeys.Compat) != MatchKeys.CompatValue;
+            ulong.TryParse(listing.steamLobby, out ulong lobby);
+            return new OpenMatch
+            {
+                lobby = lobby,
+                joinCode = listing.joinCode,
+                platform = listing.platform,
+                picks = picks,
+                hosted = true,
+                otherMods = otherMods,
+                mods = MatchMods.FromJson(Data(MatchKeys.Mods)),
+                // Without Steam there's no Workshop to get their mods from
+                compatible = sameBase && !otherMods,
+                protocol = Data(MatchKeys.Protocol),
+                game = Data(MatchKeys.Game),
+                debug = Data(MatchKeys.Debug),
+            };
+        }
+
+        private static void Merge()
+        {
+            if (steamPending || directoryPending) return;
+            Loading = false;
+            Failed = (steamFailed || !SteamListed) && directoryFailed;
+            var all = new List<OpenMatch>(fromSteam ?? new List<OpenMatch>());
+            var inSteam = new HashSet<ulong>(all.Select(m => m.lobby));
+            foreach (OpenMatch listed in fromDirectory ?? new List<OpenMatch>())
+            {
+                OpenMatch same = listed.lobby != 0 ? all.FirstOrDefault(m => m.lobby == listed.lobby) : null;
+                if (same != null)
+                {
+                    // Its Steam lobby says it all; the directory adds the way in for players without Steam
+                    same.joinCode = listed.joinCode;
+                    same.platform = listed.platform;
+                    continue;
+                }
+                all.Add(listed);
+            }
+            // The ones that can be played first, keeping each list's order within each
+            Matches.Clear();
+            Matches.AddRange(all.Where(m => m.compatible).Concat(all.Where(m => !m.compatible)));
+            Plugin.Log($"[Match] {Matches.Count(m => m.compatible)} open matches, {Matches.Count(m => !m.compatible)} incompatible; {fromDirectory?.Count ?? 0} in the directory");
+            Changed?.Invoke();
+        }
+    }
+
+    // The Steam lobbies listed, only asked for with Steam there
+    internal static class SteamLobbyList
+    {
+        private const int Most = 50;
+        private static CallResult<LobbyMatchList_t> listed;
+        private static Action<List<OpenMatch>> done;
+
+        public static void Request(bool showIncompatible, Action<List<OpenMatch>> then)
+        {
+            done = then;
+            listed ??= CallResult<LobbyMatchList_t>.Create(OnListed);
             SteamMatchmaking.AddRequestLobbyListStringFilter(MatchmakingSession.MatchKey, "1", ELobbyComparison.k_ELobbyComparisonEqual);
-            if (!ShowIncompatible) SteamMatchmaking.AddRequestLobbyListStringFilter(MatchmakingSession.BaseKey, MatchmakingSession.Base, ELobbyComparison.k_ELobbyComparisonEqual);
+            if (!showIncompatible) SteamMatchmaking.AddRequestLobbyListStringFilter(MatchmakingSession.BaseKey, MatchmakingSession.Base, ELobbyComparison.k_ELobbyComparisonEqual);
             SteamMatchmaking.AddRequestLobbyListStringFilter(MatchmakingSession.OpenKey, "1", ELobbyComparison.k_ELobbyComparisonEqual);
             SteamMatchmaking.AddRequestLobbyListFilterSlotsAvailable(1);
             SteamMatchmaking.AddRequestLobbyListDistanceFilter(ELobbyDistanceFilter.k_ELobbyDistanceFilterWorldwide);
             SteamMatchmaking.AddRequestLobbyListResultCountFilter(Most);
             listed.Set(SteamMatchmaking.RequestLobbyList());
-            Changed?.Invoke();
         }
 
         private static void OnListed(LobbyMatchList_t list, bool failed)
         {
-            Loading = false;
-            Failed = failed;
-            Matches.Clear();
+            if (failed)
+            {
+                done?.Invoke(null);
+                return;
+            }
+            var matches = new List<OpenMatch>();
             ulong me = SteamUser.GetSteamID().m_SteamID;
-            for (int i = 0; !failed && i < list.m_nLobbiesMatching; i++)
+            for (int i = 0; i < list.m_nLobbiesMatching; i++)
             {
                 CSteamID id = SteamMatchmaking.GetLobbyByIndex(i);
                 // Two test copies of the game share one Steam account (see DevTools.TestHarness)
@@ -77,9 +204,10 @@ namespace BeaverBuddies.Matchmaking
                 if (picks == null) continue;
                 bool hosted = SteamMatchmaking.GetLobbyData(id, MatchmakingSession.KindKey) == MatchmakingSession.HostedKind;
                 bool otherMods = SteamMatchmaking.GetLobbyData(id, MatchmakingSession.CompatKey) != MatchmakingSession.Compat;
-                Matches.Add(new OpenMatch
+                matches.Add(new OpenMatch
                 {
                     lobby = id.m_SteamID,
+                    platform = "steam",
                     picks = picks,
                     hosted = hosted,
                     otherMods = otherMods,
@@ -90,12 +218,7 @@ namespace BeaverBuddies.Matchmaking
                     debug = Data(id, MatchmakingSession.DebugKey),
                 });
             }
-            // The ones that can be played first, keeping Steam's order within each
-            List<OpenMatch> sorted = Matches.Where(m => m.compatible).Concat(Matches.Where(m => !m.compatible)).ToList();
-            Matches.Clear();
-            Matches.AddRange(sorted);
-            Plugin.Log($"[Match] {Matches.Count(m => m.compatible)} open matches, {Matches.Count(m => !m.compatible)} incompatible");
-            Changed?.Invoke();
+            done?.Invoke(matches);
         }
 
         private static string Data(CSteamID id, string key)

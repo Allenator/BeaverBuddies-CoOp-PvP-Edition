@@ -24,6 +24,12 @@ namespace BeaverBuddies.Matchmaking
      * so it looks like the rest of the menus, and kept fresh while open.
      * A checkbox under the list shows the players this one can't match with
      * too, greyed out, with what keeps them apart.
+     *
+     * Each row has the host's store beside their name, Steam or Epic Games:
+     * two Steam players meet through the game's Steam lobby, and anyone else
+     * through its join code over WebRTC. Without Steam (the Epic Games build,
+     * or Steam networking off) it's the hosted games in the directory alone,
+     * and nothing here may touch Steam.
      */
     public class HostBrowser : RegisteredSingleton, IPanelController, IUpdatableSingleton, IExtendedDropdownProvider
     {
@@ -34,7 +40,7 @@ namespace BeaverBuddies.Matchmaking
         private readonly ILoc _loc;
         private readonly FactionSpecService _factionSpecService;
         private readonly ITooltipRegistrar _tooltipRegistrar;
-        private readonly MatchmakingUI _matchmakingUI;
+        private readonly Connect.ClientConnectionService _clientConnectionService;
         private readonly Connect.ClientConnectionUI _clientConnectionUI;
         private readonly DropdownListDrawer _dropdownListDrawer;
         private readonly DropdownItemsSetter _dropdownItemsSetter;
@@ -50,7 +56,7 @@ namespace BeaverBuddies.Matchmaking
         private float _refreshAt;
 
         public HostBrowser(VisualElementLoader visualElementLoader, PanelStack panelStack, ILoc loc,
-            FactionSpecService factionSpecService, ITooltipRegistrar tooltipRegistrar, MatchmakingUI matchmakingUI,
+            FactionSpecService factionSpecService, ITooltipRegistrar tooltipRegistrar, Connect.ClientConnectionService clientConnectionService,
             Connect.ClientConnectionUI clientConnectionUI, DropdownListDrawer dropdownListDrawer, DropdownItemsSetter dropdownItemsSetter)
         {
             _dropdownListDrawer = dropdownListDrawer;
@@ -61,7 +67,7 @@ namespace BeaverBuddies.Matchmaking
             _loc = loc;
             _factionSpecService = factionSpecService;
             _tooltipRegistrar = tooltipRegistrar;
-            _matchmakingUI = matchmakingUI;
+            _clientConnectionService = clientConnectionService;
         }
 
         public void Open()
@@ -173,18 +179,20 @@ namespace BeaverBuddies.Matchmaking
 
         public void UpdateSingleton()
         {
-            if (_open && Time.realtimeSinceStartup >= _refreshAt) Refresh();
+            if (!_open) return;
+            MatchList.Poll();
+            if (Time.realtimeSinceStartup >= _refreshAt) Refresh();
         }
 
         // The list as Steam last gave it, keeping the picked host picked
         private void Fill()
         {
             if (!_open) return;
-            ulong picked = (_list.selectedItem as OpenMatch)?.lobby ?? 0;
+            string picked = (_list.selectedItem as OpenMatch)?.Key;
             _matches.Clear();
             _matches.AddRange(MatchList.Matches);
             _list.RefreshItems();
-            int index = _matches.FindIndex(m => m.lobby == picked);
+            int index = picked == null ? -1 : _matches.FindIndex(m => m.Key == picked);
             if (index >= 0) _list.SetSelectionWithoutNotify(new[] { index });
             else _list.ClearSelection();
             ShowDetails();
@@ -194,7 +202,9 @@ namespace BeaverBuddies.Matchmaking
         {
             OpenMatch match = _matches[index];
             MatchPicks picks = match.picks;
-            element.Q<Label>("DisplayName").text = picks.name;
+            Label name = element.Q<Label>("DisplayName");
+            name.text = picks.name;
+            PlatformIcon(name, match.platform);
             string options = string.Join(", ", MatchOptions.All.Where(o => picks.options?.ContainsKey(o.Id) == true).Select(o => o.Label(_loc, picks.options[o.Id])));
             string game = string.Join(", ", new[] { options, picks.mapTitle, Mode(picks) }.Where(s => !string.IsNullOrEmpty(s)));
             element.Q<Label>("GameTime").text = game;
@@ -211,7 +221,7 @@ namespace BeaverBuddies.Matchmaking
             if (_list.selectedItem is not OpenMatch match)
             {
                 _details.text = _loc.T(MatchList.Loading && _matches.Count == 0 ? "BeaverBuddies.Match.ListLoading"
-                    : MatchList.Failed ? "BeaverBuddies.Match.SteamFailed"
+                    : MatchList.Failed ? "BeaverBuddies.Match.ListFailed"
                     : _matches.Count == 0 ? "BeaverBuddies.Match.ListEmpty"
                     : "BeaverBuddies.Match.ListIntro");
                 // Players hidden for being incompatible are the usual reason for an empty list
@@ -302,7 +312,75 @@ namespace BeaverBuddies.Matchmaking
         {
             if (_list.selectedItem is not OpenMatch { compatible: true } match) return;
             Close();
-            _matchmakingUI.JoinOpen(match, _factionId);
+            if (match.lobby != 0 && MatchList.SteamListed)
+            {
+                JoinOverSteam(match, _factionId);
+                return;
+            }
+            // Not both on Steam: the game's join code, over WebRTC
+            Plugin.Log($"[Match] Joining the hosted game {match.joinCode} ({match.platform}) as {_factionId}");
+            MatchHooks.RaiseStarting(_factionId, false, false);
+            _clientConnectionService.ConnectOrShowFailureMessage(WebRtc.JoinCode.Prefix + match.joinCode);
+        }
+
+        // Apart, so that compiling Join never loads Steam's types in a copy without them
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+        private static void JoinOverSteam(OpenMatch match, string faction) => SingletonManager.GetSingleton<MatchmakingUI>().JoinOpen(match, faction);
+
+        /**
+         * The host's store before their name: Steam's or Epic Games' mark.
+         * Rows are reused, so every row sets it, and none for a store we
+         * have no mark for.
+         */
+        private static readonly Dictionary<string, Sprite> PlatformSprites = new();
+
+        private void PlatformIcon(Label name, string platform)
+        {
+            const string IconName = "BeaverBuddiesPlatform";
+            VisualElement icon = name.parent.Q<VisualElement>(IconName);
+            if (icon == null)
+            {
+                icon = new VisualElement { name = IconName };
+                icon.style.width = icon.style.height = 18;
+                icon.style.marginRight = 6;
+                icon.style.flexShrink = 0;
+                icon.style.alignSelf = Align.Center;
+                // Beside the name, on its line
+                var line = new VisualElement();
+                line.style.flexDirection = FlexDirection.Row;
+                line.style.alignItems = Align.Center;
+                name.parent.Insert(name.parent.IndexOf(name), line);
+                line.Add(icon);
+                line.Add(name);
+            }
+            Sprite sprite = PlatformSprite(platform);
+            icon.style.backgroundImage = sprite != null ? new StyleBackground(sprite) : new StyleBackground(StyleKeyword.None);
+            icon.ToggleDisplayStyle(sprite != null);
+        }
+
+        private static Sprite PlatformSprite(string platform)
+        {
+            string file = platform switch { "steam" => "steam", "epic" => "epicgames", _ => null };
+            if (file == null) return null;
+            if (PlatformSprites.TryGetValue(file, out Sprite cached)) return cached;
+            Sprite sprite = null;
+            try
+            {
+                string path = System.IO.Directory.GetFiles(Util.ModSounds.ModPath, file + ".png", System.IO.SearchOption.AllDirectories)
+                    .FirstOrDefault(p => p.Replace('\\', '/').Contains("/Sprites/Platforms/"));
+                if (path != null)
+                {
+                    var texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+                    texture.LoadImage(System.IO.File.ReadAllBytes(path));
+                    sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+                }
+            }
+            catch (Exception e)
+            {
+                Plugin.LogWarning($"[Match] Couldn't load the {platform} icon: {e.Message}");
+            }
+            PlatformSprites[file] = sprite;
+            return sprite;
         }
 
         private void Close()

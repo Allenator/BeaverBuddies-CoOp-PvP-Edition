@@ -148,13 +148,17 @@ namespace BeaverBuddies.Matchmaking
 
         // ---- Getting them ----
 
-        private static readonly List<PublishedFileId_t> downloading = new();
+        // Apart from the rest, so the list of local mods works without Steam (the Epic Games build)
+        private static class WorkshopQueue
+        {
+            public static readonly List<PublishedFileId_t> Items = new();
+            public static CallResult<RemoteStorageSubscribePublishedFileResult_t> Subscribed;
+        }
         private static float downloadDeadline;
-        private static CallResult<RemoteStorageSubscribePublishedFileResult_t> subscribed;
 
-        public static bool Downloading => downloading.Count > 0;
+        public static bool Downloading => WorkshopQueue.Items.Count > 0;
         public static int Total { get; private set; }
-        public static int Done => Total - downloading.Count;
+        public static int Done => Total - WorkshopQueue.Items.Count;
 
         // Subscribes to and downloads every item, and turns the mods back on; Steam does the rest
         public static void Apply(Plan plan)
@@ -165,20 +169,20 @@ namespace BeaverBuddies.Matchmaking
                 Plugin.Log($"[Match] Turned {mod.Manifest.Id} back on");
             }
             PlayerPrefs.Save();
-            downloading.Clear();
-            subscribed ??= CallResult<RemoteStorageSubscribePublishedFileResult_t>.Create((result, failed) =>
+            WorkshopQueue.Items.Clear();
+            WorkshopQueue.Subscribed ??= CallResult<RemoteStorageSubscribePublishedFileResult_t>.Create((result, failed) =>
             {
                 if (failed || result.m_eResult != EResult.k_EResultOK) Plugin.LogWarning($"[Match] Couldn't subscribe to {result.m_nPublishedFileId}: {result.m_eResult}");
             });
             foreach (ulong id in plan.Download)
             {
                 var item = new PublishedFileId_t(id);
-                if ((SteamUGC.GetItemState(item) & (uint)EItemState.k_EItemStateSubscribed) == 0) subscribed.Set(SteamUGC.SubscribeItem(item));
+                if ((SteamUGC.GetItemState(item) & (uint)EItemState.k_EItemStateSubscribed) == 0) WorkshopQueue.Subscribed.Set(SteamUGC.SubscribeItem(item));
                 SteamUGC.DownloadItem(item, true);
-                downloading.Add(item);
+                WorkshopQueue.Items.Add(item);
                 Plugin.Log($"[Match] Getting Workshop item {id}");
             }
-            Total = downloading.Count;
+            Total = WorkshopQueue.Items.Count;
             downloadDeadline = Time.realtimeSinceStartup + DownloadTimeout;
         }
 
@@ -188,7 +192,7 @@ namespace BeaverBuddies.Matchmaking
          */
         public static bool? CheckDownloads()
         {
-            downloading.RemoveAll(item =>
+            WorkshopQueue.Items.RemoveAll(item =>
             {
                 uint state = SteamUGC.GetItemState(item);
                 bool installed = (state & (uint)EItemState.k_EItemStateInstalled) != 0;
@@ -196,7 +200,7 @@ namespace BeaverBuddies.Matchmaking
                 if (installed && !busy) Plugin.Log($"[Match] Workshop item {item} is in");
                 return installed && !busy;
             });
-            if (downloading.Count == 0) return true;
+            if (WorkshopQueue.Items.Count == 0) return true;
             if (Time.realtimeSinceStartup > downloadDeadline) return null;
             return false;
         }

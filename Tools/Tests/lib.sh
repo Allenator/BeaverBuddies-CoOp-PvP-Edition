@@ -183,6 +183,7 @@ bb_open() {
     rm -f "$BB_CMD_PREFIX-$inst" "$(bb_log "$inst")"
     prefs_windowed
     open -g -n -a "$BB_GAME" --env SteamAppId=1062090 --env SteamGameId=1062090 --env BB_INSTANCE="$inst" \
+        ${BB_RTC_CODE:+--env BB_RTC_CODE="$BB_RTC_CODE"} \
         --args -skipModManager -logFile "$(bb_log "$inst")" -screen-fullscreen 0 -screen-width 1400 -screen-height 880
 }
 
@@ -229,7 +230,8 @@ start_match() {
     for pick in ${BB_CLIENT_SETTINGS:-}; do send client "gamesetting ${pick%%=*} ${pick#*=}"; done
     send host "hostmatch ${BB_MAP:-Waterfalls} $hostf $mode"
     wait_for_watch host "Server started listening" 120 || return 1
-    send client "joinmatch $clientf"
+    # BB_JOIN_ADDRESS joins some other way than 127.0.0.1, rtc:CODE over WebRTC say
+    send client "joinmatch $clientf ${BB_JOIN_ADDRESS:-}"
     local i
     for ((i = 0; i < 180; i++)); do
         grep -aq "Registering Co-op services" "$(bb_log host)" \

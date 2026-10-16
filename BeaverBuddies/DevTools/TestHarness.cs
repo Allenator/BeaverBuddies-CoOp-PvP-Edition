@@ -165,6 +165,26 @@ namespace BeaverBuddies.DevTools
                 case "pickhost":
                     SingletonManager.GetSingleton<Matchmaking.HostBrowser>()._list.SetSelection(I(a[1]));
                     break;
+                case "listmatches":
+                    // Each open match as the list has it: who, from which store, and the ways in
+                    foreach (var match in Matchmaking.MatchList.Matches)
+                    {
+                        Plugin.Log($"[Test] Open match {match.picks.name} platform={match.platform} code={match.joinCode} lobby={match.lobby} hosted={match.hosted} compatible={match.compatible}");
+                    }
+                    break;
+                case "pickcode":
+                {
+                    // pickcode CODE: picks the game with that join code in the list
+                    var browser = SingletonManager.GetSingleton<Matchmaking.HostBrowser>();
+                    int index = Matchmaking.MatchList.Matches.FindIndex(m => m.joinCode == a[1]);
+                    if (index < 0) throw new Exception($"no open match with code {a[1]}");
+                    browser._list.SetSelection(index);
+                    break;
+                }
+                case "joinpicked":
+                    // The list's Join button
+                    SingletonManager.GetSingleton<Matchmaking.HostBrowser>().OnUIConfirmed();
+                    break;
                 case "matchmods":
                     foreach (var match in Matchmaking.MatchList.Matches)
                     {

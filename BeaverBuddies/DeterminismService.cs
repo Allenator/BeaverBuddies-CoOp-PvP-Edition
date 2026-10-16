@@ -775,6 +775,9 @@ namespace BeaverBuddies
     public class GuidPatcher
     {
         private static bool makeRealGuid = false;
+        // The game makes its ids on Unity's thread. Anything else is a library's, the network's
+        // say (WebRTC makes ids as it goes): it mustn't use up the game's random
+        internal static Thread UnityThread;
 
         public static Guid RealNewGuid()
         {
@@ -789,7 +792,7 @@ namespace BeaverBuddies
 #if NO_RANDOM
             __result = GenerateIncrementally();
 #else
-            if (makeRealGuid)
+            if (makeRealGuid || (UnityThread != null && Thread.CurrentThread != UnityThread))
             {
                 return true;
             }

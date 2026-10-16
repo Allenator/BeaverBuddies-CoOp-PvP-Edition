@@ -51,7 +51,7 @@ namespace TimberNet
             base.Start();
             // TODO: Handle async properly and cleanup
             // TODO: Make wait configurable?
-            if (!client.ConnectAsync().Wait(3000))
+            if (!client.ConnectAsync().Wait(client.ConnectTimeoutMs))
             {
                 throw new ConnectionFailureException();
             }

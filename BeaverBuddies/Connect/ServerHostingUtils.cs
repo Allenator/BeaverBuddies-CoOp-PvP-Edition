@@ -120,6 +120,8 @@ namespace BeaverBuddies.Connect
                 if (confirm != null && !confirm.enabledSelf && UnityEngine.Time.unscaledTime >= clickable) confirm.SetEnabled(true);
                 List<string> clients = io.NetBase.GetConnectedClients();
                 string content = baseMessage;
+                // For anyone joining from the list without Steam, or by typing it in
+                if (WebRtc.JoinCode.Current != null) content = loc.T("BeaverBuddies.Host.JoinCode", WebRtc.JoinCode.Display(WebRtc.JoinCode.Current)) + "\n\n" + content;
                 int nonLocalID = 1;
                 foreach (string client in clients)
                 {
@@ -192,6 +194,9 @@ namespace BeaverBuddies.Connect
                 shower.Create().SetLocalizedMessage("BeaverBuddies.Menu.HostFailed").Show();
                 return;
             }
+#if IS_STEAM
+            Matchmaking.HostedListing.Publish();
+#endif
 
             var behavior = GetMonoBehaviour(sceneLoader._sceneLoader);
             Coroutine coroutine = null;

@@ -1,6 +1,7 @@
 #if IS_STEAM
 using BeaverBuddies.NewGame;
 using BeaverBuddies.Players;
+using BeaverBuddies.Steam;
 using Newtonsoft.Json.Linq;
 using Steamworks;
 using System;
@@ -25,6 +26,10 @@ namespace BeaverBuddies.Matchmaking
      * The picks come from the New Game screens when the game was hosted
      * from them, and otherwise from the save: its mode and settings, with
      * the map and faction from the game when one is loaded.
+     *
+     * It's in the directory too (see OpenListings) with the game's join
+     * code, for players without Steam: the Epic Games build can host and list
+     * a game as well, so nothing here may touch Steam but HostedLobby.
      */
     public static class HostedListing
     {
@@ -34,7 +39,7 @@ namespace BeaverBuddies.Matchmaking
         private static bool newGameFriendsOnly, friendsOnly;
         // The game about to be hosted, for its lobby
         private static MatchPicks hosting;
-        private static CSteamID lobby = CSteamID.Nil;
+        private static ulong lobby;
 
         public static void HostingNewGame(NewGameConfiguration configuration, string mapTitle, string modeLocKey)
         {
@@ -46,7 +51,7 @@ namespace BeaverBuddies.Matchmaking
         // The save about to be hosted, read before its lobby exists
         public static void Hosting(SaveReference save, byte[] saveFile)
         {
-            lobby = CSteamID.Nil;
+            lobby = 0;
             string settlement = save.SettlementReference.SettlementName;
             bool fromNewGame = newGame != null && newGameSettlement == settlement;
             hosting = fromNewGame ? newGame : FromSave(settlement, saveFile);
@@ -86,24 +91,31 @@ namespace BeaverBuddies.Matchmaking
             }
         }
 
-        /**
-         * The hosted game's lobby is up: listed for anyone, unless the host
-         * keeps it to invites or Steam friends, or it's a match's game, which only its other
-         * player joins.
-         */
-        public static void Advertise(CSteamID server)
+        // Anyone can find it: not kept to invites or Steam friends, and not a match's game, which only its other player joins
+        private static bool Listable => hosting != null && !friendsOnly && Settings.LobbyJoinable && !(SteamSupport.Installed && HostedLobby.HostsMatch);
+
+        /** Hosting started: in the directory with the join code, Steam or not. */
+        public static void Publish()
         {
-            if (hosting == null || friendsOnly || !Settings.LobbyJoinable || MatchmakingSession.State == MatchState.Hosting) return;
+            if (!Listable || WebRtc.JoinCode.Current == null) return;
+            OpenListings.Publish(MatchKeys.Describe(hosting, MatchKeys.HostedKind), WebRtc.JoinCode.Current);
+            if (lobby != 0) OpenListings.SetSteamLobby(lobby);
+        }
+
+        /** The hosted game's Steam lobby is up: listed for Steam players, and named in the directory. */
+        public static void Advertise(ulong server)
+        {
+            if (!Listable) return;
             lobby = server;
-            SteamMatchmaking.SetLobbyType(lobby, ELobbyType.k_ELobbyTypePublic);
-            MatchmakingSession.Describe(lobby, hosting, MatchmakingSession.HostedKind);
+            HostedLobby.MakePublic(lobby, hosting);
+            OpenListings.SetSteamLobby(lobby);
             Plugin.Log($"[Match] Listing the hosted game {lobby}: {hosting.mapTitle}");
         }
 
         // How many have joined: it's off the list once the map has no room left
         public static void Joined(int clients)
         {
-            if (!lobby.IsValid() || hosting?.mode == null) return;
+            if (hosting?.mode == null || (lobby == 0 && OpenListings.MineId == null)) return;
             if (!hosting.mode.TryGetValue(nameof(MultiStart.MultiplayerNewGameModeSpec.Players), out float players)) return;
             if (clients + 1 >= players) Unlist();
         }
@@ -111,11 +123,27 @@ namespace BeaverBuddies.Matchmaking
         // The game started, or hosting stopped
         public static void Unlist()
         {
-            if (!lobby.IsValid()) return;
+            OpenListings.Unlist();
+            if (lobby == 0) return;
             Plugin.Log($"[Match] {lobby} is off the list");
-            SteamMatchmaking.SetLobbyData(lobby, MatchmakingSession.OpenKey, "0");
-            lobby = CSteamID.Nil;
+            HostedLobby.Close(lobby);
+            lobby = 0;
         }
+    }
+
+    // The Steam side of HostedListing, only called with Steam there
+    internal static class HostedLobby
+    {
+        public static bool HostsMatch => MatchmakingSession.State == MatchState.Hosting;
+
+        public static void MakePublic(ulong lobby, MatchPicks picks)
+        {
+            CSteamID id = new(lobby);
+            SteamMatchmaking.SetLobbyType(id, ELobbyType.k_ELobbyTypePublic);
+            MatchmakingSession.Describe(id, picks, MatchmakingSession.HostedKind);
+        }
+
+        public static void Close(ulong lobby) => SteamMatchmaking.SetLobbyData(new CSteamID(lobby), MatchmakingSession.OpenKey, "0");
     }
 
     // What the loaded game is, for listing it when it's hosted

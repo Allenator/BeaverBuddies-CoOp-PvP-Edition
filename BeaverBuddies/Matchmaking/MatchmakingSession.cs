@@ -70,17 +70,12 @@ namespace BeaverBuddies.Matchmaking
         // How long a lobby's owner waits for a player getting its mods and restarting
         private const float UpdateWait = 420;
 
-        // Lobby data, set by the lobby's owner: what the search filters on
-        internal const string MatchKey = "bb.match", BaseKey = "bb.match.base", CompatKey = "bb.match.compat", ModsKey = "bb.match.mods",
-            OpenKey = "bb.match.open", MapKey = "bb.match.map", ModeKey = "bb.match.mode", OptionsKey = "bb.match.options", PicksKey = "bb.match.picks", ResultKey = "bb.match.result";
-        // What Base is made of, in the clear: the list of open matches
-        // shows players it can't match with why
-        internal const string ProtocolKey = "bb.match.protocol", GameKey = "bb.match.game", DebugKey = "bb.match.debug";
-        // A player waiting for a Quick match, or a hosted game (see
-        // HostedListing): both are listed, only the first is searched
-        internal const string KindKey = "bb.match.kind", QuickKind = "quick", HostedKind = "hosted";
-        // Matchmaking's own version: two that differ can't find each other
-        internal const int Protocol = 6;
+        // Lobby data (see MatchKeys)
+        internal const string MatchKey = MatchKeys.Match, BaseKey = MatchKeys.Base, CompatKey = MatchKeys.Compat, ModsKey = MatchKeys.Mods,
+            OpenKey = MatchKeys.Open, MapKey = MatchKeys.Map, ModeKey = MatchKeys.Mode, OptionsKey = MatchKeys.Options, PicksKey = MatchKeys.Picks, ResultKey = "bb.match.result";
+        internal const string ProtocolKey = MatchKeys.Protocol, GameKey = MatchKeys.Game, DebugKey = MatchKeys.Debug;
+        internal const string KindKey = MatchKeys.Kind, QuickKind = MatchKeys.QuickKind, HostedKind = MatchKeys.HostedKind;
+        internal const int Protocol = MatchKeys.ProtocolVersion;
         // Member data: the hosting player's game, who may not own the
         // lobby, and a player getting the owner's mods to come back with
         private const string ServerKey = "bb.match.server", UpdatingKey = "bb.match.updating";
@@ -160,7 +155,7 @@ namespace BeaverBuddies.Matchmaking
             looking = false;
             startedAt = Time.realtimeSinceStartup;
             // Only players with the same of all of these play together: to compare when two can't
-            Plugin.Log($"[Match] Compatible with {Compat}: {CompatParts}; detailed logging {(Settings.Debug ? "on" : "off")}");
+            Plugin.Log($"[Match] Compatible with {Compat}: {MatchKeys.CompatParts}; detailed logging {(Settings.Debug ? "on" : "off")}");
         }
 
         // Into one of the open matches, picked from the list
@@ -217,26 +212,9 @@ namespace BeaverBuddies.Matchmaking
             dataUpdated = Callback<LobbyDataUpdate_t>.Create(OnDataUpdated);
         }
 
-        // What no mod download can fix, short enough for a lobby filter: the
-        // game's version, and detailed logging, which a desync report needs
-        // on for both players
-        internal static string Base => Hash($"match {Protocol}|{GameVersions.CurrentVersion}|{Settings.Debug}");
+        internal static string Base => MatchKeys.BaseValue;
+        internal static string Compat => MatchKeys.CompatValue;
 
-        // The same game, mod and add-on versions and the same factions,
-        // which any two players in a game need
-        private static string CompatParts =>
-            $"{GameVersions.CurrentVersion}|{Plugin.Version} {Build}|{ReplayHooks.AddOnList}|{ReplayHooks.FactionList}";
-
-        // This exact build: two builds of the same version can still play differently
-        private static string Build => Events.InitializeClientEvent.ModBuild;
-
-        internal static string Compat => Hash(CompatParts);
-
-        private static string Hash(string text)
-        {
-            using var sha = SHA1.Create();
-            return string.Concat(sha.ComputeHash(Encoding.UTF8.GetBytes(text)).Take(8).Select(b => b.ToString("x2")));
-        }
 
         private static void Look()
         {
@@ -312,19 +290,7 @@ namespace BeaverBuddies.Matchmaking
         // What the list and the search read of a lobby, and open
         internal static void Describe(CSteamID id, MatchPicks picks, string kind)
         {
-            SteamMatchmaking.SetLobbyData(id, MatchKey, "1");
-            SteamMatchmaking.SetLobbyData(id, KindKey, kind);
-            SteamMatchmaking.SetLobbyData(id, BaseKey, Base);
-            SteamMatchmaking.SetLobbyData(id, ProtocolKey, Protocol.ToString());
-            SteamMatchmaking.SetLobbyData(id, GameKey, GameVersions.CurrentVersion.ToString());
-            SteamMatchmaking.SetLobbyData(id, DebugKey, Settings.Debug ? "1" : "0");
-            SteamMatchmaking.SetLobbyData(id, CompatKey, Compat);
-            SteamMatchmaking.SetLobbyData(id, ModsKey, MatchMods.ToJson(MatchMods.Local));
-            SteamMatchmaking.SetLobbyData(id, MapKey, picks.MapKey);
-            SteamMatchmaking.SetLobbyData(id, ModeKey, picks.ModeKey);
-            SteamMatchmaking.SetLobbyData(id, OptionsKey, picks.OptionsKey);
-            SteamMatchmaking.SetLobbyData(id, PicksKey, picks.ToJson());
-            SteamMatchmaking.SetLobbyData(id, OpenKey, "1");
+            foreach (var pair in MatchKeys.Describe(picks, kind)) SteamMatchmaking.SetLobbyData(id, pair.Key, pair.Value);
         }
 
         private static void OnEntered(LobbyEnter_t result, bool failed)
