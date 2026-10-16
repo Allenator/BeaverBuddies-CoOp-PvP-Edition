@@ -123,6 +123,7 @@ namespace BeaverBuddies.Matchmaking
         public event Action<ulong> MemberEntered;
         public event Action<ulong> MemberLeft;
         public event Action DataChanged;
+        public event Action Lost;
         // The lobby as it is when this player came in, or the Worker said no
         internal event Action Ready, Failed;
 
@@ -136,7 +137,7 @@ namespace BeaverBuddies.Matchmaking
             Id = id;
             this.socket = socket;
             socket.OnMessage += message => Lobbies.Post(() => Apply(message));
-            socket.OnClosed += () => Lobbies.Post(Lost);
+            socket.OnClosed += () => Lobbies.Post(Dropped);
         }
 
         private static ulong Parse(JToken token) => ulong.TryParse((string)token, out ulong id) ? id : 0;
@@ -195,7 +196,7 @@ namespace BeaverBuddies.Matchmaking
         }
 
         // The connection to the Worker dropped: as far as this player knows, everyone else left
-        private void Lost()
+        private void Dropped()
         {
             if (left) return;
             left = true;
@@ -206,6 +207,7 @@ namespace BeaverBuddies.Matchmaking
             }
             Plugin.LogWarning($"[Match] Lost the connection to the Worker's lobby {Id}");
             foreach (ulong other in members.Select(m => m.Id).Where(m => m != Lobbies.Me).ToList()) MemberLeft?.Invoke(other);
+            Lost?.Invoke();
         }
 
         private Member Find(ulong id) => members.FirstOrDefault(m => m.Id == id);

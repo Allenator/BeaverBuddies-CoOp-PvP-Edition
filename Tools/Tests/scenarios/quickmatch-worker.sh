@@ -16,7 +16,7 @@ shot "waiting" host
 # Open matches lists it too, with its store
 send client "click MultiplayerButton"; sleep 1
 send client "openmatches"
-wait_for client "\[Match\] .* open matches, .* in the directory" 30
+wait_for client "\[Match\] .* open matches, .* on the Worker" 30
 sleep 1; send client "listmatches"; sleep 1
 expect_log "the waiting player is in Open matches" client "\[Test\] Open match .* platform=steam code= lobby=[0-9]+ hosted=False compatible=True"
 shot "open-matches" client

@@ -9,10 +9,9 @@ using Timberborn.Versioning;
 namespace BeaverBuddies.Matchmaking
 {
     /**
-     * What an open match says about itself, by the same keys wherever it's
-     * listed: the data of its Steam lobby, and its listing in the directory
-     * (see OpenListings) that players without Steam see. Free of Steam, so
-     * the Epic Games build can use it.
+     * What an open match says about itself, by the same keys in a Steam
+     * lobby or a Worker one (see Lobbies). Free of Steam, so the Epic Games
+     * build can use it.
      */
     public static class MatchKeys
     {
@@ -24,6 +23,8 @@ namespace BeaverBuddies.Matchmaking
         public const string Protocol = "bb.match.protocol", Game = "bb.match.game", Debug = "bb.match.debug";
         // The player's store, for the icon beside their name
         public const string Platform = "bb.match.platform";
+        // A hosted game's ways in: its join code, and its Steam lobby when it has one
+        public const string Code = "bb.match.code", SteamLobby = "bb.match.steam";
         // A player waiting for a Quick match, or a hosted game (see
         // HostedListing): both are listed, only the first is searched
         public const string Kind = "bb.match.kind", QuickKind = "quick", HostedKind = "hosted";
@@ -66,7 +67,7 @@ namespace BeaverBuddies.Matchmaking
             [Mode] = picks.ModeKey,
             [Options] = picks.OptionsKey,
             [Picks] = picks.ToJson(),
-            [Platform] = OpenListings.Platform,
+            [Platform] = Lobbies.Platform,
             [Open] = "1",
         };
     }

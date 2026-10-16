@@ -12,7 +12,7 @@ namespace BeaverBuddies.Matchmaking
     // A player waiting in a match lobby of their own, or a hosted game, for anyone to join
     public class OpenMatch
     {
-        // Its Steam lobby, 0 for a game only in the directory
+        // Its Steam lobby, or its Worker lobby for a Quick match; 0 for a hosted game without Steam
         public ulong lobby;
         // Its WebRTC join code, null for a Quick match, which only Steam lists
         public string joinCode;
@@ -46,10 +46,10 @@ namespace BeaverBuddies.Matchmaking
      * too, after the rest, so a player can see why they can't play them.
      *
      * Two places list them: Steam's lobbies, for players with Steam, and the
-     * directory (see OpenListings), where every hosted game is, Steam or not.
-     * A game in both shows once, as its Steam lobby when this player has
+     * Worker's (see WorkerLobbies), where every hosted game is too, Steam or
+     * not. A game in both shows once, as its Steam lobby when this player has
      * Steam. Without Steam (the Epic Games build, or Steam networking off)
-     * it's the directory alone, and nothing here may touch Steam.
+     * it's the Worker's alone, and nothing here may touch Steam.
      */
     public static class MatchList
     {
@@ -62,38 +62,29 @@ namespace BeaverBuddies.Matchmaking
         public static bool SteamListed => Lobbies.SteamUp;
 
         // What each place last gave, merged once both are in. Null while waiting, or when it failed
-        private static List<OpenMatch> fromSteam, fromDirectory, fromWorker;
-        private static bool steamPending, directoryPending, workerPending, steamFailed, directoryFailed;
-        // The directory answers on another thread: picked up on Unity's, at the next Poll
-        private static volatile bool directoryArrived;
-        private static List<DirectoryListing> arrived;
+        private static List<OpenMatch> fromSteam, fromWorker;
+        private static bool steamPending, workerPending, steamFailed, workerFailed;
 
         public static void Refresh()
         {
             if (Loading) return;
             Loading = true;
             Failed = false;
-            steamFailed = directoryFailed = false;
-            fromSteam = fromDirectory = fromWorker = null;
+            steamFailed = workerFailed = false;
+            fromSteam = fromWorker = null;
             steamPending = SteamListed;
-            directoryPending = workerPending = true;
+            workerPending = true;
             if (steamPending) RequestSteam();
-            // Players without Steam waiting for a Quick match
             var filter = new LobbyFilter { Most = 50 };
             filter.Equal[MatchKeys.Match] = "1";
-            filter.Equal[MatchKeys.Kind] = MatchKeys.QuickKind;
             filter.Equal[MatchKeys.Open] = "1";
             if (!ShowIncompatible) filter.Equal[MatchKeys.Base] = MatchKeys.BaseValue;
             WorkerLobbies.Search(filter, lobbies =>
             {
                 workerPending = false;
+                workerFailed = lobbies == null;
                 fromWorker = lobbies?.Select(FromLobby).Where(m => m != null).ToList();
                 Merge();
-            });
-            Task.Run(async () =>
-            {
-                arrived = await OpenListings.Fetch();
-                directoryArrived = true;
             });
             Changed?.Invoke();
         }
@@ -101,17 +92,6 @@ namespace BeaverBuddies.Matchmaking
         // Apart, so that compiling Refresh never loads Steam's types in a copy without them
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static void RequestSteam() => SteamLobbyList.Request(ShowIncompatible, OnSteamListed);
-
-        /** Every frame the list is open (see HostBrowser): takes in the directory's answer. */
-        public static void Poll()
-        {
-            if (!directoryArrived) return;
-            directoryArrived = false;
-            directoryPending = false;
-            directoryFailed = arrived == null;
-            fromDirectory = arrived?.Select(FromListing).Where(m => m != null).ToList();
-            Merge();
-        }
 
         private static void OnSteamListed(List<OpenMatch> matches)
         {
@@ -128,46 +108,22 @@ namespace BeaverBuddies.Matchmaking
             string Data(string key) => lobby.Data.TryGetValue(key, out string value) && !string.IsNullOrEmpty(value) ? value : null;
             MatchPicks picks = MatchPicks.FromJson(Data(MatchKeys.Picks));
             if (picks == null) return null;
+            bool hosted = Data(MatchKeys.Kind) == MatchKeys.HostedKind;
+            if (hosted && Data(MatchKeys.Code) == null) return null;
             bool otherMods = Data(MatchKeys.Compat) != MatchKeys.CompatValue;
+            ulong.TryParse(Data(MatchKeys.SteamLobby), out ulong steamLobby);
             return new OpenMatch
             {
-                lobby = lobby.Id,
+                // A hosted game is joined by its Steam lobby or its code, never its Worker lobby
+                lobby = hosted ? steamLobby : lobby.Id,
+                joinCode = hosted ? Data(MatchKeys.Code) : null,
                 platform = Data(MatchKeys.Platform) ?? "other",
                 picks = picks,
+                hosted = hosted,
                 otherMods = otherMods,
                 mods = MatchMods.FromJson(Data(MatchKeys.Mods)),
-                // Their mods come from the Workshop, which needs Steam
-                compatible = Data(MatchKeys.Base) == MatchKeys.BaseValue && (!otherMods || SteamListed),
-                protocol = Data(MatchKeys.Protocol),
-                game = Data(MatchKeys.Game),
-                debug = Data(MatchKeys.Debug),
-            };
-        }
-
-        private static OpenMatch FromListing(DirectoryListing listing)
-        {
-            // Two test copies list their games side by side (see DevTools.TestHarness)
-            if (listing.id == OpenListings.MineId && !DevTools.TestHarness.Active) return null;
-            var data = listing.data ?? new Dictionary<string, string>();
-            string Data(string key) => data.TryGetValue(key, out string value) && !string.IsNullOrEmpty(value) ? value : null;
-            if (Data(MatchKeys.Open) != "1") return null;
-            MatchPicks picks = MatchPicks.FromJson(Data(MatchKeys.Picks));
-            if (picks == null) return null;
-            bool sameBase = Data(MatchKeys.Base) == MatchKeys.BaseValue;
-            if (!sameBase && !ShowIncompatible) return null;
-            bool otherMods = Data(MatchKeys.Compat) != MatchKeys.CompatValue;
-            ulong.TryParse(listing.steamLobby, out ulong lobby);
-            return new OpenMatch
-            {
-                lobby = lobby,
-                joinCode = listing.joinCode,
-                platform = listing.platform,
-                picks = picks,
-                hosted = true,
-                otherMods = otherMods,
-                mods = MatchMods.FromJson(Data(MatchKeys.Mods)),
-                // Without Steam there's no Workshop to get their mods from
-                compatible = sameBase && !otherMods,
+                // A hosted game has no match to get its mods in, and a Quick match's come from the Workshop, which needs Steam
+                compatible = Data(MatchKeys.Base) == MatchKeys.BaseValue && (!otherMods || !hosted && SteamListed),
                 protocol = Data(MatchKeys.Protocol),
                 game = Data(MatchKeys.Game),
                 debug = Data(MatchKeys.Debug),
@@ -176,18 +132,16 @@ namespace BeaverBuddies.Matchmaking
 
         private static void Merge()
         {
-            if (steamPending || directoryPending || workerPending) return;
+            if (steamPending || workerPending) return;
             Loading = false;
-            Failed = (steamFailed || !SteamListed) && directoryFailed;
+            Failed = (steamFailed || !SteamListed) && workerFailed;
             var all = new List<OpenMatch>(fromSteam ?? new List<OpenMatch>());
-            all.AddRange(fromWorker ?? new List<OpenMatch>());
-            var inSteam = new HashSet<ulong>(all.Select(m => m.lobby));
-            foreach (OpenMatch listed in fromDirectory ?? new List<OpenMatch>())
+            foreach (OpenMatch listed in fromWorker ?? new List<OpenMatch>())
             {
                 OpenMatch same = listed.lobby != 0 ? all.FirstOrDefault(m => m.lobby == listed.lobby) : null;
                 if (same != null)
                 {
-                    // Its Steam lobby says it all; the directory adds the way in for players without Steam
+                    // Its Steam lobby says it all; the Worker's adds the way in for players without Steam
                     same.joinCode = listed.joinCode;
                     same.platform = listed.platform;
                     continue;
@@ -197,7 +151,7 @@ namespace BeaverBuddies.Matchmaking
             // The ones that can be played first, keeping each list's order within each
             Matches.Clear();
             Matches.AddRange(all.Where(m => m.compatible).Concat(all.Where(m => !m.compatible)));
-            Plugin.Log($"[Match] {Matches.Count(m => m.compatible)} open matches, {Matches.Count(m => !m.compatible)} incompatible; {fromDirectory?.Count ?? 0} in the directory");
+            Plugin.Log($"[Match] {Matches.Count(m => m.compatible)} open matches, {Matches.Count(m => !m.compatible)} incompatible; {fromWorker?.Count ?? 0} on the Worker");
             Changed?.Invoke();
         }
     }

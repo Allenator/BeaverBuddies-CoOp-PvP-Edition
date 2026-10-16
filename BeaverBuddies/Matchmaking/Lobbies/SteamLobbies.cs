@@ -174,6 +174,8 @@ namespace BeaverBuddies.Matchmaking
         public event Action<ulong> MemberEntered;
         public event Action<ulong> MemberLeft;
         public event Action DataChanged;
+        // Steam keeps a lobby for as long as the game runs
+        public event Action Lost { add { } remove { } }
 
         internal void Changed(ulong member, bool cameIn)
         {

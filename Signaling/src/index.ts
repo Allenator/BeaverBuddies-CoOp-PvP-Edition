@@ -6,13 +6,9 @@
 // messages reach the host with "from" set to the guest's id, and the host
 // addresses a guest with "to".
 //
-// /listings is the directory of hosted games, for the players who can't see
-// Steam lobbies (the Epic Games build, or anyone with Steam networking off):
-// every host puts its game there, Steam or not, and puts it again every 30
-// seconds while it's open. A listing nobody refreshes for 90 seconds is gone.
-//
-// /lobby/<id> is a matchmaking lobby (see lobby.ts), and /lobbies searches
-// the ones open to join.
+// /lobby/<id> is a lobby (see lobby.ts): a Quick match's, or a hosted game's
+// for the players who can't see Steam lobbies. /lobbies searches the ones
+// open to join.
 
 import { DurableObject } from "cloudflare:workers";
 import { Lobby, type LobbySummary } from "./lobby";
@@ -33,7 +29,7 @@ const GUEST_LIFETIME = 2 * 60 * 1000;
 export default {
 	async fetch(request: Request, env: Env): Promise<Response> {
 		const url = new URL(request.url);
-		if (url.pathname === "/listings" || url.pathname.startsWith("/listings/") || url.pathname === "/lobbies") {
+		if (url.pathname === "/lobbies") {
 			return env.DIRECTORY.get(env.DIRECTORY.idFromName("directory")).fetch(request);
 		}
 		const lobby = url.pathname.match(/^\/lobby\/([0-9]{1,20})$/);
@@ -144,32 +140,13 @@ export class Room extends DurableObject<Env> {
 	}
 }
 
-const LISTING_LIFETIME = 90 * 1000;
-const MAX_LISTING = 64 * 1024;
-const MAX_LISTINGS = 500;
-const ID = /^[A-Za-z0-9-]{8,64}$/;
-
-interface Listing {
-	id: string;
-	// steam, epic or other: the icon beside the host's name
-	platform: string;
-	// For WebRTC (see Room)
-	joinCode: string;
-	// The game's Steam lobby, when the host has one: Steam players join through it
-	steamLobby?: string;
-	// The lobby data's keys and values (MatchKeys in BeaverBuddies)
-	data: Record<string, string>;
-	until: number;
-}
-
 // A lobby nobody relisted for this long is gone (see lobby.ts, which relists every minute)
 const LOBBY_LIFETIME = 150 * 1000;
 
+// Where the lobbies list themselves, for search
 export class Directory extends DurableObject<Env> {
-	private listings = new Map<string, Listing & { key: string }>();
-	// Matchmaking lobbies, in memory only: each relists itself every minute
+	// In memory only: each lobby relists itself every minute
 	private lobbies = new Map<string, LobbySummary & { until: number }>();
-	private loaded = false;
 
 	// From the lobbies themselves (see lobby.ts), never from outside
 	async putLobby(summary: LobbySummary) {
@@ -207,79 +184,7 @@ export class Directory extends DurableObject<Env> {
 	}
 
 	async fetch(request: Request): Promise<Response> {
-		await this.load();
-		if (new URL(request.url).pathname === "/lobbies") {
-			if (request.method !== "GET") return new Response("Use GET", { status: 405 });
-			return this.searchLobbies(new URL(request.url));
-		}
-		// Read before any answer: one sent with the body unread breaks the connection for the next request
-		const body = request.method === "PUT" ? await request.text() : "";
-		const url = new URL(request.url);
-		const id = url.pathname.split("/")[2];
-		const now = Date.now();
-		for (const [key, listing] of this.listings) {
-			if (listing.until <= now) {
-				this.listings.delete(key);
-				this.ctx.storage.delete(key);
-			}
-		}
-
-		if (request.method === "GET" && !id) {
-			const open = [...this.listings.values()].map(({ key, until, ...listing }) => listing);
-			return Response.json({ listings: open }, { headers: { "Cache-Control": "no-store" } });
-		}
-		if (!id || !ID.test(id)) {
-			return new Response("Bad listing id", { status: 400 });
-		}
-		// Whoever first put a listing owns it: only their key changes or removes it
-		const key = request.headers.get("X-Listing-Key") ?? "";
-		const existing = this.listings.get(id);
-		if (key.length < 16 || (existing && existing.key !== key)) {
-			return new Response("Not your listing", { status: 403 });
-		}
-
-		if (request.method === "DELETE") {
-			this.listings.delete(id);
-			await this.ctx.storage.delete(id);
-			return new Response(null, { status: 204 });
-		}
-		if (request.method !== "PUT") {
-			return new Response("Use GET, PUT or DELETE", { status: 405 });
-		}
-		if (body.length > MAX_LISTING) {
-			return new Response("Listing too big", { status: 413 });
-		}
-		if (!existing && this.listings.size >= MAX_LISTINGS) {
-			return new Response("Directory full", { status: 503 });
-		}
-		let parsed: Partial<Listing>;
-		try {
-			parsed = JSON.parse(body);
-		} catch {
-			return new Response("Bad JSON", { status: 400 });
-		}
-		if (typeof parsed.joinCode !== "string" || typeof parsed.data !== "object" || parsed.data === null) {
-			return new Response("A listing needs joinCode and data", { status: 400 });
-		}
-		const listing = {
-			id,
-			key,
-			platform: typeof parsed.platform === "string" ? parsed.platform.slice(0, 16) : "other",
-			joinCode: parsed.joinCode.slice(0, 16),
-			steamLobby: typeof parsed.steamLobby === "string" ? parsed.steamLobby.slice(0, 24) : undefined,
-			data: Object.fromEntries(Object.entries(parsed.data).filter(([, v]) => typeof v === "string")) as Record<string, string>,
-			until: now + LISTING_LIFETIME,
-		};
-		this.listings.set(id, listing);
-		await this.ctx.storage.put(id, listing);
-		return new Response(null, { status: 204 });
-	}
-
-	// Back from storage after the object was evicted
-	private async load() {
-		if (this.loaded) return;
-		this.loaded = true;
-		const stored = await this.ctx.storage.list<Listing & { key: string }>();
-		for (const [id, listing] of stored) this.listings.set(id, listing);
+		if (request.method !== "GET") return new Response("Use GET", { status: 405 });
+		return this.searchLobbies(new URL(request.url));
 	}
 }

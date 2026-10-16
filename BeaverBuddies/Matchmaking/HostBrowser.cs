@@ -29,7 +29,7 @@ namespace BeaverBuddies.Matchmaking
      * two Steam players meet through the game's Steam lobby, and anyone else
      * through its join code over WebRTC, or for a Quick match the Worker's
      * lobby. Without Steam (the Epic Games build, or Steam networking off)
-     * it's the directory and the Worker's lobbies, and nothing here may touch
+     * it's the Worker's lobbies alone, and nothing here may touch
      * Steam.
      */
     public class HostBrowser : RegisteredSingleton, IPanelController, IUpdatableSingleton, IExtendedDropdownProvider
@@ -181,7 +181,6 @@ namespace BeaverBuddies.Matchmaking
         public void UpdateSingleton()
         {
             if (!_open) return;
-            MatchList.Poll();
             if (Time.realtimeSinceStartup >= _refreshAt) Refresh();
         }
 

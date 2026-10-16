@@ -33,6 +33,8 @@ namespace BeaverBuddies.Matchmaking
         event Action<ulong> MemberLeft;
         // Its data or a member's changed
         event Action DataChanged;
+        // This player lost the lobby without leaving it (the Worker's: the connection dropped)
+        event Action Lost;
     }
 
     // Lobbies whose data has each of these, with room for one more
@@ -56,6 +58,11 @@ namespace BeaverBuddies.Matchmaking
         public const ulong WorkerIdsBelow = 1UL << 56;
 
         public static bool SteamUp => SteamSupport.IsSteamEnabled && Settings.EnableSteam;
+
+        // This copy's store, for the icon beside a player's name
+        public static readonly string Platform = SteamSupport.Installed ? "steam"
+            : AppDomain.CurrentDomain.GetAssemblies().Any(a => a.GetName().Name.IndexOf("Epic", StringComparison.OrdinalIgnoreCase) >= 0) ? "epic"
+            : "other";
 
         public static ulong Me => SteamUp ? SteamMe() : WorkerLobbies.Me;
 

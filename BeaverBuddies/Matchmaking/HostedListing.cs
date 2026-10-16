@@ -27,9 +27,10 @@ namespace BeaverBuddies.Matchmaking
      * from them, and otherwise from the save: its mode and settings, with
      * the map and faction from the game when one is loaded.
      *
-     * It's in the directory too (see OpenListings) with the game's join
-     * code, for players without Steam: the Epic Games build can host and list
-     * a game as well, so nothing here may touch Steam but HostedLobby.
+     * It has a Worker lobby too (see WorkerLobbies), with the game's join
+     * code, for players without Steam. Only the host is in it, and it lasts
+     * as long as they host. The Epic Games build can host and list a game as
+     * well, so nothing here may touch Steam but HostedLobby.
      */
     public static class HostedListing
     {
@@ -40,6 +41,10 @@ namespace BeaverBuddies.Matchmaking
         // The game about to be hosted, for its lobby
         private static MatchPicks hosting;
         private static ulong lobby;
+        private static ILobby workerLobby;
+        // Bumped whenever the listing ends, so a Worker lobby still on its way is left at once
+        private static int generation;
+        private static bool listed;
 
         public static void HostingNewGame(NewGameConfiguration configuration, string mapTitle, string modeLocKey)
         {
@@ -94,28 +99,59 @@ namespace BeaverBuddies.Matchmaking
         // Anyone can find it: not kept to invites or Steam friends, and not a match's game, which only its other player joins
         private static bool Listable => hosting != null && !friendsOnly && Settings.LobbyJoinable && !(SteamSupport.Installed && HostedLobby.HostsMatch);
 
-        /** Hosting started: in the directory with the join code, Steam or not. */
+        /** Hosting started: in a Worker lobby with the join code, Steam or not. */
         public static void Publish()
         {
             if (!Listable || WebRtc.JoinCode.Current == null) return;
-            OpenListings.Publish(MatchKeys.Describe(hosting, MatchKeys.HostedKind), WebRtc.JoinCode.Current);
-            if (lobby != 0) OpenListings.SetSteamLobby(lobby);
+            listed = true;
+            OpenWorkerLobby(WebRtc.JoinCode.Current);
         }
 
-        /** The hosted game's Steam lobby is up: listed for Steam players, and named in the directory. */
+        private static void OpenWorkerLobby(string code)
+        {
+            int mine = ++generation;
+            WorkerLobbies.Create(2, created =>
+            {
+                if (mine != generation)
+                {
+                    created?.Leave();
+                    return;
+                }
+                if (created == null)
+                {
+                    Plugin.LogWarning("[Match] Couldn't list the hosted game for players without Steam");
+                    return;
+                }
+                workerLobby = created;
+                foreach (var pair in MatchKeys.Describe(hosting, MatchKeys.HostedKind)) created.SetData(pair.Key, pair.Value);
+                created.SetData(MatchKeys.Code, code);
+                if (lobby != 0) created.SetData(MatchKeys.SteamLobby, lobby.ToString());
+                // The Worker restarted, or the network dropped: listed again
+                created.Lost += () =>
+                {
+                    if (workerLobby != created) return;
+                    workerLobby = null;
+                    OpenWorkerLobby(code);
+                };
+                Plugin.Log($"[Match] Listing the hosted game in the Worker's lobby {created.Id} with code {code}");
+            });
+        }
+
+        /** The hosted game's Steam lobby is up: listed for Steam players, and named in the Worker lobby. */
         public static void Advertise(ulong server)
         {
             if (!Listable) return;
             lobby = server;
+            listed = true;
             HostedLobby.MakePublic(lobby, hosting);
-            OpenListings.SetSteamLobby(lobby);
+            workerLobby?.SetData(MatchKeys.SteamLobby, lobby.ToString());
             Plugin.Log($"[Match] Listing the hosted game {lobby}: {hosting.mapTitle}");
         }
 
         // How many have joined: it's off the list once the map has no room left
         public static void Joined(int clients)
         {
-            if (hosting?.mode == null || (lobby == 0 && OpenListings.MineId == null)) return;
+            if (hosting?.mode == null || !listed) return;
             if (!hosting.mode.TryGetValue(nameof(MultiStart.MultiplayerNewGameModeSpec.Players), out float players)) return;
             if (clients + 1 >= players) Unlist();
         }
@@ -123,7 +159,14 @@ namespace BeaverBuddies.Matchmaking
         // The game started, or hosting stopped
         public static void Unlist()
         {
-            OpenListings.Unlist();
+            generation++;
+            listed = false;
+            if (workerLobby != null)
+            {
+                Plugin.Log($"[Match] The Worker's lobby {workerLobby.Id} is off the list");
+                workerLobby.Leave();
+                workerLobby = null;
+            }
             if (lobby == 0) return;
             Plugin.Log($"[Match] {lobby} is off the list");
             HostedLobby.Close(lobby);

@@ -183,7 +183,7 @@ namespace BeaverBuddies.IO
         private float _nextListingCheck;
 
         // A hosted game stays listed while it runs, until it has no room left
-        // Nobody can join a game no longer hosted: off the directory, where it would linger until it expired
+        // Nobody can join a game no longer hosted: off the list
         protected override void Closed()
         {
 #if IS_STEAM

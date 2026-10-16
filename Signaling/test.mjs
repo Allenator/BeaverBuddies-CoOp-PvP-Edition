@@ -1,5 +1,5 @@
-// Connects a host and two guests to the signaling Worker and checks that
-// messages pass between them. Usage: node test.mjs [base-url]
+// Connects a host and two guests to a signaling room on the Worker and checks
+// that messages pass between them. Usage: node test.mjs [base-url]
 import WebSocket from "ws";
 
 const base = (process.argv[2] ?? "http://localhost:8799").replace(/^http/, "ws");
@@ -46,18 +46,5 @@ a.ws.close();
 await until(() => host.inbox.some((m) => m.type === "guest-left" && m.from === idA));
 host.ws.close();
 await until(() => b.ws.readyState >= WebSocket.CLOSING);
-// The directory of hosted games
-const http = base.replace(/^ws/, "http");
-const id = "test-" + code.toLowerCase();
-const put = (key, body) => fetch(`${http}/listings/${id}`, { method: "PUT", headers: { "X-Listing-Key": key }, body: JSON.stringify(body) });
-const listed = async () => (await (await fetch(`${http}/listings`)).json()).listings.find((l) => l.id === id);
-const key = "k".repeat(24);
-if ((await put(key, { platform: "epic", joinCode: "ABC234", data: { "bb.match": "1" } })).status !== 204) throw new Error("put failed");
-const got = await listed();
-if (got?.platform !== "epic" || got.joinCode !== "ABC234" || got.data["bb.match"] !== "1" || got.key) throw new Error("listing wrong: " + JSON.stringify(got));
-if ((await put("x".repeat(24), { joinCode: "HIJACK", data: {} })).status !== 403) throw new Error("someone else changed the listing");
-await fetch(`${http}/listings/${id}`, { method: "DELETE", headers: { "X-Listing-Key": key } });
-if (await listed()) throw new Error("listing still there");
-
 console.log(`ok (${code})`);
 process.exit(0);
