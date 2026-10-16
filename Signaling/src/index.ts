@@ -10,12 +10,19 @@
 // Steam lobbies (the Epic Games build, or anyone with Steam networking off):
 // every host puts its game there, Steam or not, and puts it again every 30
 // seconds while it's open. A listing nobody refreshes for 90 seconds is gone.
+//
+// /lobby/<id> is a matchmaking lobby (see lobby.ts), and /lobbies searches
+// the ones open to join.
 
 import { DurableObject } from "cloudflare:workers";
+import { Lobby, type LobbySummary } from "./lobby";
+
+export { Lobby };
 
 export interface Env {
 	ROOMS: DurableObjectNamespace<Room>;
 	DIRECTORY: DurableObjectNamespace<Directory>;
+	LOBBIES: DurableObjectNamespace<Lobby>;
 }
 
 const CODE = /^[A-Z0-9]{4,12}$/;
@@ -26,8 +33,15 @@ const GUEST_LIFETIME = 2 * 60 * 1000;
 export default {
 	async fetch(request: Request, env: Env): Promise<Response> {
 		const url = new URL(request.url);
-		if (url.pathname === "/listings" || url.pathname.startsWith("/listings/")) {
+		if (url.pathname === "/listings" || url.pathname.startsWith("/listings/") || url.pathname === "/lobbies") {
 			return env.DIRECTORY.get(env.DIRECTORY.idFromName("directory")).fetch(request);
+		}
+		const lobby = url.pathname.match(/^\/lobby\/([0-9]{1,20})$/);
+		if (lobby) {
+			if (request.headers.get("Upgrade") !== "websocket") {
+				return new Response("Expected a WebSocket", { status: 426 });
+			}
+			return env.LOBBIES.get(env.LOBBIES.idFromName(lobby[1])).fetch(request);
 		}
 		const match = url.pathname.match(/^\/room\/([^/]+)$/);
 		if (!match) {
@@ -148,12 +162,56 @@ interface Listing {
 	until: number;
 }
 
+// A lobby nobody relisted for this long is gone (see lobby.ts, which relists every minute)
+const LOBBY_LIFETIME = 150 * 1000;
+
 export class Directory extends DurableObject<Env> {
 	private listings = new Map<string, Listing & { key: string }>();
+	// Matchmaking lobbies, in memory only: each relists itself every minute
+	private lobbies = new Map<string, LobbySummary & { until: number }>();
 	private loaded = false;
+
+	// From the lobbies themselves (see lobby.ts), never from outside
+	async putLobby(summary: LobbySummary) {
+		this.lobbies.set(summary.id, { ...summary, until: Date.now() + LOBBY_LIFETIME });
+	}
+
+	async deleteLobby(id: string) {
+		this.lobbies.delete(id);
+	}
+
+	/**
+	 * The lobbies anyone can join: with room, joinable, and with every
+	 * eq.<key>=<value> of the query in their data. most=<n> caps how many.
+	 */
+	private searchLobbies(url: URL): Response {
+		const now = Date.now();
+		const equal: [string, string][] = [];
+		for (const [param, value] of url.searchParams) {
+			if (param.startsWith("eq.")) equal.push([param.slice(3), value]);
+		}
+		const most = Math.min(Math.max(parseInt(url.searchParams.get("most") ?? "50") || 50, 1), 100);
+		const found: LobbySummary[] = [];
+		for (const [id, lobby] of this.lobbies) {
+			if (lobby.until <= now) {
+				this.lobbies.delete(id);
+				continue;
+			}
+			if (!lobby.joinable || lobby.members >= lobby.max) continue;
+			if (!equal.every(([key, value]) => lobby.data[key] === value)) continue;
+			const { until, ...summary } = lobby;
+			found.push(summary);
+			if (found.length >= most) break;
+		}
+		return Response.json({ lobbies: found }, { headers: { "Cache-Control": "no-store" } });
+	}
 
 	async fetch(request: Request): Promise<Response> {
 		await this.load();
+		if (new URL(request.url).pathname === "/lobbies") {
+			if (request.method !== "GET") return new Response("Use GET", { status: 405 });
+			return this.searchLobbies(new URL(request.url));
+		}
 		// Read before any answer: one sent with the body unread breaks the connection for the next request
 		const body = request.method === "PUT" ? await request.text() : "";
 		const url = new URL(request.url);

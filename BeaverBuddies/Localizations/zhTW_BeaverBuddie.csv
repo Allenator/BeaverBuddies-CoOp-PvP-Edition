@@ -107,7 +107,7 @@ BeaverBuddies.Match.Joining,"正在加入 {0} 的遊戲...","Joining {0}'s game.
 BeaverBuddies.Match.OpponentLeft,"你的對手離開了。","Your opponent left."
 BeaverBuddies.Match.HostTimedOut,"{0} 無法開始遊戲。","{0} couldn't start the game."
 BeaverBuddies.Match.HostFailed,"無法主持對局的遊戲。","Couldn't host the match's game."
-BeaverBuddies.Match.SteamFailed,"Steam 無法設定對局。","Steam couldn't set up the match."
+BeaverBuddies.Match.SteamFailed,"無法準備對局。","Couldn't set up the match."
 BeaverBuddies.Match.OpponentUpdating,"{0} 正在從 Steam 工作坊取得本場對戰的模組並重新啟動，請稍候...","{0} is getting this match's mods from the Steam Workshop and restarting. Waiting for them..."
 BeaverBuddies.Match.Updating,"{0} 使用了你沒有的模組。正在從 Steam 工作坊取得 ({1}/{2})... 遊戲會自動重新啟動並回到對戰。","{0} plays with mods you don't have. Getting them from the Steam Workshop ({1}/{2})... The game restarts by itself and goes back into the match."
 BeaverBuddies.Match.Restarting,"正在使用對戰的模組重新啟動...","Restarting with the match's mods..."

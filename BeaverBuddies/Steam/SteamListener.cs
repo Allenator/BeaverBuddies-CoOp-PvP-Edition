@@ -59,7 +59,7 @@ namespace BeaverBuddies.Steam
                 // Invites too: anyone joining checks it against their own mods and build
                 SteamMatchmaking.SetLobbyData(LobbyID, Matchmaking.MatchmakingSession.CompatKey, Matchmaking.MatchmakingSession.Compat);
                 // A match's game: the other player joins it by this ID
-                Matchmaking.MatchmakingSession.ServerReady(LobbyID);
+                Matchmaking.MatchmakingSession.ServerReady(LobbyID.m_SteamID);
                 // Or in the list of open matches, for anyone
                 Matchmaking.HostedListing.Advertise(LobbyID.m_SteamID);
 #endif

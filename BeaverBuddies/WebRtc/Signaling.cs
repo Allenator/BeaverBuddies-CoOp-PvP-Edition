@@ -9,10 +9,11 @@ using System.Threading.Tasks;
 namespace BeaverBuddies.WebRtc
 {
     /**
-     * A connection to the signaling Worker (Signaling/ in this repo): a room
-     * per join code, where the host and the players joining it trade the
-     * offers, answers and ICE candidates that set up a WebRTC connection.
-     * Nothing of the game goes through it.
+     * A WebSocket to the signaling Worker (Signaling/ in this repo). Mostly
+     * a room per join code, where the host and the players joining it trade
+     * the offers, answers and ICE candidates that set up a WebRTC connection;
+     * also a matchmaking lobby (see WorkerLobbies). Nothing of the game
+     * goes through it.
      */
     public class Signaling : IDisposable
     {
@@ -26,11 +27,18 @@ namespace BeaverBuddies.WebRtc
         // The room or the connection to it is gone
         public event Action OnClosed;
 
-        public static async Task<Signaling> Open(string code, bool host, TimeSpan? timeout = null)
+        public static Task<Signaling> Open(string code, bool host, TimeSpan? timeout = null) =>
+            Connect(new Uri($"{Server}/room/{code}?role={(host ? "host" : "guest")}"), timeout ?? TimeSpan.FromSeconds(15));
+
+        /**
+         * A WebSocket to the Worker at that address. Messages flow once
+         * Start is called, so whoever subscribes first misses none; with
+         * start, at once.
+         */
+        public static async Task<Signaling> Connect(Uri uri, TimeSpan timeout, bool start = true)
         {
             var signaling = new Signaling();
-            var uri = new Uri($"{Server}/room/{code}?role={(host ? "host" : "guest")}");
-            using (var giveUp = new CancellationTokenSource(timeout ?? TimeSpan.FromSeconds(15)))
+            using (var giveUp = new CancellationTokenSource(timeout))
             {
                 try
                 {
@@ -42,8 +50,15 @@ namespace BeaverBuddies.WebRtc
                     throw;
                 }
             }
-            _ = Task.Run(signaling.ReceiveLoop);
+            if (start) signaling.Start();
             return signaling;
+        }
+
+        private int started;
+
+        public void Start()
+        {
+            if (Interlocked.Exchange(ref started, 1) == 0) _ = Task.Run(ReceiveLoop);
         }
 
         public async Task Send(JObject message)

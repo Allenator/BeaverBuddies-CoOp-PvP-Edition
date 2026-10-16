@@ -107,7 +107,7 @@ BeaverBuddies.Match.Joining,"Приєднання до гри {0}...","Joining {
 BeaverBuddies.Match.OpponentLeft,"Суперник вийшов.","Your opponent left."
 BeaverBuddies.Match.HostTimedOut,"{0} не вдалося запустити гру.","{0} couldn't start the game."
 BeaverBuddies.Match.HostFailed,"Не вдалося розмістити гру матчу.","Couldn't host the match's game."
-BeaverBuddies.Match.SteamFailed,"Steam не вдалося підготувати матч.","Steam couldn't set up the match."
+BeaverBuddies.Match.SteamFailed,"Не вдалося підготувати матч.","Couldn't set up the match."
 BeaverBuddies.Match.OpponentUpdating,"{0} завантажує моди цього матчу з Майстерні Steam і перезапускає гру. Чекаємо...","{0} is getting this match's mods from the Steam Workshop and restarting. Waiting for them..."
 BeaverBuddies.Match.Updating,"{0} грає з модами, яких у тебе немає. Завантаження з Майстерні Steam ({1}/{2})... Гра перезапуститься сама й повернеться в матч.","{0} plays with mods you don't have. Getting them from the Steam Workshop ({1}/{2})... The game restarts by itself and goes back into the match."
 BeaverBuddies.Match.Restarting,"Перезапуск із модами матчу...","Restarting with the match's mods..."

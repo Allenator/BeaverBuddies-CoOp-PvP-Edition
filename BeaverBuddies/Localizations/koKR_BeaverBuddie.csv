@@ -107,7 +107,7 @@ BeaverBuddies.Match.Joining,"{0}의 게임에 참가하는 중...","Joining {0}'
 BeaverBuddies.Match.OpponentLeft,"상대가 나갔습니다.","Your opponent left."
 BeaverBuddies.Match.HostTimedOut,"{0}이(가) 게임을 시작하지 못했습니다.","{0} couldn't start the game."
 BeaverBuddies.Match.HostFailed,"대전 게임을 호스트하지 못했습니다.","Couldn't host the match's game."
-BeaverBuddies.Match.SteamFailed,"Steam에서 대전을 준비하지 못했습니다.","Steam couldn't set up the match."
+BeaverBuddies.Match.SteamFailed,"매치를 준비하지 못했습니다.","Couldn't set up the match."
 BeaverBuddies.Match.OpponentUpdating,"{0} 님이 이 대전의 모드를 스팀 창작마당에서 받고 재시작하는 중입니다. 기다리는 중...","{0} is getting this match's mods from the Steam Workshop and restarting. Waiting for them..."
 BeaverBuddies.Match.Updating,"{0} 님은 당신에게 없는 모드로 플레이합니다. 스팀 창작마당에서 받는 중 ({1}/{2})... 게임이 자동으로 재시작해 대전으로 돌아갑니다.","{0} plays with mods you don't have. Getting them from the Steam Workshop ({1}/{2})... The game restarts by itself and goes back into the match."
 BeaverBuddies.Match.Restarting,"대전의 모드로 재시작하는 중...","Restarting with the match's mods..."

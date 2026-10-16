@@ -107,7 +107,7 @@ BeaverBuddies.Match.Joining,"{0}のゲームに参加しています...","Joinin
 BeaverBuddies.Match.OpponentLeft,"対戦相手が退出しました。","Your opponent left."
 BeaverBuddies.Match.HostTimedOut,"{0}はゲームを開始できませんでした。","{0} couldn't start the game."
 BeaverBuddies.Match.HostFailed,"対戦のゲームをホストできませんでした。","Couldn't host the match's game."
-BeaverBuddies.Match.SteamFailed,"Steamで対戦を準備できませんでした。","Steam couldn't set up the match."
+BeaverBuddies.Match.SteamFailed,"マッチを準備できませんでした。","Couldn't set up the match."
 BeaverBuddies.Match.OpponentUpdating,"{0}がこの対戦のMODをSteamワークショップから取得して再起動しています。待機中...","{0} is getting this match's mods from the Steam Workshop and restarting. Waiting for them..."
 BeaverBuddies.Match.Updating,"{0}はあなたが持っていないMODで遊んでいます。Steamワークショップから取得中 ({1}/{2})... ゲームは自動で再起動し、対戦に戻ります。","{0} plays with mods you don't have. Getting them from the Steam Workshop ({1}/{2})... The game restarts by itself and goes back into the match."
 BeaverBuddies.Match.Restarting,"対戦のMODで再起動しています...","Restarting with the match's mods..."

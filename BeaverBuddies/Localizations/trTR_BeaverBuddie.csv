@@ -107,7 +107,7 @@ BeaverBuddies.Match.Joining,"{0} oyununa katılınıyor...","Joining {0}'s game.
 BeaverBuddies.Match.OpponentLeft,"Rakibin ayrıldı.","Your opponent left."
 BeaverBuddies.Match.HostTimedOut,"{0} oyunu başlatamadı.","{0} couldn't start the game."
 BeaverBuddies.Match.HostFailed,"Maçın oyunu barındırılamadı.","Couldn't host the match's game."
-BeaverBuddies.Match.SteamFailed,"Steam maçı hazırlayamadı.","Steam couldn't set up the match."
+BeaverBuddies.Match.SteamFailed,"Maç hazırlanamadı.","Couldn't set up the match."
 BeaverBuddies.Match.OpponentUpdating,"{0} bu maçın modlarını Steam Atölyesi'nden alıp yeniden başlatıyor. Bekleniyor...","{0} is getting this match's mods from the Steam Workshop and restarting. Waiting for them..."
 BeaverBuddies.Match.Updating,"{0} sende olmayan modlarla oynuyor. Steam Atölyesi'nden alınıyor ({1}/{2})... Oyun kendiliğinden yeniden başlayıp maça döner.","{0} plays with mods you don't have. Getting them from the Steam Workshop ({1}/{2})... The game restarts by itself and goes back into the match."
 BeaverBuddies.Match.Restarting,"Maçın modlarıyla yeniden başlatılıyor...","Restarting with the match's mods..."

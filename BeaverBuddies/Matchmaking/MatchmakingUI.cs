@@ -3,7 +3,6 @@ using BeaverBuddies.Connect;
 using BeaverBuddies.Players;
 using BeaverBuddies.Steam;
 using HarmonyLib;
-using Steamworks;
 using System;
 using System.IO;
 using System.Linq;
@@ -43,20 +42,20 @@ namespace BeaverBuddies.Matchmaking
         private readonly PanelStack _panelStack;
         private readonly NewGameFactionPanel _newGameFactionPanel;
         private readonly ILoc _loc;
+        private readonly ClientConnectionService _clientConnectionService;
         private DialogBox _box;
         private Label _message;
         private float _hostAt = -1;
         private bool _resumeChecked;
         // Whose open match this player is joining
         private string _joining;
-        private CallResult<LobbyEnter_t> _hostedEntered;
-        private string _hostedFaction;
 
         public MatchmakingUI(DialogBoxShower dialogBoxShower, GameSceneLoader gameSceneLoader, GameModeSpecService gameModeSpecService,
             MapRepository mapRepository, FactionSpecService factionSpecService, PanelStack panelStack, NewGameFactionPanel newGameFactionPanel, ILoc loc,
-            Timberborn.Modding.ModRepository modRepository)
+            Timberborn.Modding.ModRepository modRepository, ClientConnectionService clientConnectionService)
         {
             MatchMods.Repository = modRepository;
+            _clientConnectionService = clientConnectionService;
             _panelStack = panelStack;
             _newGameFactionPanel = newGameFactionPanel;
             _dialogBoxShower = dialogBoxShower;
@@ -67,8 +66,8 @@ namespace BeaverBuddies.Matchmaking
             _loc = loc;
         }
 
-        // Only when the game can reach Steam, and the player lets it
-        public static bool Available => SteamSupport.IsSteamEnabled && Settings.EnableSteam;
+        // Steam's lobbies, or the Worker's without Steam (see Lobbies): always
+        public static bool Available => true;
 
         public void AddButton(NewGameModePanel panel)
         {
@@ -115,23 +114,19 @@ namespace BeaverBuddies.Matchmaking
          * it, as an invite does (see SteamOverlayConnectionService). The
          * faction picked goes to mods that let each player pick their own.
          */
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
         private void JoinHosted(OpenMatch match, string faction)
         {
             Plugin.Log($"[Match] Joining the hosted game {match.lobby} as {faction}");
-            _hostedEntered ??= CallResult<LobbyEnter_t>.Create(OnHostedEntered);
-            _hostedFaction = faction;
-            _hostedEntered.Set(SteamMatchmaking.JoinLobby(new CSteamID(match.lobby)));
-        }
-
-        private void OnHostedEntered(LobbyEnter_t result, bool failed)
-        {
-            if (failed || result.m_EChatRoomEnterResponse != (uint)EChatRoomEnterResponse.k_EChatRoomEnterResponseSuccess)
+            SteamLobbies.EnterHostedGame(match.lobby, entered =>
             {
-                Plugin.Log($"[Match] Couldn't join the hosted game {result.m_ulSteamIDLobby}: {(EChatRoomEnterResponse)result.m_EChatRoomEnterResponse}");
-                _dialogBoxShower.Create().SetLocalizedMessage("BeaverBuddies.Match.Gone").Show();
-                return;
-            }
-            MatchHooks.RaiseStarting(_hostedFaction, false, false);
+                if (!entered)
+                {
+                    _dialogBoxShower.Create().SetLocalizedMessage("BeaverBuddies.Match.Gone").Show();
+                    return;
+                }
+                MatchHooks.RaiseStarting(faction, false, false);
+            });
         }
 
         // How the search is going, until the game starts
@@ -186,7 +181,8 @@ namespace BeaverBuddies.Matchmaking
 
         public void UpdateSingleton()
         {
-            if (!_resumeChecked && Available) Resume();
+            // Only a restart for the Workshop's mods leaves one, and that needs Steam
+            if (!_resumeChecked && Lobbies.SteamUp) Resume();
             MatchmakingSession.Update();
             if (_box == null) return;
             // A picked match that's gone: back to the list, saying why
@@ -205,6 +201,9 @@ namespace BeaverBuddies.Matchmaking
             if (_hostAt < 0) _hostAt = Time.realtimeSinceStartup + ReadingTime;
             else if (Time.realtimeSinceStartup >= _hostAt) StartGame();
         }
+
+        // Into the match's game by its join code (see MatchmakingSession.ReadServer)
+        public void JoinByCode(string code) => _clientConnectionService.ConnectOrShowFailureMessage(WebRtc.JoinCode.Prefix + code);
 
         // The host starts the match's game; MatchHosting hosts it once it's up
         private void StartGame()

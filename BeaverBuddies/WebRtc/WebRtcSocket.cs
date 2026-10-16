@@ -26,12 +26,14 @@ namespace BeaverBuddies.WebRtc
         internal static readonly string[] StunServers = { "stun:stun.cloudflare.com:3478", "stun:stun.l.google.com:19302" };
         // TimberClient waits for this on Unity's thread, so the game stands still while it does: two
         // copies connect in a second or two, and one that takes much longer won't connect at all
-        private static readonly TimeSpan ConnectTimeout = TimeSpan.FromSeconds(10);
+        private static readonly TimeSpan ConnectTimeout = TimeSpan.FromSeconds(8);
+        // A match's host passes its code on as it starts hosting, a moment before its room is open
+        private static readonly TimeSpan RoomWait = TimeSpan.FromSeconds(4);
 
         public int MaxChunkSize => 16 * 1024;
         public int MaxBytesPerSecond => 1024 * 1024;
         // Finding a way through both sides' NATs takes a few seconds; ConnectAsync gives up first
-        public int ConnectTimeoutMs => (int)ConnectTimeout.TotalMilliseconds + 2000;
+        public int ConnectTimeoutMs => (int)(RoomWait + ConnectTimeout).TotalMilliseconds + 1000;
         public bool Connected { get; private set; }
         public string Name { get; private set; }
 
@@ -77,9 +79,26 @@ namespace BeaverBuddies.WebRtc
             }
         }
 
+        // The host's room, waiting a little for it to open: the Worker refuses a guest until it is
+        private async Task<Signaling> OpenRoom()
+        {
+            DateTime until = DateTime.UtcNow + RoomWait;
+            while (true)
+            {
+                try
+                {
+                    return await Signaling.Open(code, host: false, TimeSpan.FromSeconds(4));
+                }
+                catch (Exception) when (DateTime.UtcNow < until)
+                {
+                    await Task.Delay(500);
+                }
+            }
+        }
+
         private async Task ConnectThroughRoom()
         {
-            using Signaling signaling = await Signaling.Open(code, host: false, TimeSpan.FromSeconds(5));
+            using Signaling signaling = await OpenRoom();
             peer = NewPeer();
             var opened = new TaskCompletionSource<bool>();
             peer.onicecandidate += candidate =>

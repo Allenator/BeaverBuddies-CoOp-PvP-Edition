@@ -166,7 +166,7 @@ namespace BeaverBuddies.Steam
             // Full, or gone: there's no one to connect to
             if (callback.m_EChatRoomEnterResponse != (uint)EChatRoomEnterResponse.k_EChatRoomEnterResponseSuccess) return;
             // A match's lobby only pairs players up: its owner isn't hosting a game
-            if (Matchmaking.MatchmakingSession.IsMatchLobby(new CSteamID(callback.m_ulSteamIDLobby))) return;
+            if (Matchmaking.SteamLobbies.IsMatchLobby(new CSteamID(callback.m_ulSteamIDLobby))) return;
             ClearWaitForSteamOverlay();
             var lobby = new CSteamID(callback.m_ulSteamIDLobby);
             var owner = SteamMatchmaking.GetLobbyOwner(lobby);

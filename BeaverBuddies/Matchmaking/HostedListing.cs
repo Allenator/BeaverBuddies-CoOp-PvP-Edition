@@ -138,9 +138,8 @@ namespace BeaverBuddies.Matchmaking
 
         public static void MakePublic(ulong lobby, MatchPicks picks)
         {
-            CSteamID id = new(lobby);
-            SteamMatchmaking.SetLobbyType(id, ELobbyType.k_ELobbyTypePublic);
-            MatchmakingSession.Describe(id, picks, MatchmakingSession.HostedKind);
+            SteamLobbies.MakePublic(lobby);
+            foreach (var pair in MatchKeys.Describe(picks, MatchKeys.HostedKind)) SteamMatchmaking.SetLobbyData(new CSteamID(lobby), pair.Key, pair.Value);
         }
 
         public static void Close(ulong lobby) => SteamMatchmaking.SetLobbyData(new CSteamID(lobby), MatchmakingSession.OpenKey, "0");

@@ -107,7 +107,7 @@ BeaverBuddies.Match.Joining,"Connexion à la partie de {0}...","Joining {0}'s ga
 BeaverBuddies.Match.OpponentLeft,"Votre adversaire est parti.","Your opponent left."
 BeaverBuddies.Match.HostTimedOut,"{0} n'a pas pu lancer la partie.","{0} couldn't start the game."
 BeaverBuddies.Match.HostFailed,"Impossible d'héberger la partie.","Couldn't host the match's game."
-BeaverBuddies.Match.SteamFailed,"Steam n'a pas pu préparer la partie.","Steam couldn't set up the match."
+BeaverBuddies.Match.SteamFailed,"Impossible de préparer la partie.","Couldn't set up the match."
 BeaverBuddies.Match.OpponentUpdating,"{0} récupère les mods de cette partie sur le Steam Workshop et redémarre. En attente...","{0} is getting this match's mods from the Steam Workshop and restarting. Waiting for them..."
 BeaverBuddies.Match.Updating,"{0} joue avec des mods que vous n'avez pas. Téléchargement depuis le Steam Workshop ({1}/{2})... Le jeu redémarre tout seul et revient dans la partie.","{0} plays with mods you don't have. Getting them from the Steam Workshop ({1}/{2})... The game restarts by itself and goes back into the match."
 BeaverBuddies.Match.Restarting,"Redémarrage avec les mods de la partie...","Restarting with the match's mods..."

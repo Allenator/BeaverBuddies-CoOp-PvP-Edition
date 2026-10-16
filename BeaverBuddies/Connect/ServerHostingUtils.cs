@@ -196,6 +196,7 @@ namespace BeaverBuddies.Connect
             }
 #if IS_STEAM
             Matchmaking.HostedListing.Publish();
+            Matchmaking.MatchmakingSession.ServerStarted();
 #endif
 
             var behavior = GetMonoBehaviour(sceneLoader._sceneLoader);

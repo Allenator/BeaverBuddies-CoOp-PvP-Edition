@@ -56,11 +56,9 @@ namespace BeaverBuddies
             containerDefinition.Bind<NewGameHosting>().AsSingleton();
             if (DevTools.TestHarness.Active) containerDefinition.Bind<DevTools.TestHarness>().AsSingleton();
 #if IS_STEAM
-            if (Steam.SteamSupport.Installed)
-            {
-                containerDefinition.Bind<Matchmaking.MatchHosting>().AsSingleton();
-                containerDefinition.Bind<Matchmaking.HostedGameInfo>().AsSingleton();
-            }
+            // Matchmaking works without Steam too (see Matchmaking.Lobbies)
+            containerDefinition.Bind<Matchmaking.MatchHosting>().AsSingleton();
+            containerDefinition.Bind<Matchmaking.HostedGameInfo>().AsSingleton();
 #endif
 
             // What the game was created with, saved with it whether it's
@@ -123,8 +121,8 @@ namespace BeaverBuddies
             if (Steam.SteamSupport.Installed)
             {
                 containerDefinition.Bind<SteamOverlayConnectionService>().AsSingleton();
-                containerDefinition.Bind<Matchmaking.MatchmakingUI>().AsSingleton();
             }
+            containerDefinition.Bind<Matchmaking.MatchmakingUI>().AsSingleton();
             // Steam's lobbies or not, it lists the hosted games in the directory (see MatchList)
             containerDefinition.Bind<Matchmaking.HostBrowser>().AsSingleton();
 #else

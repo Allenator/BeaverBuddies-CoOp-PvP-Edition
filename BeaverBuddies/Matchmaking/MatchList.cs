@@ -59,11 +59,11 @@ namespace BeaverBuddies.Matchmaking
         public static event Action Changed;
         public static bool ShowIncompatible { get; set; }
 
-        public static bool SteamListed => SteamSupport.IsSteamEnabled && Settings.EnableSteam;
+        public static bool SteamListed => Lobbies.SteamUp;
 
         // What each place last gave, merged once both are in. Null while waiting, or when it failed
-        private static List<OpenMatch> fromSteam, fromDirectory;
-        private static bool steamPending, directoryPending, steamFailed, directoryFailed;
+        private static List<OpenMatch> fromSteam, fromDirectory, fromWorker;
+        private static bool steamPending, directoryPending, workerPending, steamFailed, directoryFailed;
         // The directory answers on another thread: picked up on Unity's, at the next Poll
         private static volatile bool directoryArrived;
         private static List<DirectoryListing> arrived;
@@ -74,10 +74,22 @@ namespace BeaverBuddies.Matchmaking
             Loading = true;
             Failed = false;
             steamFailed = directoryFailed = false;
-            fromSteam = fromDirectory = null;
+            fromSteam = fromDirectory = fromWorker = null;
             steamPending = SteamListed;
-            directoryPending = true;
+            directoryPending = workerPending = true;
             if (steamPending) RequestSteam();
+            // Players without Steam waiting for a Quick match
+            var filter = new LobbyFilter { Most = 50 };
+            filter.Equal[MatchKeys.Match] = "1";
+            filter.Equal[MatchKeys.Kind] = MatchKeys.QuickKind;
+            filter.Equal[MatchKeys.Open] = "1";
+            if (!ShowIncompatible) filter.Equal[MatchKeys.Base] = MatchKeys.BaseValue;
+            WorkerLobbies.Search(filter, lobbies =>
+            {
+                workerPending = false;
+                fromWorker = lobbies?.Select(FromLobby).Where(m => m != null).ToList();
+                Merge();
+            });
             Task.Run(async () =>
             {
                 arrived = await OpenListings.Fetch();
@@ -107,6 +119,29 @@ namespace BeaverBuddies.Matchmaking
             steamFailed = matches == null;
             fromSteam = matches;
             Merge();
+        }
+
+        private static OpenMatch FromLobby(LobbySummary lobby)
+        {
+            // Two test copies list theirs side by side (see DevTools.TestHarness)
+            if (lobby.Owner == Lobbies.Me && !DevTools.TestHarness.Active) return null;
+            string Data(string key) => lobby.Data.TryGetValue(key, out string value) && !string.IsNullOrEmpty(value) ? value : null;
+            MatchPicks picks = MatchPicks.FromJson(Data(MatchKeys.Picks));
+            if (picks == null) return null;
+            bool otherMods = Data(MatchKeys.Compat) != MatchKeys.CompatValue;
+            return new OpenMatch
+            {
+                lobby = lobby.Id,
+                platform = Data(MatchKeys.Platform) ?? "other",
+                picks = picks,
+                otherMods = otherMods,
+                mods = MatchMods.FromJson(Data(MatchKeys.Mods)),
+                // Their mods come from the Workshop, which needs Steam
+                compatible = Data(MatchKeys.Base) == MatchKeys.BaseValue && (!otherMods || SteamListed),
+                protocol = Data(MatchKeys.Protocol),
+                game = Data(MatchKeys.Game),
+                debug = Data(MatchKeys.Debug),
+            };
         }
 
         private static OpenMatch FromListing(DirectoryListing listing)
@@ -141,10 +176,11 @@ namespace BeaverBuddies.Matchmaking
 
         private static void Merge()
         {
-            if (steamPending || directoryPending) return;
+            if (steamPending || directoryPending || workerPending) return;
             Loading = false;
             Failed = (steamFailed || !SteamListed) && directoryFailed;
             var all = new List<OpenMatch>(fromSteam ?? new List<OpenMatch>());
+            all.AddRange(fromWorker ?? new List<OpenMatch>());
             var inSteam = new HashSet<ulong>(all.Select(m => m.lobby));
             foreach (OpenMatch listed in fromDirectory ?? new List<OpenMatch>())
             {

@@ -22,6 +22,8 @@ namespace BeaverBuddies.Matchmaking
         // What Base is made of, in the clear: the list of open matches
         // shows players it can't match with why
         public const string Protocol = "bb.match.protocol", Game = "bb.match.game", Debug = "bb.match.debug";
+        // The player's store, for the icon beside their name
+        public const string Platform = "bb.match.platform";
         // A player waiting for a Quick match, or a hosted game (see
         // HostedListing): both are listed, only the first is searched
         public const string Kind = "bb.match.kind", QuickKind = "quick", HostedKind = "hosted";
@@ -64,6 +66,7 @@ namespace BeaverBuddies.Matchmaking
             [Mode] = picks.ModeKey,
             [Options] = picks.OptionsKey,
             [Picks] = picks.ToJson(),
+            [Platform] = OpenListings.Platform,
             [Open] = "1",
         };
     }

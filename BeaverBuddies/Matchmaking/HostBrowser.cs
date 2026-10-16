@@ -27,9 +27,10 @@ namespace BeaverBuddies.Matchmaking
      *
      * Each row has the host's store beside their name, Steam or Epic Games:
      * two Steam players meet through the game's Steam lobby, and anyone else
-     * through its join code over WebRTC. Without Steam (the Epic Games build,
-     * or Steam networking off) it's the hosted games in the directory alone,
-     * and nothing here may touch Steam.
+     * through its join code over WebRTC, or for a Quick match the Worker's
+     * lobby. Without Steam (the Epic Games build, or Steam networking off)
+     * it's the directory and the Worker's lobbies, and nothing here may touch
+     * Steam.
      */
     public class HostBrowser : RegisteredSingleton, IPanelController, IUpdatableSingleton, IExtendedDropdownProvider
     {
@@ -312,20 +313,17 @@ namespace BeaverBuddies.Matchmaking
         {
             if (_list.selectedItem is not OpenMatch { compatible: true } match) return;
             Close();
-            if (match.lobby != 0 && MatchList.SteamListed)
+            // A Quick match's lobby, Steam's or the Worker's, or a hosted game both reach on Steam
+            if (!match.hosted || (match.lobby != 0 && !Lobbies.IsWorker(match.lobby) && Lobbies.SteamUp))
             {
-                JoinOverSteam(match, _factionId);
+                SingletonManager.GetSingleton<MatchmakingUI>().JoinOpen(match, _factionId);
                 return;
             }
-            // Not both on Steam: the game's join code, over WebRTC
+            // A hosted game not both on Steam: its join code, over WebRTC
             Plugin.Log($"[Match] Joining the hosted game {match.joinCode} ({match.platform}) as {_factionId}");
             MatchHooks.RaiseStarting(_factionId, false, false);
             _clientConnectionService.ConnectOrShowFailureMessage(WebRtc.JoinCode.Prefix + match.joinCode);
         }
-
-        // Apart, so that compiling Join never loads Steam's types in a copy without them
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
-        private static void JoinOverSteam(OpenMatch match, string faction) => SingletonManager.GetSingleton<MatchmakingUI>().JoinOpen(match, faction);
 
         /**
          * The host's store before their name: Steam's or Epic Games' mark.
