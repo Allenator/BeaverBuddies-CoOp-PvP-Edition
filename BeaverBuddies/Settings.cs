@@ -1,5 +1,6 @@
 using ModSettings.Common;
 using ModSettings.Core;
+using System.Linq;
 using Timberborn.Modding;
 using Timberborn.SettingsSystem;
 
@@ -90,12 +91,11 @@ namespace BeaverBuddies
                 ).SetLocalizedTooltip("BeaverBuddies.Settings.PingPlayerName.Tooltip")
         );
 
-        public ColorModSetting PingColor { get; } =
-            new(UnityEngine.Color.yellow,
-                ModSettingDescriptor.CreateLocalized(
-                    "BeaverBuddies.Settings.PingColor"
-                ).SetLocalizedTooltip("BeaverBuddies.Settings.PingColor.Tooltip"),
-                useAlpha: false
+        public LimitedStringModSetting PreferredColor { get; } =
+            new(0, Players.PlayerColors.Palette.Select((c, i) =>
+                    new LimitedStringModSettingValue(i.ToString(), "BeaverBuddies.Settings.PreferredColor." + c.Key)).ToArray(),
+                ModSettingDescriptor.CreateLocalized("BeaverBuddies.Settings.PreferredColor")
+                    .SetLocalizedTooltip("BeaverBuddies.Settings.PreferredColor.Tooltip")
         );
 
         public ModSetting<bool> ShowPlayerCursors { get; } =
@@ -144,10 +144,13 @@ namespace BeaverBuddies
 
         public static string PingDisplayName => instance?.PingPlayerName.Value ?? DefaultPingPlayerName;
 
+        // Two test copies share these settings: the second prefers red (see DevTools.TestHarness)
+        public static int PreferredColorIndex =>
+            DevTools.TestHarness.Active && DevTools.TestHarness.Instance != "host" ? 1
+            : int.TryParse(instance?.PreferredColor?.Value, out int index) ? index : 0;
+
         public static UnityEngine.Color PingColorValue =>
-            // Two test copies share these settings: the second plays in red (see DevTools.TestHarness)
-            DevTools.TestHarness.Active && DevTools.TestHarness.Instance != "host" ? new UnityEngine.Color(0.85f, 0.15f, 0.12f)
-            : instance?.PingColor.Color ?? UnityEngine.Color.white;
+            Players.PlayerColors.Palette[Players.PlayerPresence.LocalColorIndex()].Color;
 
         public static bool ShowCursors => instance?.ShowPlayerCursors.Value ?? true;
 

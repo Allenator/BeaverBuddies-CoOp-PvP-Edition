@@ -27,6 +27,7 @@ namespace BeaverBuddies.Players
 
         private readonly LoadingScreen _loadingScreen;
         private readonly Dictionary<string, float> _lastHeard = new();
+        private readonly Dictionary<string, int> _preferredColors = new();
         private float _lastSendTime = float.NegativeInfinity;
 
         public PlayerPresence(LoadingScreen loadingScreen)
@@ -44,6 +45,23 @@ namespace BeaverBuddies.Players
             return (local == null ? online : online.Prepend(local)).Distinct().ToArray();
         }
 
+        /**
+         * This player's color for the match: their preferred one unless
+         * someone else here has the same preference first (see PlayerColors).
+         */
+        public static int LocalColorIndex()
+        {
+            int preferred = PlayerColors.Clamp(Settings.PreferredColorIndex);
+            string local = PlayerIdentity.LocalID;
+            if (_instance == null || local == null) return preferred;
+            float now = Time.unscaledTime;
+            var preferences = _instance._lastHeard
+                .Where(p => now - p.Value <= GoneSeconds && _instance._preferredColors.ContainsKey(p.Key))
+                .ToDictionary(p => p.Key, p => _instance._preferredColors[p.Key]);
+            preferences[local] = preferred;
+            return PlayerColors.Assign(preferences)[local];
+        }
+
         public void PostLoad()
         {
             _instance = this;
@@ -56,6 +74,7 @@ namespace BeaverBuddies.Players
             _loadingScreen.LoadingScreenEnabled -= OnLoadingScreenEnabled;
             EventIO.TransientMessageReceived -= OnTransientMessageReceived;
             _lastHeard.Clear();
+            _preferredColors.Clear();
             if (_instance == this) _instance = null;
         }
 
@@ -71,6 +90,7 @@ namespace BeaverBuddies.Players
             {
                 [TimberNet.TimberNetBase.TYPE_KEY] = MessageType,
                 ["playerID"] = local,
+                ["color"] = PlayerColors.Clamp(Settings.PreferredColorIndex),
             });
         }
 
@@ -81,6 +101,7 @@ namespace BeaverBuddies.Players
             if (string.IsNullOrEmpty(playerID) || playerID == PlayerIdentity.LocalID) return;
             if (!_lastHeard.ContainsKey(playerID)) Plugin.Log($"Player {playerID} is here");
             _lastHeard[playerID] = Time.unscaledTime;
+            _preferredColors[playerID] = message.Value<int?>("color") ?? 0;
         }
     }
 }
