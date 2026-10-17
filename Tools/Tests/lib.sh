@@ -350,7 +350,8 @@ shot() {
 _record() { printf '%s\t%s\t%s\t%s\n' "$1" "${BB_SCENARIO:-?}" "$2" "$3" >> "$BB_RESULTS"; }
 
 pass() { echo "  ok    $1"; _record PASS "$1" ""; }
-fail() { echo "  FAIL  $1: $2"; _record FAIL "$1" "$2"; }
+# A mod's own tests can define bb_on_fail <check> to keep more of the copies' state at a failure
+fail() { echo "  FAIL  $1: $2"; _record FAIL "$1" "$2"; declare -F bb_on_fail > /dev/null && bb_on_fail "$1"; return 0; }
 
 # expect_eq <name> <actual> <wanted>
 expect_eq() { if [ "$2" == "$3" ]; then pass "$1"; else fail "$1" "got '$2', wanted '$3'"; fi; }
