@@ -123,7 +123,11 @@ send() {
     shift
     file="$BB_CMD_PREFIX-$inst"
     while [ -e "$file" ] && [ $n -lt 200 ]; do sleep 0.05; n=$((n + 1)); done
-    echo "$*" > "$file"
+    # A copy that hasn't taken the last one in 10 s is stuck: its command would be lost under this one
+    [ -e "$file" ] && echo "  (warning: $inst hadn't taken \"$(head -1 "$file")\", sending \"$*\" after it)" >&2
+    # Written whole and then moved in: the game reads and deletes the file as soon as it sees it,
+    # and could otherwise read one half written, empty, and drop the command
+    if [ -e "$file" ]; then echo "$*" >> "$file"; else echo "$*" > "$file.part" && mv "$file.part" "$file"; fi
 }
 
 # wait_for <instance> <regex> [seconds]
