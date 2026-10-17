@@ -169,6 +169,19 @@ namespace BeaverBuddies.Connect
             return ((SceneLoader)loader)._coroutineStarter._monoBehaviour;
         }
 
+        /**
+         * The game behind the hosting box stays paused until it's closed:
+         * a new game being hosted is loaded as one alone, with no
+         * ReplayService to freeze it, and nothing may unpause it meanwhile.
+         */
+        public static bool HoldingPaused { get; private set; }
+
+        public static void HoldPaused(Timberborn.TimeSystem.SpeedManager speedManager)
+        {
+            HoldingPaused = true;
+            Events.SpeedChangePatcher.SetSpeedSilentlyNow(speedManager, 0);
+        }
+
         public static void LoadAndHost(ValidatingGameLoader loader, DialogBoxShower shower, SaveReference saveReference)
         {
             var sceneLoader = loader._gameSceneLoader;
@@ -205,6 +218,7 @@ namespace BeaverBuddies.Connect
             var loc = shower._loc;
             Action start = () =>
             {
+                HoldingPaused = false;
                 if (coroutine != null)
                 {
                     behavior.StopCoroutine(coroutine);
@@ -223,6 +237,7 @@ namespace BeaverBuddies.Connect
                 .SetConfirmButton(start, loc.T("BeaverBuddies.Host.StartGame"))
                 .SetCancelButton(() =>
                 {
+                    HoldingPaused = false;
                     if (coroutine != null)
                     {
                         behavior.StopCoroutine(coroutine);

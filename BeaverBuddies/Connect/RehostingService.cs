@@ -30,6 +30,7 @@ namespace BeaverBuddies.Connect
         private readonly SettlementReferenceService _settlementReferenceService;
         private readonly ValidatingGameLoader _validatingGameLoader;
         private readonly DialogBoxShower _dialogBoxShower;
+        private readonly Timberborn.TimeSystem.SpeedManager _speedManager;
 
 
         public RehostingService(
@@ -38,9 +39,11 @@ namespace BeaverBuddies.Connect
             GameSaveRepository gameSaveRepository,
             SettlementReferenceService settlementReferenceService,
             ValidatingGameLoader validatingGameLoader,
-            DialogBoxShower dialogBoxShower
+            DialogBoxShower dialogBoxShower,
+            Timberborn.TimeSystem.SpeedManager speedManager
         ) 
         {
+            _speedManager = speedManager;
             _autosaveNameService = autosaveNameService;
             _gameSaver = gameSaver;
             _gameSaveRepository = gameSaveRepository;
@@ -106,6 +109,7 @@ namespace BeaverBuddies.Connect
 
         public void LoadGame(SaveReference saveReference)
         {
+            ServerHostingUtils.HoldPaused(_speedManager);
             ServerHostingUtils.LoadIfSaveValidAndHost(_validatingGameLoader, _dialogBoxShower, saveReference);
         }
     }
