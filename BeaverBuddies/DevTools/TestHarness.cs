@@ -295,7 +295,8 @@ namespace BeaverBuddies.DevTools
                 {
                     // A button by name on the panel on top, as a player's click would press it
                     var panel = _panelStack._stack.Peek().PanelController.GetPanel();
-                    var button = UnityEngine.UIElements.UQueryExtensions.Q<UnityEngine.UIElements.Button>(panel, a[1]) ?? throw new Exception($"no button {a[1]}");
+                    // click name [n]: the nth of the buttons by that name, the first by default
+                    var button = UnityEngine.UIElements.UQueryExtensions.Query<UnityEngine.UIElements.Button>(panel, a[1]).ToList().ElementAtOrDefault(a.Length > 2 ? I(a[2]) : 0) ?? throw new Exception($"no button {a[1]}");
                     using var click = UnityEngine.UIElements.ClickEvent.GetPooled();
                     click.target = button;
                     button.SendEvent(click);
@@ -797,6 +798,27 @@ namespace BeaverBuddies.DevTools
                     // The game menu, as Escape opens it
                     Get<Timberborn.Options.IOptionsBox>().Show();
                     break;
+                case "modsettings":
+                {
+                    // modsettings ModId: that mod's box of settings, as its button in the mod manager opens it
+                    var type = AppDomain.CurrentDomain.GetAssemblies().Select(x => x.GetType("ModSettings.CoreUI.ModSettingsBox")).FirstOrDefault(t => t != null) ?? throw new Exception("no ModSettings");
+                    object box = _container.GetInstance(type);
+                    var mod = Get<Timberborn.Modding.ModRepository>().Mods.First(m => m.Manifest.Id == a[1]);
+                    type.GetMethod("Open").Invoke(box, new object[] { mod });
+                    break;
+                }
+                case "escape":
+                    // Escape on whatever's on top, as the player's key does
+                    _panelStack.ProcessUICancel();
+                    break;
+                case "toppanel":
+                {
+                    // What's on top, how many panels are up, and its buttons by name
+                    var top = _panelStack._stack.Count > 0 ? _panelStack._stack.Peek().PanelController : null;
+                    var buttons = top == null ? "" : string.Join(" ", UnityEngine.UIElements.UQueryExtensions.Query<UnityEngine.UIElements.Button>(top.GetPanel()).ToList().Select(b => b.name));
+                    Plugin.Log($"[Test] toppanel: {top?.GetType().Name ?? "none"} of {_panelStack._stack.Count}; buttons {buttons}");
+                    break;
+                }
                 case "dismiss":
                     // Presses OK on every dialog showing, as a player would
                     for (int i = 0; i < 5 && _panelStack._stack.Count > 0 && _panelStack._stack.Peek().PanelController is DialogBox box; i++)
