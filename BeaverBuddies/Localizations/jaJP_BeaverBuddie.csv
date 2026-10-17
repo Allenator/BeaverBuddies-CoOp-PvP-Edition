@@ -292,3 +292,4 @@ BeaverBuddies.Match.Incompatible.ModsNoWorkshop,"あなたのModは相手と違�
 BeaverBuddies.Host.CopyCode,"コピー","Copy"
 BeaverBuddies.Host.CodeCopied,"コピーしました！","Copied!"
 BeaverBuddies.Host.InviteByCode,"このコードで誰でも参加できます。公開中のマッチから「コードまたはアドレスで参加」を選んでください。","Anyone can join with this code, from Open matches, then Join by code or address."
+BeaverBuddies.Client.HostLeft,"ホストがゲームを退出しました。メインメニューに戻ります。","Shown to a guest when the host leaves mid-game"

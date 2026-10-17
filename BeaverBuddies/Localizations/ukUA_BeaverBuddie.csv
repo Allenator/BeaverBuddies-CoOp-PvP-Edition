@@ -292,3 +292,4 @@ BeaverBuddies.Match.Incompatible.ModsNoWorkshop,"Ваші моди відріз�
 BeaverBuddies.Host.CopyCode,"Копіювати","Copy"
 BeaverBuddies.Host.CodeCopied,"Скопійовано!","Copied!"
 BeaverBuddies.Host.InviteByCode,"За цим кодом може приєднатися будь-хто: Відкриті матчі, потім Увійти за кодом або адресою.","Anyone can join with this code, from Open matches, then Join by code or address."
+BeaverBuddies.Client.HostLeft,"Хост покинув гру. Повернення до головного меню.","Shown to a guest when the host leaves mid-game"

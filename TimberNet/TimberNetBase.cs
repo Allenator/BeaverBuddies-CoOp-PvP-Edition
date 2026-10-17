@@ -44,6 +44,10 @@ namespace TimberNet
         public event Action<JObject>? OnTransientMessage;
         // On the Update() thread, when the host's reload save has arrived
         public event MapReceived? OnReload;
+        // On the Update() thread, once the host's end of a client's connection
+        // has closed, after everything it sent before has been taken
+        public event Action? OnDisconnected;
+        private volatile bool disconnected = false;
 
         // A received message, or the save a reload starts again from
         private readonly ConcurrentQueue<(ISocketStream source, string? message, byte[]? reloadMap)> receivedEventQueue =
@@ -301,6 +305,8 @@ namespace TimberNet
                 receivedEventQueue.Enqueue((client, message, null));
                 messageCount++;
             }
+            // The host closed the connection, or it dropped: nothing more is coming
+            if (isClient && !IsStopped && messageCount > 0) disconnected = true;
         }
 
         protected byte[] MessageToBuffer(JObject message)
@@ -507,7 +513,11 @@ namespace TimberNet
             if (!Started) return;
             ProcessReceivedMap();
             ProcessReceivedEventsQueue();
-
+            if (disconnected && !IsStopped)
+            {
+                disconnected = false;
+                OnDisconnected?.Invoke();
+            }
         }
 
         private List<JObject> FilterEvents(List<JObject> events)

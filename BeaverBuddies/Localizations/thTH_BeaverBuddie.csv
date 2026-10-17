@@ -292,3 +292,4 @@ BeaverBuddies.Match.Incompatible.ModsNoWorkshop,"ม็อดของคุณ�
 BeaverBuddies.Host.CopyCode,"คัดลอก","Copy"
 BeaverBuddies.Host.CodeCopied,"คัดลอกแล้ว!","Copied!"
 BeaverBuddies.Host.InviteByCode,"ใครก็เข้าร่วมด้วยรหัสนี้ได้ จากแมตช์ที่เปิดอยู่ แล้วเลือกเข้าร่วมด้วยรหัสหรือที่อยู่","Anyone can join with this code, from Open matches, then Join by code or address."
+BeaverBuddies.Client.HostLeft,"โฮสต์ออกจากเกมแล้ว กลับไปยังเมนูหลัก","Shown to a guest when the host leaves mid-game"

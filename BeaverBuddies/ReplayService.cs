@@ -204,7 +204,8 @@ namespace BeaverBuddies
             Settings settings,
             TemplateInstantiator templateInstantiator,
             AutomationResetter automationResetter,
-            Timberborn.BlockSystem.BlockValidator blockValidator
+            Timberborn.BlockSystem.BlockValidator blockValidator,
+            Timberborn.MainMenuSceneLoading.MainMenuSceneLoader mainMenuSceneLoader
         )
         {
             DesyncDetecter.ThreadSafeWaterMapUpdateDataPatcher.Reset();
@@ -245,6 +246,7 @@ namespace BeaverBuddies
             AddSingleton(templateInstantiator);
             AddSingleton(automationResetter);
             AddSingleton(blockValidator);
+            AddSingleton(mainMenuSceneLoader);
 
             AddSingleton(this);
 
@@ -453,6 +455,18 @@ namespace BeaverBuddies
             return cycle == null ? 0 : unchecked(cycle.DayNumber * 100003 + cycle._ticksPassedToday);
         }
 
+        // Nothing can play without the host, so the guest's game ends with it
+        private void ShowHostLeft()
+        {
+            Plugin.Log("The host left: back to the main menu");
+            EventIO.Reset();
+            SpeedChangePatcher.SetSpeedSilentlyNow(_speedManager, 0);
+            GetSingleton<DialogBoxShower>().Create()
+                .SetLocalizedMessage("BeaverBuddies.Client.HostLeft")
+                .SetConfirmButton(() => GetSingleton<Timberborn.MainMenuSceneLoading.MainMenuSceneLoader>().OpenMainMenu())
+                .Show();
+        }
+
         public void HandleDesync()
         {
             if (IsDesynced) return;
@@ -575,6 +589,11 @@ namespace BeaverBuddies
 
         public void UpdateSingleton()
         {
+            if (io is ClientEventIO { HostLeft: true })
+            {
+                ShowHostLeft();
+                return;
+            }
             if (!CanAct)
             {
                 // Still listening while desynced, or waiting for a reload,
@@ -582,7 +601,6 @@ namespace BeaverBuddies
                 if (!isReset) io?.Update();
                 return;
             }
-            if (_frozenForHosting) return;
             if (waitUpdates > 0)
             {
                 waitUpdates--;

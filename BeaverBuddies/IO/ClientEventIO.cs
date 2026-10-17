@@ -21,6 +21,8 @@ namespace BeaverBuddies.IO
 
         private MapReceived mapReceivedCallback;
         private bool FailedToConnect = false;
+        // The host's end closed mid-game: the game can't go on without it
+        public bool HostLeft { get; private set; }
 
         private ClientEventIO(ISocketStream socket, MapReceived mapReceivedCallback,
             Action<string> onError)
@@ -34,6 +36,7 @@ namespace BeaverBuddies.IO
             NetBase.OnReload += Connect.ResyncService.ReceiveSave;
             NetBase.OnLog += Plugin.Log;
             NetBase.OnTransientMessage += EventIO.RaiseTransientMessageReceived;
+            NetBase.OnDisconnected += () => HostLeft = true;
             NetBase.OnError += (error) =>
             {
                 Plugin.LogError(error);

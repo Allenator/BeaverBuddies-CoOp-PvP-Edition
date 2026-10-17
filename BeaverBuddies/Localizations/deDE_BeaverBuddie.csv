@@ -292,3 +292,4 @@ BeaverBuddies.Match.Incompatible.ModsNoWorkshop,"Deine Mods sind nicht dieselben
 BeaverBuddies.Host.CopyCode,"Kopieren","Copy"
 BeaverBuddies.Host.CodeCopied,"Kopiert!","Copied!"
 BeaverBuddies.Host.InviteByCode,"Mit diesem Code kann jeder beitreten: Offene Matches, dann Mit Code oder Adresse beitreten.","Anyone can join with this code, from Open matches, then Join by code or address."
+BeaverBuddies.Client.HostLeft,"Der Host hat das Spiel verlassen. Zurück zum Hauptmenü.","Shown to a guest when the host leaves mid-game"
