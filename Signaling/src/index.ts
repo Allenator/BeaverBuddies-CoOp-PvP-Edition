@@ -142,37 +142,63 @@ export class Room extends DurableObject<Env> {
 
 // A lobby nobody relisted for this long is gone (see lobby.ts, which relists every minute)
 const LOBBY_LIFETIME = 150 * 1000;
+// How far ahead the stored lifetime runs, so a relist needn't write every minute. A lobby
+// that died without delisting is dropped this long after its last relist at worst, once the
+// directory restarted.
+const STORED_LIFETIME = 5 * 60 * 1000;
+
+type Listed = LobbySummary & { until: number };
 
 // Where the lobbies list themselves, for search. Kept in storage too: the
 // object can be restarted at any time, and a lobby only relists once a minute.
 export class Directory extends DurableObject<Env> {
-	private lobbies = new Map<string, LobbySummary & { until: number }>();
+	private lobbies = new Map<string, Listed>();
+	// When each lobby's stored copy runs out
+	private stored = new Map<string, number>();
 	private loaded = false;
 
 	private async load() {
 		if (this.loaded) return;
 		this.loaded = true;
-		// Alive until their next relisting proves otherwise: the stored time is from their last change, not their last relist
-		for (const [id, lobby] of await this.ctx.storage.list<LobbySummary & { until: number }>({ prefix: "lobby:" })) {
-			this.lobbies.set(id.slice(6), { ...lobby, until: Date.now() + LOBBY_LIFETIME });
+		const now = Date.now();
+		const expired: string[] = [];
+		for (const [key, lobby] of await this.ctx.storage.list<Listed>({ prefix: "lobby:" })) {
+			if (lobby.until <= now) {
+				expired.push(key);
+				continue;
+			}
+			const id = key.slice(6);
+			this.stored.set(id, lobby.until);
+			this.lobbies.set(id, { ...lobby, until: Math.min(lobby.until, now + LOBBY_LIFETIME) });
 		}
+		await this.forget(expired);
 	}
 
 	// From the lobbies themselves (see lobby.ts), never from outside
 	async putLobby(summary: LobbySummary) {
 		await this.load();
+		const now = Date.now();
 		const before = this.lobbies.get(summary.id);
-		const listed = { ...summary, until: Date.now() + LOBBY_LIFETIME };
-		this.lobbies.set(summary.id, listed);
-		// A relist that changes nothing only moves the time, which needn't survive a restart (see load)
+		this.lobbies.set(summary.id, { ...summary, until: now + LOBBY_LIFETIME });
+		// A relist that changes nothing only moves the time, which the stored copy needs only when it's about to run out
 		const { until, ...was } = before ?? { until: 0 };
-		if (!before || JSON.stringify(was) !== JSON.stringify(summary)) await this.ctx.storage.put("lobby:" + summary.id, listed);
+		const changed = !before || JSON.stringify(was) !== JSON.stringify(summary);
+		if (changed || (this.stored.get(summary.id) ?? 0) < now + LOBBY_LIFETIME) {
+			this.stored.set(summary.id, now + STORED_LIFETIME);
+			await this.ctx.storage.put("lobby:" + summary.id, { ...summary, until: now + STORED_LIFETIME });
+		}
 	}
 
 	async deleteLobby(id: string) {
 		await this.load();
 		this.lobbies.delete(id);
+		this.stored.delete(id);
 		await this.ctx.storage.delete("lobby:" + id);
+	}
+
+	// In one go, at most 128 keys a call
+	private async forget(keys: string[]) {
+		for (let i = 0; i < keys.length; i += 128) await this.ctx.storage.delete(keys.slice(i, i + 128));
 	}
 
 	/**
@@ -191,6 +217,7 @@ export class Directory extends DurableObject<Env> {
 		for (const [id, lobby] of this.lobbies) {
 			if (lobby.until <= now) {
 				this.lobbies.delete(id);
+				this.stored.delete(id);
 				expired.push("lobby:" + id);
 				continue;
 			}
@@ -200,8 +227,7 @@ export class Directory extends DurableObject<Env> {
 			found.push(summary);
 			if (found.length >= most) break;
 		}
-		// In one go, at most 128 keys a call
-		for (let i = 0; i < expired.length; i += 128) this.ctx.storage.delete(expired.slice(i, i + 128));
+		this.forget(expired);
 		return Response.json({ lobbies: found }, { headers: { "Cache-Control": "no-store" } });
 	}
 

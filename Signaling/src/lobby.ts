@@ -49,6 +49,8 @@ export class Lobby extends DurableObject<Env> {
 		if (this.loaded) return;
 		this.loaded = true;
 		this.state = (await this.ctx.storage.get<State>("state")) ?? null;
+		// Kept in storage: a lobby that hibernated wakes up without it, and has to delist itself when the last one leaves
+		this.storedId = (await this.ctx.storage.get<string>("id")) ?? null;
 	}
 
 	private async save() {
@@ -162,7 +164,7 @@ export class Lobby extends DurableObject<Env> {
 			default:
 				return;
 		}
-		await this.list(this.lobbyId(ws));
+		await this.list(this.storedId);
 	}
 
 	async webSocketClose(ws: WebSocket, code: number) {
@@ -181,11 +183,12 @@ export class Lobby extends DurableObject<Env> {
 		const member = ws.deserializeAttachment() as Member | null;
 		if (!member || !this.state) return;
 		ws.serializeAttachment(null);
-		const id = this.lobbyId(ws);
+		const id = this.storedId;
 		const left = this.members().filter((m) => m.ws !== ws);
 		if (left.length === 0) {
 			await this.ctx.storage.deleteAll();
 			this.state = null;
+			this.storedId = null;
 			if (id) await this.directory().deleteLobby(id);
 			return;
 		}
@@ -203,25 +206,19 @@ export class Lobby extends DurableObject<Env> {
 		await this.ctx.storage.setAlarm(Date.now() + RELIST_EVERY);
 	}
 
-	private storedId: string | null = null;
-
 	// The lobby's id, which the object only knows from the requests that reach it
-	private lobbyId(_ws?: WebSocket): string | null {
-		return this.storedId;
-	}
+	private storedId: string | null = null;
 
 	private directory() {
 		return this.env.DIRECTORY.get(this.env.DIRECTORY.idFromName("directory"));
 	}
 
 	private async list(id: string | null) {
-		if (id) {
-			if (this.storedId !== id) await this.ctx.storage.put("id", id);
-			this.storedId = id;
-		} else {
-			id = this.storedId ?? (await this.ctx.storage.get<string>("id")) ?? null;
+		if (id && this.storedId !== id) {
+			await this.ctx.storage.put("id", id);
 			this.storedId = id;
 		}
+		id = this.storedId;
 		if (!id || !this.state) return;
 		const summary: LobbySummary = {
 			id,

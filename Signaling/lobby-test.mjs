@@ -1,10 +1,11 @@
 // Two players in a matchmaking lobby on the Worker: create, search, join,
-// data both ways, joinable, the owner leaving. Usage: node lobby-test.mjs [base-url]
+// data both ways, joinable, the owner leaving, and a lobby that leaves after
+// sitting idle long enough to hibernate. Usage: node lobby-test.mjs [base-url]
 import WebSocket from "ws";
 
 const base = (process.argv[2] ?? "http://localhost:8799").replace(/\/$/, "");
 const ws = base.replace(/^http/, "ws");
-const lobbyId = String(Math.floor(Math.random() * 2 ** 50));
+let lobbyId = String(Math.floor(Math.random() * 2 ** 50));
 const tag = "t" + lobbyId;
 
 function open(member, name, create) {
@@ -59,5 +60,16 @@ b.socket.close();
 await new Promise((r) => setTimeout(r, 500));
 if ((await search()).length !== 0) throw new Error("an empty lobby is still found");
 if ((await status("9")) !== 404) throw new Error("an empty lobby can still be joined");
-console.log(`ok (${lobbyId})`);
+
+// Idle long enough to hibernate: it wakes up for the close and still has to delist itself
+lobbyId = String(Math.floor(Math.random() * 2 ** 50));
+const idle = await open("111", "Alice", true);
+idle.socket.send(JSON.stringify({ type: "data", key: "test", value: tag }));
+await new Promise((r) => setTimeout(r, 300));
+if ((await search()).length !== 1) throw new Error("the idle lobby isn't found");
+await new Promise((r) => setTimeout(r, 20000));
+idle.socket.close();
+await new Promise((r) => setTimeout(r, 1000));
+if ((await search()).length !== 0) throw new Error("a lobby that hibernated is still found after it emptied");
+console.log("ok");
 process.exit(0);
