@@ -162,7 +162,11 @@ namespace BeaverBuddies.Events
         public override void Replay(IReplayContext context)
         {
             base.Replay(context);
-            context.GetSingleton<IOptionsBox>().Show();
+            // Not over panels already up: the menu again on top of a player's own (Mod Settings
+            // opened from it, say) leaves it in their stack twice, and closing them crashes
+            var box = context.GetSingleton<IOptionsBox>();
+            if (box is GameOptionsBox options && options._panelStack._stack.Count > 0) return;
+            box.Show();
         }
     }
 
