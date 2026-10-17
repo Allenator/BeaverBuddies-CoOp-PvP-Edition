@@ -228,6 +228,10 @@ namespace BeaverBuddies.Modding
         // lets each player in a match keep the faction they picked
         public static void AddCanMixFactions(Func<bool> hook) => MatchHooks.CanMixFactions.Add(hook);
 
+        // The faction this player would rather play, or null: what joining
+        // an open match picks to start with
+        public static void AddPreferredFaction(Func<string> hook) => MatchHooks.PreferredFaction.Add(hook);
+
         // Before a match's game starts on this machine: the faction this
         // player plays, whether the game mixes factions, and whether this
         // machine hosts it

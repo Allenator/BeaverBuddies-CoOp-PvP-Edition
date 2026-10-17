@@ -51,6 +51,7 @@ namespace BeaverBuddies.Matchmaking
         internal ListView _list;
         private Label _details;
         private Dropdown _faction;
+        private string _preferredFaction;
         private Button _join;
         private Toggle _showIncompatible;
         private string _factionId;
@@ -75,6 +76,10 @@ namespace BeaverBuddies.Matchmaking
         public void Open()
         {
             if (_root == null) Build();
+            // The faction from the mod's settings, until it's changed there again
+            string preferred = MatchHooks.Preferred;
+            if (preferred != _preferredFaction && Factions.Contains(preferred)) _factionId = preferred;
+            _preferredFaction = preferred;
             _factionId ??= Factions.FirstOrDefault();
             _dropdownItemsSetter.SetItems(_faction, this);
             _open = true;

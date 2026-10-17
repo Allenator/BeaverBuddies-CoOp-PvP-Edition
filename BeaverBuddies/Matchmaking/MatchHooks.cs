@@ -13,6 +13,8 @@ namespace BeaverBuddies.Matchmaking
     public static class MatchHooks
     {
         public static readonly List<Func<bool>> CanMixFactions = new();
+        // The faction this player would rather play, if a mod knows one
+        public static readonly List<Func<string>> PreferredFaction = new();
         // Whether each player places their own start: then the match's new
         // game starts with no starting building, and the mod founds each
         // player's settlement where they put it
@@ -35,6 +37,7 @@ namespace BeaverBuddies.Matchmaking
         // several of them
         public static event Action<Placement[]> MapStarts;
 
+        public static string Preferred => PreferredFaction.Select(hook => hook()).FirstOrDefault(f => !string.IsNullOrEmpty(f));
         public static bool FactionsMix => CanMixFactions.Any(hook => hook());
         public static bool PlaceStart => PlayersPlaceStart.Any(hook => hook());
         public static bool NewGamePlaces => NewGamePlacesStart.Any(hook => hook());
