@@ -698,11 +698,11 @@ namespace BeaverBuddies
             float targetSpeed = TargetSpeed;
             int ticksBehind = io.TicksBehind;
 
-            // If we're behind, speed up to match.
+            // If we're behind, speed up to match, up to 10 (never below the
+            // host's own speed, which can be higher than that)
             if (ticksBehind > targetSpeed)
             {
-                targetSpeed = Math.Min(ticksBehind, 10);
-                //Plugin.Log($"Upping target speed to: {targetSpeed}");
+                targetSpeed = Math.Max(targetSpeed, Math.Min(ticksBehind, 10));
             }
             BucketBoost = io is ClientEventIO && targetSpeed > 0 && ticksBehind <= targetSpeed ? ClientPace() : 1;
 
