@@ -156,14 +156,17 @@ prefs_save
 rm -f "$BB_RESULTS"; rm -f "$BB_TEST_DIR"/shots/*.png
 : > "$BB_RESULTS"
 
+# This run's own folder, made now so a run that's stopped part way keeps what it logged
+RUN_NAMES=$(for f in $FILES; do basename "$f" .sh; done | paste -sd+ - | cut -c1-60)
+export BB_RUN_DIR="$BB_TEST_DIR/runs/$(date '+%Y%m%d-%H%M%S')-$RUN_NAMES"
+mkdir -p "$BB_RUN_DIR/shots" "$BB_RUN_DIR/logs"
+
 START=$(date +%s)
 for f in $FILES; do
     name=$(basename "$f" .sh)
     echo
     echo "== $name"
     t0=$(date +%s)
-    # The last scenario's logs out of the way, so its fatal lines aren't taken for this one's
-    rm -f "$(bb_log host)" "$(bb_log client)"
     (
         export BB_SCENARIO="$name" BB_SCENARIO_DIR="$(cd "$(dirname "$f")" && pwd)"
         source "$f"
@@ -188,6 +191,8 @@ for f in $FILES; do
     wait $spid 2>/dev/null
     spid=
     bb_close
+    # Its logs kept, and out of the way so their fatal lines aren't taken for the next one's
+    BB_SCENARIO="$name" bb_keep_log host; BB_SCENARIO="$name" bb_keep_log client
     mod_enable_all
     prefs_restore_overrides
     printf '%s\t%s\t%s\t%s\n' TIME "$name" "$(( $(date +%s) - t0 ))" "" >> "$BB_RESULTS"
@@ -210,12 +215,9 @@ PASSED=$(grep -c '^PASS' "$BB_RESULTS"); FAILED=$(grep -c '^FAIL' "$BB_RESULTS")
 } > "$BB_TEST_DIR/report.md"
 
 # This run's own copy of the results, so the next run doesn't overwrite them
-RUN_NAMES=$(for f in $FILES; do basename "$f" .sh; done | paste -sd+ - | cut -c1-60)
-RUN_DIR="$BB_TEST_DIR/runs/$(date '+%Y%m%d-%H%M%S')-$RUN_NAMES"
-mkdir -p "$RUN_DIR/shots"
+RUN_DIR="$BB_RUN_DIR"
 cp "$BB_TEST_DIR/report.md" "$RUN_DIR/"
 cp "$BB_TEST_DIR"/shots/*.png "$RUN_DIR/shots/" 2>/dev/null
-cp "$(bb_log host)" "$(bb_log client)" "$RUN_DIR/" 2>/dev/null
 sed -i '' "s#$BB_TEST_DIR/shots/#$RUN_DIR/shots/#g" "$RUN_DIR/report.md"
 
 echo

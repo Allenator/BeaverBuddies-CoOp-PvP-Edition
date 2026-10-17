@@ -104,6 +104,19 @@ mod_installed() { [ -d "$(bb_mods_dir)/$1" ]; }
 
 bb_log() { echo "$BB_TEST_DIR/$1.log"; }
 
+# bb_keep_log <instance>: that copy's log moved into this run's logs folder, named after the
+# scenario and numbered, before anything starts a new one over it. A scenario run on its own
+# keeps its logs in runs/single
+bb_keep_log() {
+    local log dir n=1
+    log=$(bb_log "$1")
+    [ -s "$log" ] || { rm -f "$log"; return 0; }
+    dir="${BB_RUN_DIR:-$BB_TEST_DIR/runs/single}/logs"
+    mkdir -p "$dir"
+    while [ -e "$dir/${BB_SCENARIO:-x}-$1-$n.log" ]; do n=$((n + 1)); done
+    mv "$log" "$dir/${BB_SCENARIO:-x}-$1-$n.log"
+}
+
 # send <instance> <command...>: one harness command, once the last one's been taken
 send() {
     local inst=$1 file n=0
@@ -180,7 +193,8 @@ bb_stack_windows() {
 # bb_open <instance>: starts a copy without waiting for it, so two can load side by side
 bb_open() {
     local inst=$1
-    rm -f "$BB_CMD_PREFIX-$inst" "$(bb_log "$inst")"
+    rm -f "$BB_CMD_PREFIX-$inst"
+    bb_keep_log "$inst"
     prefs_windowed
     open -g -n -a "$BB_GAME" --env SteamAppId=1062090 --env SteamGameId=1062090 --env BB_INSTANCE="$inst" \
         ${BB_RTC_CODE:+--env BB_RTC_CODE="$BB_RTC_CODE"} \
