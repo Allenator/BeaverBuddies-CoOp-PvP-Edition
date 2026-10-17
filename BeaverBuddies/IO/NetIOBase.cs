@@ -32,9 +32,15 @@ namespace BeaverBuddies.IO
         public void Update()
         {
             if (NetBase == null) return;
+            long start = Performance.HitchWatch.Now;
             NetBase.Update();
+            Performance.HitchWatch.Part("net", start);
+            start = Performance.HitchWatch.Now;
             steamPacketListener?.Update();
+            Performance.HitchWatch.Part("steam packets", start);
+            start = Performance.HitchWatch.Now;
             Updated();
+            Performance.HitchWatch.Part("io updated", start);
         }
 
         protected virtual void Updated() { }

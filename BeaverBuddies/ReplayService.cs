@@ -111,18 +111,27 @@ namespace BeaverBuddies
 
         public float TargetSpeed  { get; private set; } = 0;
 
-        // A client keeps only this little behind the host, in seconds: once
-        // the host's next tick has been waiting longer than this, it plays
-        // CatchUp times as many buckets a frame until it hasn't. Left alone,
-        // it settles a whole tick behind (0.6 s at normal speed), which
-        // every action waits on the way back
-        private const float ClientCushion = 0.1f, CatchUp = 1.25f;
+        // A client keeps this little behind the host, in seconds: the host's
+        // next tick should have been here about this long when the client
+        // reaches it. It plays a little faster or slower (between Slowest and
+        // Fastest times the buckets) to stay there. Running into a tick that
+        // hasn't come yet stops the game until it does, a visible stutter;
+        // left alone, it settles a whole tick behind (0.6 s at normal
+        // speed), which every action waits on the way back
+        private const float ClientCushion = 0.1f, Slowest = 0.85f, Fastest = 1.25f;
+        // How much faster per second of margin off the cushion
+        private const float PaceGain = 2.5f;
         // The tick whose events arrived first while the one before was still
         // playing, and when they did (realtime)
         private int _nextTickSeen = -1;
+        private float _nextTickArrived;
+        // The client's margin at the last few tick starts (averaged), and
+        // when it began waiting for a tick that hadn't come
+        private float _margin = ClientCushion;
+        private float _waitingSince = -1;
         // How many times the buckets the game asks for a client plays a frame
         public float BucketBoost { get; private set; } = 1;
-        private float _nextTickArrived;
+        public float Margin => _margin;
         private bool _desyncKept;
 
         public bool IsDesynced { get; private set; } = false;
@@ -260,6 +269,12 @@ namespace BeaverBuddies
             Plugin.Log("PostLoad");
             Fixes.DeferredDestroyFix.Reset();
             if (DevTools.TestHarness.Active) Util.ObjectCensus.Log("after loading");
+            if (HitchWatch.Profiling)
+            {
+                Util.LeakFinder.Loaded();
+                Plugin.LogWarning($"[Pace] heap after loading, collected: {GC.GetTotalMemory(true) >> 20} MB, " +
+                    $"Mono used {UnityEngine.Profiling.Profiler.GetMonoUsedSizeLong() >> 20} MB of {UnityEngine.Profiling.Profiler.GetMonoHeapSizeLong() >> 20} MB");
+            }
             Performance.ActionLatency.Hook();
             _determinismService.UnityThread = Thread.CurrentThread;
         }
@@ -589,6 +604,7 @@ namespace BeaverBuddies
             // Only replay events on Update if we're paused by the user.
             // Also only send events if paused, so the client doesn't play
             // then before the end of the tick.
+            long part = HitchWatch.Now;
             if (_speedManager.CurrentSpeed == 0 && TargetSpeed == 0)
             {
                 DoTickIO();
@@ -602,7 +618,10 @@ namespace BeaverBuddies
                 // nearly all of it there
                 SendEvents();
             }
+            HitchWatch.Part("paused io", part);
+            part = HitchWatch.Now;
             UpdateSpeed();
+            HitchWatch.Part("speed", part);
         }
 
         /**
@@ -685,7 +704,7 @@ namespace BeaverBuddies
                 targetSpeed = Math.Min(ticksBehind, 10);
                 //Plugin.Log($"Upping target speed to: {targetSpeed}");
             }
-            BucketBoost = io is ClientEventIO && targetSpeed > 0 && ticksBehind <= targetSpeed && ClientWaitingOnItself() ? CatchUp : 1;
+            BucketBoost = io is ClientEventIO && targetSpeed > 0 && ticksBehind <= targetSpeed ? ClientPace() : 1;
 
             if (_speedManager.CurrentSpeed != targetSpeed)
             {
@@ -694,18 +713,31 @@ namespace BeaverBuddies
             }
         }
 
-        // Whether the host's next tick has been here a while, the client
-        // still busy with the one before
-        private bool ClientWaitingOnItself()
+        private float ClientPace()
         {
             int next = ticksSinceLoad + 1;
-            if (!io.HasEventsForTick(next)) return false;
-            if (_nextTickSeen != next)
+            if (_nextTickSeen != next && io.HasEventsForTick(next))
             {
                 _nextTickSeen = next;
                 _nextTickArrived = UnityEngine.Time.realtimeSinceStartup;
             }
-            return UnityEngine.Time.realtimeSinceStartup - _nextTickArrived > ClientCushion;
+            return Math.Max(Slowest, Math.Min(Fastest, 1 + (_margin - ClientCushion) * PaceGain));
+        }
+
+        // A client at the start of a tick, with the host's tick for it or
+        // without: how early it came is the margin the pace keeps
+        public void ReachedTickStart(bool ready)
+        {
+            float now = UnityEngine.Time.realtimeSinceStartup;
+            if (!ready)
+            {
+                if (_waitingSince < 0) _waitingSince = now;
+                return;
+            }
+            float margin = _waitingSince >= 0 ? _waitingSince - now
+                : _nextTickSeen == ticksSinceLoad + 1 ? now - _nextTickArrived : 0;
+            _waitingSince = -1;
+            _margin += (margin - _margin) * 0.25f;
         }
 
         // This will be called at the very begining of a tick before
@@ -858,8 +890,11 @@ namespace BeaverBuddies
                 // is ready. Note that this is only a reason to stop if
                 // we're at the *very start* of a new tick - otherwise
                 // it would be overly conservative.
-                if (!replayService.IsReadyToStartTick)
+                bool ready = replayService.IsReadyToStartTick;
+                if (replayService.TargetSpeed > 0) replayService.ReachedTickStart(ready);
+                if (!ready)
                 {
+                    HitchWatch.Stalled();
                     // In theory the game should be paused to prevent this, but some logs
                     // suggest the client can get ahead of the server, which would
                     // trigger this warning (and now prevent the client's tick)
@@ -936,15 +971,14 @@ namespace BeaverBuddies
             }
 #endif
 
-            // A client catching up with the host plays a few more buckets a
-            // frame (see ReplayService.BucketBoost): the game's own speed
-            // doesn't change how fast it ticks
-            if (numberOfBucketsToTick > 0 && replayService != null && replayService.BucketBoost > 1)
+            // A client keeping pace with the host plays a few more or fewer
+            // buckets a frame (see ReplayService.BucketBoost): the game's own
+            // speed doesn't change how fast it ticks
+            if (numberOfBucketsToTick > 0 && replayService != null && replayService.BucketBoost != 1)
             {
-                _extraBuckets += numberOfBucketsToTick * (replayService.BucketBoost - 1);
-                int extra = (int)_extraBuckets;
-                _extraBuckets -= extra;
-                numberOfBucketsToTick += extra;
+                _extraBuckets += numberOfBucketsToTick * replayService.BucketBoost;
+                numberOfBucketsToTick = (int)_extraBuckets;
+                _extraBuckets -= numberOfBucketsToTick;
             }
 
             long ticking = HitchWatch.Now;

@@ -48,7 +48,7 @@ namespace BeaverBuddies.DevTools
      * And anywhere, "dismiss" presses OK on the dialogs showing.
      * Does nothing unless BB_INSTANCE is set.
      */
-    public class TestHarness : IUpdatableSingleton
+    public class TestHarness : IUpdatableSingleton, IUnloadableSingleton
     {
         public static readonly string Instance = Environment.GetEnvironmentVariable("BB_INSTANCE");
         public static bool Active => !string.IsNullOrEmpty(Instance);
@@ -82,6 +82,12 @@ namespace BeaverBuddies.DevTools
 
         // The harness of the game being played, for what runs between games (chaos mode)
         internal static TestHarness Current { get; private set; }
+
+        // Held past its scene, it would keep the whole game it was in, and skew what tests measure
+        public void Unload()
+        {
+            if (Current == this) Current = null;
+        }
 
         public void UpdateSingleton()
         {

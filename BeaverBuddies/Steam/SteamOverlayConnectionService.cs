@@ -14,7 +14,7 @@ using Timberborn.CoreUI;
 
 namespace BeaverBuddies.Steam
 {
-    class SteamOverlayConnectionService : IUpdatableSingleton
+    class SteamOverlayConnectionService : IUpdatableSingleton, IUnloadableSingleton
     {
 #if IS_STEAM
         // Typed object: Timberborn checks every class of a mod when it loads it,
@@ -28,7 +28,9 @@ namespace BeaverBuddies.Steam
 
         private bool? _lastSuccess = null;
 
-        private static List<IDisposable> callbacks = new List<IDisposable>();
+        // This scene's: a callback holds this service and through it the scene's
+        // whole container, so it goes with the scene (see Unload)
+        private readonly List<IDisposable> callbacks = new List<IDisposable>();
 
         public SteamOverlayConnectionService(
             SteamManager steamManager,
@@ -56,12 +58,6 @@ namespace BeaverBuddies.Steam
                 if (((SteamManager)_steamManager).Initialized)
                 {
                     SteamSupport.IsSteamEnabled = true;
-
-                    foreach (var callback in callbacks)
-                    {
-                        callback.Dispose();
-                    }
-
                     done = true;
 
                     //Callback<LobbyCreated_t>.Create(OnLobbyCreated);
@@ -81,6 +77,12 @@ namespace BeaverBuddies.Steam
                 }
             }
             //ReceiveMessages();
+        }
+
+        public void Unload()
+        {
+            foreach (var callback in callbacks) callback.Dispose();
+            callbacks.Clear();
         }
 
         private void TrySetPingName()
@@ -194,8 +196,9 @@ namespace BeaverBuddies.Steam
             }
         }
 #else
-        // Need to implement the interface
+        // Need to implement the interfaces
         public void UpdateSingleton() { }
+        public void Unload() { }
 #endif
     }
 }

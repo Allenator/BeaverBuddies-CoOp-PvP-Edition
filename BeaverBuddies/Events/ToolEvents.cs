@@ -348,13 +348,16 @@ namespace BeaverBuddies.Events
     }
 
     // InputService isn't one of our registered singletons, so keep hold of the
-    // game's instance as it updates.
+    // game's instance as it updates. Weakly: held, the last scene's would keep
+    // that whole game alive through the next one's load
     [HarmonyPatch(typeof(InputService), nameof(InputService.UpdateSingleton))]
     class InputServiceCapture
     {
-        public static InputService Instance;
+        private static readonly WeakReference<InputService> instance = new WeakReference<InputService>(null);
 
-        static void Prefix(InputService __instance) => Instance = __instance;
+        public static InputService Instance => instance.TryGetTarget(out var service) ? service : null;
+
+        static void Prefix(InputService __instance) => instance.SetTarget(__instance);
     }
 
     // MarkArea/UnmarkArea derive the planting height by raycasting the planter's
