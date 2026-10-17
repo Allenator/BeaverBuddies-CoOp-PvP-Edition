@@ -56,6 +56,37 @@ prefs_restore() {
     rm -f "$BB_PREFS_SAVED"
 }
 
+# The picks a new game starts from (BeaverBuddies.GameSetting.*, Timber Empires' among them): a scenario's
+# gamesetting commands change them for the player's own games too. Saved with the rest, and put back after
+# every scenario, so none leaks into the next one or into the player's games
+BB_GAME_SETTINGS_SAVED="$BB_TEST_DIR/game-settings.saved"
+game_settings() {
+    defaults read $BB_PREFS_DOMAIN 2>/dev/null | sed -nE 's/^ *"?(BeaverBuddies\.GameSetting\.[^"= ]+)"? = .*/\1/p'
+}
+
+game_settings_save() {
+    [ -f "$BB_GAME_SETTINGS_SAVED" ] && return
+    local k
+    for k in $(game_settings); do
+        echo "$k|$(defaults read-type $BB_PREFS_DOMAIN "$k" | sed 's/^Type is //')|$(defaults read $BB_PREFS_DOMAIN "$k")"
+    done > "$BB_GAME_SETTINGS_SAVED"
+}
+
+# keep: leave the saved file for a later restore (after a scenario), rather than the run's last
+game_settings_restore() {
+    [ -f "$BB_GAME_SETTINGS_SAVED" ] || return 0
+    local k t v
+    for k in $(game_settings); do grep -q "^$k|" "$BB_GAME_SETTINGS_SAVED" || defaults delete $BB_PREFS_DOMAIN "$k" 2>/dev/null; done
+    while IFS='|' read -r k t v; do
+        case "$t" in
+            integer) defaults write $BB_PREFS_DOMAIN "$k" -int "$v" ;;
+            float) defaults write $BB_PREFS_DOMAIN "$k" -float "$v" ;;
+            *) defaults write $BB_PREFS_DOMAIN "$k" -string "$v" ;;
+        esac
+    done < "$BB_GAME_SETTINGS_SAVED"
+    [ "${1:-}" == keep ] || rm -f "$BB_GAME_SETTINGS_SAVED"
+}
+
 # pref_set <key> <int>: a game preference for this scenario only (a mod's setting, say), the player's
 # own put back when the scenario is over. BeaverBuddies' "always trace" is the one that matters:
 # a scenario that is about logging being off, or on, sets it, whatever this Mac has it at.

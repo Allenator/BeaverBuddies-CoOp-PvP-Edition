@@ -90,6 +90,7 @@ cleanup() {
     mod_enable_all
     prefs_restore_overrides
     prefs_restore
+    game_settings_restore
     rm -rf "$LOCK"
 }
 trap cleanup EXIT
@@ -153,6 +154,7 @@ if why=$(stale_install); then
     exit 1
 fi
 prefs_save
+game_settings_save
 rm -f "$BB_RESULTS"; rm -f "$BB_TEST_DIR"/shots/*.png
 : > "$BB_RESULTS"
 
@@ -195,6 +197,7 @@ for f in $FILES; do
     BB_SCENARIO="$name" bb_keep_log host; BB_SCENARIO="$name" bb_keep_log client
     mod_enable_all
     prefs_restore_overrides
+    game_settings_restore keep
     printf '%s\t%s\t%s\t%s\n' TIME "$name" "$(( $(date +%s) - t0 ))" "" >> "$BB_RESULTS"
     echo "   ($(( $(date +%s) - t0 )) s)"
 done
