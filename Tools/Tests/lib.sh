@@ -130,11 +130,12 @@ send() {
     if [ -e "$file" ]; then echo "$*" >> "$file"; else echo "$*" > "$file.part" && mv "$file.part" "$file"; fi
 }
 
-# wait_for <instance> <regex> [seconds]
+# wait_for <instance> <regex> [seconds]: gives up early if that copy has closed
 wait_for() {
     local inst=$1 re=$2 t=${3:-60} i
     for ((i = 0; i < t * 2; i++)); do
         grep -aEq -- "$re" "$(bb_log "$inst")" 2>/dev/null && return 0
+        [ $((i % 10)) == 9 ] && [ -z "$(bb_pid "$inst")" ] && return 1
         sleep 0.5
     done
     return 1

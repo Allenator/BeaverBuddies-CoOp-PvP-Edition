@@ -196,6 +196,7 @@ for f in $FILES; do
     mod_enable_all
     prefs_restore_overrides
     printf '%s\t%s\t%s\t%s\n' TIME "$name" "$(( $(date +%s) - t0 ))" "" >> "$BB_RESULTS"
+    echo "   ($(( $(date +%s) - t0 )) s)"
 done
 
 # ---- Report -------------------------------------------------------------------------
@@ -212,6 +213,15 @@ PASSED=$(grep -c '^PASS' "$BB_RESULTS"); FAILED=$(grep -c '^FAIL' "$BB_RESULTS")
         awk -F'\t' -v n="$name" '$2==n && $1=="PASS" {print "- ok: " $3} $2==n && $1=="FAIL" {print "- **FAILED**: " $3 ": " $4}' "$BB_RESULTS"
         for shot in "$BB_TEST_DIR"/shots/"$name"-*.png; do [ -f "$shot" ] && echo "- screenshot: $shot"; done
     done
+    # Where the scenarios sat waiting on the game: a long one is a check that timed out, or a wait
+    # that could watch for what it's after instead
+    idle=$(perl "$(dirname "$0")/idle.pl" 20 "$BB_RUN_DIR"/logs/*-host-*.log 2>/dev/null | head -15)
+    if [ -n "$idle" ]; then
+        echo
+        echo "## Longest waits"
+        echo
+        echo "$idle"
+    fi
 } > "$BB_TEST_DIR/report.md"
 
 # This run's own copy of the results, so the next run doesn't overwrite them
