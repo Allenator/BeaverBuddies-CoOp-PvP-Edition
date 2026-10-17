@@ -90,4 +90,28 @@ private void Update(float deltaTime)
         }
     }
 #endif
+
+    /**
+     * A swimmer's depth comes from the water map at its feet, and now and then
+     * that read lands outside the map's columns as a game starts hosting (seen
+     * once on Lakes, never reproduced): one frame's depth isn't worth the game,
+     * so that frame keeps the last one, and the log says who and where.
+     */
+    [HarmonyPatch(typeof(Timberborn.WalkingSystem.SwimmingAnimator), nameof(Timberborn.WalkingSystem.SwimmingAnimator.UpdateSwimming))]
+    public class SwimmingAnimatorOutsideMapPatcher
+    {
+        private static int logged;
+
+        static System.Exception Finalizer(System.Exception __exception, Timberborn.WalkingSystem.SwimmingAnimator __instance)
+        {
+            if (__exception is not System.IndexOutOfRangeException) return __exception;
+            if (logged++ < 5)
+            {
+                var size = SingletonManager.GetSingleton<Timberborn.MapIndexSystem.MapIndexService>();
+                Plugin.LogWarning($"[Swimming] {__instance.Transform.name} at {__instance.Transform.position} read the water map outside it" +
+                    $" (map {size?.TerrainSize}, total size {size?.TotalSize}): {__exception.Message}");
+            }
+            return null;
+        }
+    }
 }
