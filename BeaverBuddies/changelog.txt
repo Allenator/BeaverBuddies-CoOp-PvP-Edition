@@ -1,3 +1,11 @@
+v1.1.0-1.6.0
+* Steam and Epic players can play together: join a hosted game by its code, or find one in Quick match.
+* The open matches list reads more clearly, and games that ended drop off it.
+* Guests go back to the main menu when the host leaves.
+* Guests keep pace with the host better.
+* Dynamite no longer crashes the game.
+* Several multiplayer menu fixes.
+
 v1.1.0-1.5.4
 * You pick a preferred color in the settings, and every player in a match gets a different one.
 
