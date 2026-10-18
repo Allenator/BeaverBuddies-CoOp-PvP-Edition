@@ -29,8 +29,8 @@ namespace BeaverBuddies.Trading
      */
     public class TradesBatchControlTab : BatchControlTab
     {
-        // Right after Distribution (8)
-        public const int Order = 9;
+        // After the game's tabs (up to Distribution, 8), clear of the low numbers other mods take
+        public const int Order = 109;
 
         private readonly BatchControlDistrict _batchControlDistrict;
         private readonly BatchControlRowGroupFactory _rowGroupFactory;
