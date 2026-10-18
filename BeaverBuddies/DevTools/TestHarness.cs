@@ -662,7 +662,8 @@ namespace BeaverBuddies.DevTools
                     // Lights the dynamite there, as its panel's button does
                     var dynamite = Get<IBlockService>().GetObjectsAt(new Vector3Int(I(a[1]), I(a[2]), I(a[3])))
                         .Select(o => o.GetComponent<Timberborn.Explosions.Dynamite>()).FirstOrDefault(d => d) ?? throw new Exception("no dynamite there");
-                    Record(new Events.DynamiteTriggeredEvent() { entityID = ReplayEvent.GetEntityID(dynamite) });
+                    if (IO.EventIO.IsNull) dynamite.Trigger();
+                    else Record(new Events.DynamiteTriggeredEvent() { entityID = ReplayEvent.GetEntityID(dynamite) });
                     Plugin.Log($"[Test] Detonating {dynamite.GameObject.name}");
                     break;
                 }

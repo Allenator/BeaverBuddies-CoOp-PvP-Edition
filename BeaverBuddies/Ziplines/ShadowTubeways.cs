@@ -86,6 +86,13 @@ namespace BeaverBuddies.Ziplines
             _navMeshGroupService = navMeshGroupService;
             _mapSize = mapSize;
             BlockService = blockService;
+            // The terrain blocks its edges for every navmesh group there is
+            // when it loads, and unblocks them for every group there is when
+            // it changes. A faction without tubeways has no Tubeway group, so
+            // it's added before anything loads: added later, the terrain
+            // unblocks edges it never blocked for it, and the game crashes on
+            // the first dynamite.
+            navMeshGroupService.GetOrAddGroupId("Tubeway");
         }
 
         // Set while this reads the real tubes, which the hidden ones mustn't join
