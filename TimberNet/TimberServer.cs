@@ -27,6 +27,11 @@ namespace TimberNet
 
         private readonly ISocketListener listener;
 
+        // How many clients can be in at once, or null for no limit
+        public Func<int>? MaxClients;
+        // The error a client turned away for it gets
+        public const string GameFullError = "GameFull";
+
         private Func<Task<byte[]>> mapProvider;
         private Func<JObject>? initEventProvider;
 
@@ -112,6 +117,13 @@ namespace TimberNet
                     if (client == null)
                     {
                         if (IsStopped) break;
+                        continue;
+                    }
+                    // The game is full
+                    if (MaxClients != null && ClientCount >= MaxClients())
+                    {
+                        Log($"Turning a client away: {ClientCount} of {MaxClients()} already in");
+                        TurnAway(client, GameFullError);
                         continue;
                     }
                     Task.Run(async () =>
@@ -243,6 +255,25 @@ namespace TimberNet
                 StopSending(client);
             }
             clients.RemoveAll(c => c == null || !c.Connected);
+        }
+
+        // An error in place of the map, which the client shows; closed once it's had time to arrive
+        private void TurnAway(ISocketStream client, string error)
+        {
+            Task.Run(async () =>
+            {
+                try
+                {
+                    StreamSender.WriteLength(client, 0);
+                    StreamSender.WriteWithLength(client, MessageToBuffer(error));
+                    await Task.Delay(2000);
+                }
+                catch (Exception e)
+                {
+                    Log($"Couldn't tell the client why: {e.Message}");
+                }
+                client.Close();
+            });
         }
 
         private void DropClient(ISocketStream client)

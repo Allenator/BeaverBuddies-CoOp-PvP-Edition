@@ -101,6 +101,11 @@ namespace BeaverBuddies.Connect
             client = ClientEventIO.Create(socket, LoadMap, (error) =>
             {
                 CloseWaiting();
+                if (error == TimberNet.TimberServer.GameFullError)
+                {
+                    ShowError("BeaverBuddies.JoinCoopGame.Error.Full");
+                    return;
+                }
                 // A code has no address or port to check
                 ShowError(socket is WebRtc.WebRtcSocket ? "BeaverBuddies.JoinCoopGame.Error.CodeCouldNotConnect"
                     : "BeaverBuddies.JoinCoopGame.Error.CouldNotConnect", error);

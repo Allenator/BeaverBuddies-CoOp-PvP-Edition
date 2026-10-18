@@ -1,3 +1,4 @@
+using BeaverBuddies.Connect;
 ﻿using Newtonsoft.Json.Linq;
 using System;
 using TimberNet;
@@ -84,6 +85,8 @@ namespace BeaverBuddies.IO
                     CreateInitEvent()
                 );
                 //netBase = new TimberServer(port, mapProvider, null);
+                // The host is one of them
+                NetBase.MaxClients = () => PlayerLimit.Current - 1;
                 NetBase.OnLog += Plugin.Log;
                 NetBase.OnTransientMessage += EventIO.RaiseTransientMessageReceived;
                 NetBase.OnMapReceived += NetBase_OnClientConnected;

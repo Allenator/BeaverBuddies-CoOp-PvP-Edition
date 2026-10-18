@@ -166,6 +166,7 @@ namespace BeaverBuddies
 
             // BeaverBuddies' own setting for new games, next to the ones mods add
             BeaverBuddies.DevTools.DevToolsRule.AddGameSetting();
+            BeaverBuddies.Connect.PlayerLimit.AddGameSetting();
 
             // Close the connection while the game is still whole: its
             // listening threads call into Steam, which crashes the game on

@@ -154,7 +154,7 @@ namespace BeaverBuddies.Matchmaking
             Plugin.Log($"[Match] Listing the hosted game {lobby}: {hosting.mapTitle}");
         }
 
-        // How many have joined: it's off the list once the map has no room left
+        // How many have joined: it's off the list once the game has no room left
         public static void Joined(int clients)
         {
             if (!listed) return;
@@ -163,9 +163,7 @@ namespace BeaverBuddies.Matchmaking
                 players = clients + 1;
                 PublishPlayers();
             }
-            if (hosting?.mode == null) return;
-            if (!hosting.mode.TryGetValue(nameof(MultiStart.MultiplayerNewGameModeSpec.Players), out float room)) return;
-            if (clients + 1 >= room) Unlist();
+            if (hosting != null && clients + 1 >= MatchList.MaxPlayers(hosting)) Unlist();
         }
 
         // How many play now, wherever the game is listed

@@ -254,7 +254,7 @@ bb_close() {
     for p in $(pgrep -x Timberborn); do
         ps eww -p "$p" 2>/dev/null | grep -q "BB_INSTANCE=" && kill -9 "$p" 2>/dev/null
     done
-    rm -f "$BB_CMD_PREFIX-host" "$BB_CMD_PREFIX-client"
+    rm -f "$BB_CMD_PREFIX-host" "$BB_CMD_PREFIX-client" "$BB_CMD_PREFIX-third"
     local n=0
     while lsof -nP -iTCP -sTCP:LISTEN 2>/dev/null | grep -qi timberborn && [ $n -lt 40 ]; do sleep 1; n=$((n + 1)); done
 }

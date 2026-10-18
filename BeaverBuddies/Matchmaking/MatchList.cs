@@ -138,9 +138,13 @@ namespace BeaverBuddies.Matchmaking
             };
         }
 
-        // A map's room: the players its multiplayer mode was made for; 2 for a Quick match, 0 when a hosted save doesn't say
-        internal static int MaxPlayers(MatchPicks picks) =>
-            picks.mode != null && picks.mode.TryGetValue(nameof(MultiStart.MultiplayerNewGameModeSpec.Players), out float players) ? (int)players : 0;
+        // A game's room: the players its multiplayer mode was made for (2 for a Quick match), up to its player limit
+        internal static int MaxPlayers(MatchPicks picks)
+        {
+            int limit = Connect.PlayerLimit.Of(picks.settings);
+            return picks.mode != null && picks.mode.TryGetValue(nameof(MultiStart.MultiplayerNewGameModeSpec.Players), out float players)
+                ? System.Math.Min((int)players, limit) : limit;
+        }
 
         private static void Merge()
         {

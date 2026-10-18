@@ -231,7 +231,7 @@ namespace BeaverBuddies.DevTools
                     // Each open match as the list has it: who, from which store, and the ways in
                     foreach (var match in Matchmaking.MatchList.Matches)
                     {
-                        Plugin.Log($"[Test] Open match {match.picks.name} platform={match.platform} code={match.joinCode} lobby={match.lobby} hosted={match.hosted} compatible={match.compatible}");
+                        Plugin.Log($"[Test] Open match {match.picks.name} platform={match.platform} code={match.joinCode} lobby={match.lobby} hosted={match.hosted} compatible={match.compatible} players={match.players}/{match.maxPlayers}");
                     }
                     break;
                 case "pickcode":
