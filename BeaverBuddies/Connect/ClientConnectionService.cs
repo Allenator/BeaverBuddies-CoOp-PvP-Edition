@@ -100,6 +100,7 @@ namespace BeaverBuddies.Connect
             Plugin.Log("Connecting client");
             client = ClientEventIO.Create(socket, LoadMap, (error) =>
             {
+                CloseWaiting();
                 // A code has no address or port to check
                 ShowError(socket is WebRtc.WebRtcSocket ? "BeaverBuddies.JoinCoopGame.Error.CodeCouldNotConnect"
                     : "BeaverBuddies.JoinCoopGame.Error.CouldNotConnect", error);
@@ -112,6 +113,8 @@ namespace BeaverBuddies.Connect
             }
 
             EventIO.Set(client);
+            // Up until the game loads, or the menu would show while it connects
+            ShowWaiting("BeaverBuddies.JoinCoopGame.Connecting");
             return true;
         }
 
@@ -124,24 +127,42 @@ namespace BeaverBuddies.Connect
         {
             if (success)
             {
-                // It only says the map is on its way: the game loads by
-                // itself when it's in, so the one thing to do is give up
-                var box = _dialogBoxShower.Create()
-                    .SetLocalizedMessage("BeaverBuddies.JoinCoopGame.Success")
-                    .SetCancelButton(CancelJoin, _dialogBoxShower._loc.T(Timberborn.Common.CommonLocKeys.CancelKey))
-                    .Show();
-                UnityEngine.UIElements.UQueryExtensions.Q<UnityEngine.UIElements.Button>(box._root, "ConfirmButton")?.ToggleDisplayStyle(false);
+                ShowWaiting("BeaverBuddies.JoinCoopGame.Success");
             }
             else
             {
+                CloseWaiting();
                 ShowError("BeaverBuddies.JoinCoopGame.ConnectionFailedMessage");
             }
+        }
+
+        private DialogBox _waiting;
+
+        // It only says where the join is: the game loads by itself when the
+        // map's in, so the one thing to do is give up
+        private void ShowWaiting(string messageKey)
+        {
+            CloseWaiting();
+            Plugin.Log($"Waiting on the host: {messageKey}");
+            _waiting = _dialogBoxShower.Create()
+                .SetLocalizedMessage(messageKey)
+                .SetCancelButton(CancelJoin, _dialogBoxShower._loc.T(Timberborn.Common.CommonLocKeys.CancelKey))
+                .Show();
+            UnityEngine.UIElements.UQueryExtensions.Q<UnityEngine.UIElements.Button>(_waiting._root, "ConfirmButton")?.ToggleDisplayStyle(false);
+        }
+
+        private void CloseWaiting()
+        {
+            if (_waiting == null) return;
+            if (_waiting._root?.panel != null) _waiting.Close();
+            _waiting = null;
         }
 
         // Stops waiting for the host's map: disconnects, and leaves the match it was for
         private void CancelJoin()
         {
             Plugin.Log("Cancelled joining before the map arrived");
+            _waiting = null;
             EventIO.Reset();
 #if IS_STEAM
             Matchmaking.MatchmakingSession.Cancel();
@@ -219,6 +240,7 @@ namespace BeaverBuddies.Connect
                     "the host likely disconnected. Aborting load instead of crashing.");
                 // Not left as the game's IO for the next game started here
                 if (EventIO.Get() == client) EventIO.Reset();
+                CloseWaiting();
                 ShowError(null);
                 return;
             }

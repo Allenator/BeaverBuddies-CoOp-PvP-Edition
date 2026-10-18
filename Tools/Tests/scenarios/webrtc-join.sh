@@ -8,6 +8,7 @@ start_match Folktails IronTeeth || { fail "a match starts by join code" "the cop
 pass "a match starts by join code"
 expect_log "the host opens its room" host "\[WebRTC\] Hosting with code $BB_RTC_CODE"
 expect_log "the guest joins by code" client "Joining by code: $BB_RTC_CODE"
+expect_log "the guest sees it connecting until the game loads" client "Waiting on the host: BeaverBuddies.JoinCoopGame.Connecting"
 expect_log "the guest connects over WebRTC" client "\[WebRTC\] Connected to $BB_RTC_CODE"
 expect_log "the host takes the player over WebRTC" host "\[WebRTC\] Player .* connected"
 send host "speed $BB_SPEED"; sleep 10
