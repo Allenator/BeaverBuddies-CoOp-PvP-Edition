@@ -1,3 +1,6 @@
+v1.1.0-1.6.1
+* Hosting a saved game can be invite only, like a new one.
+
 v1.1.0-1.6.0
 * Steam and Epic players can play together: join a hosted game by its code, or find one in Quick match.
 * The open matches list reads more clearly, and games that ended drop off it.
