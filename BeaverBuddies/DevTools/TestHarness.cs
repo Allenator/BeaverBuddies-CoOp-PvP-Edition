@@ -643,6 +643,11 @@ namespace BeaverBuddies.DevTools
                     }
                     break;
                 }
+                case "devmode":
+                    // Dev mode on, as its key turns it on: its tools in the toolbar
+                    Get<Timberborn.Debugging.DevModeManager>().Enable();
+                    Plugin.Log($"[Test] Dev mode {Get<Timberborn.Debugging.DevModeManager>().Enabled}");
+                    break;
                 case "mousebutton":
                 {
                     // mousebutton down|up: the game's left mouse button, as a player presses it, at
