@@ -60,7 +60,7 @@ namespace BeaverBuddies.Matchmaking
             string settlement = save.SettlementReference.SettlementName;
             bool fromNewGame = newGame != null && newGameSettlement == settlement;
             hosting = fromNewGame ? newGame : FromSave(settlement, saveFile);
-            friendsOnly = fromNewGame && newGameFriendsOnly;
+            friendsOnly = fromNewGame ? newGameFriendsOnly : MatchOptionsPanel.FriendsOnly;
         }
 
         private static MatchPicks FromSave(string settlement, byte[] saveFile)
