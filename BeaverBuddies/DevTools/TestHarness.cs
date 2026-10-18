@@ -643,6 +643,17 @@ namespace BeaverBuddies.DevTools
                     }
                     break;
                 }
+                case "mousebutton":
+                {
+                    // mousebutton down|up: the game's left mouse button, as a player presses it, at
+                    // where "mouse" put the pointer
+                    var mouse = UnityEngine.InputSystem.Mouse.current;
+                    var state = new UnityEngine.InputSystem.LowLevel.MouseState { position = mouse.position.ReadValue() }
+                        .WithButton(UnityEngine.InputSystem.LowLevel.MouseButton.Left, a[1] == "down");
+                    UnityEngine.InputSystem.LowLevel.InputState.Change(mouse, state);
+                    Plugin.Log($"[Test] Mouse button {a[1]}");
+                    break;
+                }
                 case "mouse":
                 {
                     // The game's mouse at a screen point (pixels, from the top left like a screenshot),
