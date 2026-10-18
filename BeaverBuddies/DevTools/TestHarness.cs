@@ -42,7 +42,7 @@ namespace BeaverBuddies.DevTools
      * at the main menu; in game "buildnow Template x y z [0|90|180|270]"
      * places it finished, "infect x y z" infects the workers of the
      * workplace there with badwater, "workers x y z" logs who works there,
-     * "speedsolo n" sets the speed, "look x y z [zoom]" points the camera there,
+     * "speedsolo n" sets the speed, "detonate x y z" lights the dynamite there, "look x y z [zoom]" points the camera there,
      * "send x y z tx ty tz" orders the troops of the building at x y z to the
      * tile tx ty tz (in a multiplayer game).
      * And anywhere, "dismiss" presses OK on the dialogs showing.
@@ -657,6 +657,15 @@ namespace BeaverBuddies.DevTools
                     // Finishes the site there, as its builders would: on every machine, so they stay in step
                     Record(new HarnessEvent() { command = string.Join(" ", a) });
                     break;
+                case "detonate":
+                {
+                    // Lights the dynamite there, as its panel's button does
+                    var dynamite = Get<IBlockService>().GetObjectsAt(new Vector3Int(I(a[1]), I(a[2]), I(a[3])))
+                        .Select(o => o.GetComponent<Timberborn.Explosions.Dynamite>()).FirstOrDefault(d => d) ?? throw new Exception("no dynamite there");
+                    Record(new Events.DynamiteTriggeredEvent() { entityID = ReplayEvent.GetEntityID(dynamite) });
+                    Plugin.Log($"[Test] Detonating {dynamite.GameObject.name}");
+                    break;
+                }
                 case "materials":
                 {
                     // What a building draws with: each visible renderer's materials, gray or not
