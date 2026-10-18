@@ -364,7 +364,10 @@ sync_state() {
     h=$(grep -aEo "Tick [0-9]+ IO done" "$(bb_log host)" | tail -1 | grep -oE "[0-9]+")
     c=$(grep -aEo "Tick [0-9]+ IO done" "$(bb_log client)" | tail -1 | grep -oE "[0-9]+")
     [ -n "$h" ] && [ -n "$c" ] || { echo "no ticks"; return 1; }
+    # The tick before the last both logged: a tick's line goes out as it starts, and events played while
+    # paused land after the host's line but can reach the guest before its own, so the last one's can differ
     n=$((10#$h < 10#$c ? 10#$h : 10#$c))
+    n=$((n - 1))
     local hh ch
     hh=$(grep -aE "Tick 0*$n IO done" "$(bb_log host)" | tail -1 | sed 's/.*IO done//')
     ch=$(grep -aE "Tick 0*$n IO done" "$(bb_log client)" | tail -1 | sed 's/.*IO done//')
@@ -406,7 +409,7 @@ expect_no_log() {
     if [ -z "$line" ]; then pass "$1"; else fail "$1" "$2 log has: $line"; fi
 }
 
-# expect_in_sync <name>: both copies' state hashes agree at the last tick they share
+# expect_in_sync <name>: both copies' state hashes agree at the last whole tick they share
 expect_in_sync() {
     local s; s=$(sync_state)
     if echo "$s" | grep -q "in sync"; then pass "$1 ($s)"; else fail "$1" "$s"; fi
