@@ -45,6 +45,7 @@ internal static class RuntimePatches
             TerrainNeighborVisits.Install(harmonyType, harmonyMethodType, patch);
             AllowedGoodRows.Install(harmonyType, harmonyMethodType, patch);
             YielderReachabilitySkip.Install(harmonyType, harmonyMethodType, patch);
+            LoadPatches.Install();
             try { WaterTextureUpload.Install(harmonyType, harmonyMethodType, patch); }
             catch (Exception exception) { Debug.LogWarning("[BeaverBuddies Perf] Water upload de-duplication unavailable: " + exception.GetBaseException().Message); }
             Debug.Log("[BeaverBuddies Perf] Performance optimizations installed.");

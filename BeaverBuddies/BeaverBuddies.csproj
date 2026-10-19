@@ -79,7 +79,7 @@
 
     <!-- Timberborn DLL & Publicize (BepInEx.AssemblyPublicizer.MSBuild) -->
     <Reference Include="$(TimberbornManagedPath)com.rlabrecque.steamworks.net.dll" Private="false" />
-    <Reference Include="$(TimberbornManagedPath)Bindito.Core.dll" Private="false" />
+    <Reference Include="$(TimberbornManagedPath)Bindito.Core.dll" Publicize="true" Private="false" />
     <Reference Include="$(TimberbornManagedPath)Bindito.Unity.dll" Private="false" />
     <Reference Include="$(TimberbornManagedPath)UnityEngine.*.dll" Publicize="true" Private="false" />
     <Reference Include="$(TimberbornManagedPath)Unity.InputSystem.dll" Publicize="true" Private="false" />

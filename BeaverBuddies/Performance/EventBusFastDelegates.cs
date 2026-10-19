@@ -105,8 +105,7 @@ internal static class EventBusFastDelegates
             return original;
         }
         // Keep callback failure behavior; no partial registration has occurred.
-        // (T3MP also told its load-time event router about the handler here;
-        // BeaverBuddies doesn't port that router.)
+        LoadEventRouter.RememberHandler(wrapper, subscriber, method);
         return wrapper;
     }
 
