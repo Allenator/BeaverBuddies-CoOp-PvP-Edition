@@ -1,3 +1,6 @@
+v1.1.0-1.6.3
+* New game setting for how many players can join a match, 4 by default.
+
 v1.1.0-1.6.2
 * Joining a game shows that it is connecting until the game loads.
 
