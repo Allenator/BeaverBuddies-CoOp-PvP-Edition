@@ -206,8 +206,10 @@ namespace BeaverBuddies.Events
             {
                 // Instant build is a dev tool, held down on this machine only,
                 // for this machine's player: not for one it acts for (ActAs)
+                // The test harness's buildnow asks for it outright
                 bool instant = ReplayEvent.ActingPlayerID == null
-                    && ShouldBePlacedFinishedPatcher.InstantKeyHeld(__instance) && DevTools.DevToolsPolicy.IsAllowed;
+                    && (BuildingPlacedEvent.InstantOverride == true
+                        || ShouldBePlacedFinishedPatcher.InstantKeyHeld(__instance) && DevTools.DevToolsPolicy.IsAllowed);
                 string prefabName = ReplayEvent.GetBuildingName(entitySetupBuilder);
                 // If there's a duplication source, get the source's EntityID
                 var dupInit = (DuplicationInit)entitySetupBuilder._initComponents.Find(c => c is DuplicationInit);
