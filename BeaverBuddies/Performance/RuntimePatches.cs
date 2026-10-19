@@ -31,9 +31,8 @@ internal static class RuntimePatches
             var harmonyType = LoadPatchBridge.Find("HarmonyLib.Harmony");
             var harmonyMethodType = LoadPatchBridge.Find("HarmonyLib.HarmonyMethod");
             var patch = harmonyType.GetMethods().Single(m => m.Name == "Patch" && m.GetParameters().Length == 5);
-            // T3MP's speed policy, water upload and tube fix are left out: the
-            // speed is BeaverBuddies' to pace in co-op, and the others touch
-            // rendering only. What's here gives the same results as vanilla,
+            // T3MP's speed policy and tube fix are left out: the speed is
+            // BeaverBuddies' to pace in co-op, and the tube fix isn't about speed. What's here gives the same results as vanilla,
             // so both players don't need the same setting.
             if (!PerformanceSettings.Enabled)
             {
@@ -46,6 +45,8 @@ internal static class RuntimePatches
             TerrainNeighborVisits.Install(harmonyType, harmonyMethodType, patch);
             AllowedGoodRows.Install(harmonyType, harmonyMethodType, patch);
             YielderReachabilitySkip.Install(harmonyType, harmonyMethodType, patch);
+            try { WaterTextureUpload.Install(harmonyType, harmonyMethodType, patch); }
+            catch (Exception exception) { Debug.LogWarning("[BeaverBuddies Perf] Water upload de-duplication unavailable: " + exception.GetBaseException().Message); }
             Debug.Log("[BeaverBuddies Perf] Performance optimizations installed.");
         }
         catch (Exception exception)
@@ -86,6 +87,22 @@ internal static class RuntimePatches
             return false;
         }
     }
+
+    // Upstream's name for TryInstall, for the load-time patches ported from it.
+    internal static void Apply(string owner, Type harmonyType, Type harmonyMethodType, MethodInfo patch,
+        Action<Func<MethodBase, string?, string?, string?, string?, object?>> body, Type hooks)
+    {
+        if (!TryInstall(owner, harmonyType, harmonyMethodType, patch, body, hooks))
+            throw new InvalidOperationException(owner + " could not be applied");
+    }
+
+    // Without parameter types the name must be unique; with them (including
+    // Type.EmptyTypes) the exact overload is taken.
+    internal static MethodInfo Find(Type type, string name, Type[]? parameters = null) =>
+        (parameters == null
+            ? type.GetMethod(name, All | BindingFlags.DeclaredOnly)
+            : type.GetMethod(name, All | BindingFlags.DeclaredOnly, null, parameters, null))
+        ?? throw new MissingMethodException(type.FullName, name);
 
     // Harmony bookkeeping: true when another owner already patched the method.
     // Checked before a body replacement, which would hide an earlier transpiler
