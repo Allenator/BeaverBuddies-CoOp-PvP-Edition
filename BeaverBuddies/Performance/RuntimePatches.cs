@@ -32,19 +32,20 @@ internal static class RuntimePatches
             var harmonyMethodType = LoadPatchBridge.Find("HarmonyLib.HarmonyMethod");
             var patch = harmonyType.GetMethods().Single(m => m.Name == "Patch" && m.GetParameters().Length == 5);
             // T3MP's speed policy and tube fix are left out: the speed is
-            // BeaverBuddies' to pace in co-op, and the tube fix isn't about speed. What's here gives the same results as vanilla,
-            // so both players don't need the same setting.
+            // BeaverBuddies' to pace in co-op, and the tube fix isn't about speed.
+            // Movement sub-steps move characters corner to corner, which differs from vanilla
+            // in the last decimals, so every player in a match runs this the same.
             if (!PerformanceSettings.Enabled)
             {
                 Debug.Log("[BeaverBuddies Perf] Performance optimizations are off.");
                 return;
             }
-            EventBusFastDelegates.Install(harmonyType, harmonyMethodType, patch);
-            TickFrontier.Install(harmonyType, harmonyMethodType, patch);
-            WalkerSpeedDelegates.Install(harmonyType, harmonyMethodType, patch);
-            TerrainNeighborVisits.Install(harmonyType, harmonyMethodType, patch);
-            AllowedGoodRows.Install(harmonyType, harmonyMethodType, patch);
-            YielderReachabilitySkip.Install(harmonyType, harmonyMethodType, patch);
+            Feature("event bus", () => EventBusFastDelegates.Install(harmonyType, harmonyMethodType, patch));
+            Feature("tick frontier", () => TickFrontier.Install(harmonyType, harmonyMethodType, patch));
+            Feature("walker delegates and movement sub-steps", () => WalkerSpeedDelegates.Install(harmonyType, harmonyMethodType, patch));
+            Feature("terrain visits", () => TerrainNeighborVisits.Install(harmonyType, harmonyMethodType, patch));
+            Feature("allowed-good rows", () => AllowedGoodRows.Install(harmonyType, harmonyMethodType, patch));
+            Feature("yielder reachability", () => YielderReachabilitySkip.Install(harmonyType, harmonyMethodType, patch));
             LoadPatches.Install();
             try { WaterTextureUpload.Install(harmonyType, harmonyMethodType, patch); }
             catch (Exception exception) { Debug.LogWarning("[BeaverBuddies Perf] Water upload de-duplication unavailable: " + exception.GetBaseException().Message); }
@@ -87,6 +88,12 @@ internal static class RuntimePatches
             Debug.LogWarning("[BeaverBuddies Perf] " + owner + " disabled: " + exception.GetBaseException().Message);
             return false;
         }
+    }
+
+    private static void Feature(string name, Action install)
+    {
+        try { install(); }
+        catch (Exception exception) { Debug.LogWarning("[BeaverBuddies Perf] " + name + " unavailable: " + exception.GetBaseException().Message); }
     }
 
     // Upstream's name for TryInstall, for the load-time patches ported from it.

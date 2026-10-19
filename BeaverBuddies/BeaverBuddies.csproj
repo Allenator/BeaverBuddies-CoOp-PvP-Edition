@@ -42,7 +42,7 @@
     <Steam Condition="'$(Steam)' == ''">true</Steam>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Steam)' == 'true'">
-    <DefineConstants>$(DefineConstants);IS_STEAM</DefineConstants>
+    <DefineConstants>$(DefineConstants);IS_STEAM;MOVEMENT_SUBSTEPS</DefineConstants>
   </PropertyGroup>
 
   <Target Name="CheckEnv" BeforeTargets="BeforeBuild">
