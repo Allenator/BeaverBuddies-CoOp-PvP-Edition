@@ -575,6 +575,9 @@ namespace BeaverBuddies.DevTools
                         Plugin.Log($"[Test] Preview {preview.GameObject.name} {preview.PreviewState.IsBuildable} valid={block.IsValid()} blocks={validator.BlocksValid(block.PositionedBlocks)} service={Get<BlockObjectValidationService>().IsValid(block)} warning='{_previewPlacer.WarningText}' bad=[{string.Join("; ", bad)}]");
                     }
                     _previewPlacer.HideAllPreviews();
+                    // A preview's range area goes when its build tool closes, and no tool was opened
+                    // for this one: taken off here, or it stays on the ground
+                    Get<Timberborn.RangedEffectBuildingUI.BuildingWithRangeUpdateService>().RemovePreview();
                     break;
                 }
                 case "tool":
