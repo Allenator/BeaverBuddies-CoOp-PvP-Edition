@@ -244,6 +244,9 @@ namespace BeaverBuddies.Connect
         private readonly RehostingService _rehostingService;
         private readonly DialogBoxShower _dialogBoxShower;
         private float _hostAt = -1;
+        // Handed over to host: Pending stays up until the hosting box is, so the game that's
+        // setting up isn't played in between (see ServerHostingUtils.LoadAndHost)
+        private bool _handedOver;
 
         public NewGameHosting(RehostingService rehostingService, DialogBoxShower dialogBoxShower)
         {
@@ -253,12 +256,18 @@ namespace BeaverBuddies.Connect
 
         public void UpdateSingleton()
         {
-            if (!Pending) return;
+            if (!Pending)
+            {
+                _handedOver = false;
+                return;
+            }
+            if (_handedOver) return;
             if (_hostAt < 0) _hostAt = Time.realtimeSinceStartup + SettleTime;
             if (Time.realtimeSinceStartup < _hostAt) return;
-            Pending = false;
+            _handedOver = true;
             if (!_rehostingService.RehostGame())
             {
+                Pending = false;
                 _dialogBoxShower.Create().SetLocalizedMessage("BeaverBuddies.Menu.HostFailed").Show();
             }
         }

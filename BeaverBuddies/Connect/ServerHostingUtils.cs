@@ -178,6 +178,10 @@ namespace BeaverBuddies.Connect
          */
         public static bool HoldingPaused { get; private set; }
 
+        // From the moment a game is handed over to host until the host's box is answered: what the game
+        // does meanwhile is setting up, not played (see ModBridge.AboutToHost)
+        public static bool BoxUp { get; private set; }
+
         public static void HoldPaused(Timberborn.TimeSystem.SpeedManager speedManager)
         {
             HoldingPaused = true;
@@ -186,6 +190,8 @@ namespace BeaverBuddies.Connect
 
         public static void LoadAndHost(ValidatingGameLoader loader, DialogBoxShower shower, SaveReference saveReference)
         {
+            BoxUp = true;
+            NewGameHosting.Pending = false;
             var sceneLoader = loader._gameSceneLoader;
             var repository = sceneLoader._gameSaveRepository;
             byte[] data = GetMapBtyes(repository, saveReference);
@@ -206,6 +212,7 @@ namespace BeaverBuddies.Connect
             {
                 // Not left as the game's IO with nothing behind it
                 EventIO.Reset();
+                BoxUp = false;
                 shower.Create().SetLocalizedMessage("BeaverBuddies.Menu.HostFailed").Show();
                 return;
             }
@@ -221,6 +228,7 @@ namespace BeaverBuddies.Connect
             Action start = () =>
             {
                 HoldingPaused = false;
+                BoxUp = false;
                 if (coroutine != null)
                 {
                     behavior.StopCoroutine(coroutine);
@@ -240,6 +248,7 @@ namespace BeaverBuddies.Connect
                 .SetCancelButton(() =>
                 {
                     HoldingPaused = false;
+                    BoxUp = false;
                     if (coroutine != null)
                     {
                         behavior.StopCoroutine(coroutine);

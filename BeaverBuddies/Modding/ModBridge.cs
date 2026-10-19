@@ -209,6 +209,8 @@ namespace BeaverBuddies.Modding
         // (Host new game, a match): what it does now isn't the game played yet
         public static bool AboutToHost()
         {
+            // Handed over to host, the box not answered yet: still setting up
+            if (Connect.ServerHostingUtils.BoxUp) return true;
             // Hosted now: the game is the one played
             if (EventIO.Get() is ServerEventIO) return false;
             if (Connect.NewGameHosting.Pending || DevTools.TestHarness.HostsMatch) return true;
