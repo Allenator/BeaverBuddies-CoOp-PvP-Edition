@@ -138,7 +138,7 @@ internal static class PreparedEntityVisuals
                 var info = infoMethod.Invoke(null, new object[] { method });
                 if (info == null) continue;
                 var owners = (IEnumerable<string>)info.GetType().GetProperty("Owners", All)!.GetValue(info)!;
-                bool Accepted(string owner) => owner == _owner || owner == "local.gpupathinginvestigation.benchmarkprobe" ||
+                bool Accepted(string owner) => owner == _owner || LoadCompatibility.ReviewedEverywhere(method, owner) || owner == "local.gpupathinginvestigation.benchmarkprobe" ||
                     (owner == "beaverbuddies.perf.load.good-stack-models" || owner == "beaverbuddies.perf.test.lazy-good-stack" && Environment.GetCommandLineArgs().Contains("-t3mpTestLazyGoodStack")) &&
                     (method.DeclaringType?.FullName == "Timberborn.Rendering.EntityMaterials" && (method.Name == "AddMaterials" || method.Name == "AddMaterial" || method.Name == "GetChildMaterials") ||
                      method.DeclaringType?.FullName == "Timberborn.GoodStackSystem.GoodStackModel" && method.Name == "UpdateModel" ||

@@ -27,7 +27,9 @@ internal static partial class ConstructionPlans
             t == typeof(MethodRetriever) || t == typeof(InstanceProviderFuncFactory) || t == typeof(ParameterProvider))
         .SelectMany(t => t.GetMethods(All | BindingFlags.DeclaredOnly)).Cast<MethodBase>().ToArray();
     internal static bool Reviewed() => LoadCompatibility.Reviewed(LoadBodies.Construction);
-    private static bool CheckCompatibility() => Reviewed() && LoadCompatibility.Unmodified(ProtectedMethods, PatchId);
+    private static bool CheckCompatibility() => Reviewed() && LoadCompatibility.Unmodified(ProtectedMethods, PatchId,
+        // BeaverBuddies swaps the random generator in some types' arguments; those types never get a plan (see Build)
+        (method, owner) => owner == BeaverBuddies.Plugin.ID && method.DeclaringType == typeof(ParameterProvider) && method.Name == nameof(ParameterProvider.GetParameters));
     private const BindingFlags All = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
     [ThreadStatic] private static int _depth;
     [ThreadStatic] private static Dictionary<MethodBase, Plan?>? _plans;
@@ -197,6 +199,9 @@ internal static partial class ConstructionPlans
             (method.CallingConvention & CallingConventions.VarArgs) != 0 ||
             types.Any(t => t.IsByRef || t.IsPointer || t.IsByRefLike) ||
             method is MethodInfo mi && (mi.ReturnType.IsByRef || mi.ReturnType.IsPointer || mi.ReturnType.IsByRefLike)) return null;
+#if !NO_RANDOM
+        if (BeaverBuddies.ParameterProviderPatch.Handles(method.DeclaringType)) return null;
+#endif
         var plan = new Plan { Method = method, Types = types };
         if (boundProvider != null)
         {

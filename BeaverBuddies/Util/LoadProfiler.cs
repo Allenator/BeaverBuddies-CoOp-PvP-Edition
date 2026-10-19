@@ -17,6 +17,8 @@ namespace BeaverBuddies.Util
     {
         const long SlowMs = 100;
 
+        // Last, so the performance patches' own LoadAll prefixes open their scopes first: this one runs the whole load
+        [HarmonyPriority(Priority.Last)]
         static bool Prefix(SingletonLifecycleService __instance)
         {
             if (!DevTools.TestHarness.Active) return true;

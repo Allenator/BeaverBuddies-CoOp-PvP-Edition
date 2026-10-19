@@ -27,6 +27,21 @@ internal static class NavigationShapePlans
     private static bool _validate;
     private static long _hits, _builds, _checks;
     internal static bool Installed { get; private set; }
+
+    // Mods that patch the navigation update for some buildings, by their Harmony id, with
+    // which buildings. Those go through the native update and are never cached; everything
+    // else is the shape the game would build, so the patch changes nothing there.
+    private static readonly Dictionary<string, Func<BlockObject, bool>> Bypasses = new();
+    internal static void AddBypass(string harmonyId, Func<BlockObject, bool> buildings) => Bypasses[harmonyId] = buildings;
+    private static bool Bypassed(BlockObject blockObject)
+    {
+        foreach (var bypass in Bypasses.Values) if (bypass(blockObject)) return true;
+        return false;
+    }
+    private static readonly string[] BypassableMethods = { "AddManuallySetEdges", "AddEdgesAddedByStackable" };
+    // Placement checks and post-load validation: they take no part in building a shape
+    private static readonly string[] UnrelatedMethods = { "IsValid", "AddToServiceAfterLoad" };
+
     private static bool _production, _compatible;
     private static string _owner = "";
     private static Type _updater = null!;
@@ -73,7 +88,11 @@ internal static class NavigationShapePlans
         _compatible = !_production || Reviewed() && LoadCompatibility.Unmodified(
             _updater.Assembly.GetTypes().Concat(new[] { typeof(NavMeshObject), typeof(NavMeshGroupService), typeof(BlockObject), typeof(BlockObjectSpec), typeof(Blocks), typeof(Block), typeof(PositionedBlocks), typeof(PositionedEntrance) })
                 .SelectMany(t => t.GetMethods(All | BindingFlags.DeclaredOnly)), _owner,
-            (method, owner) => owner == "beaverbuddies.perf.test.nav-removal-view" &&
+            // BeaverBuddies' desync trace logs a finished building and changes nothing
+            (method, owner) => owner == BeaverBuddies.Plugin.ID && method.DeclaringType == typeof(BlockObject) && method.Name == "MarkAsFinished" ||
+                Bypasses.ContainsKey(owner) && (method.DeclaringType == _updater && Array.IndexOf(BypassableMethods, method.Name) >= 0 ||
+                    method.DeclaringType == typeof(BlockObject) && Array.IndexOf(UnrelatedMethods, method.Name) >= 0) ||
+                owner == "beaverbuddies.perf.test.nav-removal-view" &&
                 Environment.GetCommandLineArgs().Contains("-t3mpTestNavRemovalView") && method.DeclaringType == typeof(NavMeshObject) &&
                 new[] { "Reset", "AddEdge", "BlockEdge", "EnqueueRemoveFromRegularNavMesh", "EnqueueRemoveFromPreviewNavMesh", "RemoveFromPreviewNavMesh" }.Contains(method.Name) ||
                 // These observers only increment the receiver-index generation;
@@ -127,7 +146,7 @@ internal static class NavigationShapePlans
     private static bool Before(object __instance, BlockObject blockObject, NavMeshObject navMeshObject, object blockObjectNavMeshSettingsSpec, out Scope __state)
     {
         __state = default;
-        if (_depth == 0 || !_compatible || !blockObject.Positioned) return true;
+        if (_depth == 0 || !_compatible || !blockObject.Positioned || Bypassed(blockObject)) return true;
         var key = ((object)blockObject.GetComponent<BlockObjectSpec>(), blockObjectNavMeshSettingsSpec, (object)blockObject.Orientation, (object)blockObject.FlipMode, Groups(__instance), new GeometryKey(blockObject));
         if (!Plans.TryGetValue(__instance, out var plans)) Plans.Add(__instance, plans = new());
         __state = new Scope { Owner = __instance, Key = key, Capture = true };

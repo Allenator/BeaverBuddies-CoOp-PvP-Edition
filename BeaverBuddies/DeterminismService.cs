@@ -462,6 +462,10 @@ namespace BeaverBuddies
     {
         static NonTickRandomNumberGenerator nonTickRNG = null;
 
+        // Whether this patch changes the arguments GetParameters returns for a type, so the
+        // load-time construction plans, which skip GetParameters, leave it to the native path
+        public static bool Handles(Type declaringType) => blacklist.Contains(declaringType);
+
         private static HashSet<Type> blacklist = new HashSet<Type>()
         {
             typeof(BeaverTextureSetter),

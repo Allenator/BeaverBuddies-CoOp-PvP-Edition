@@ -53,7 +53,9 @@ internal static class InitialNavigationLoad
     }
     private static bool Reviewed() => LoadCompatibility.Reviewed(LoadBodies.InitialNavigation);
     private static bool CheckCompatibility() => Reviewed() && LoadCompatibility.Unmodified(Protected, Owner,
-        (method, owner) => owner == "local.gpupathinginvestigation.benchmarkprobe" && method.DeclaringType == typeof(RoadNavMeshGraph) &&
+        // Timber Empires skips unblocking an edge that isn't blocked; the initial changes only add and block edges
+        (method, owner) => owner == "timberempires" && method.DeclaringType == typeof(NavMeshSource) && method.Name == "UnblockEdge" ||
+        owner == "local.gpupathinginvestigation.benchmarkprobe" && method.DeclaringType == typeof(RoadNavMeshGraph) &&
             (method.Name == "ConnectNodes" || method.Name == "DisconnectNodes" || method.Name == "Load"));
 
     internal static void Install()

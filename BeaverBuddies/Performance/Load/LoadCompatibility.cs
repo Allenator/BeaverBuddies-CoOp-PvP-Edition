@@ -53,6 +53,12 @@ internal static class LoadCompatibility
         method.DeclaringType == typeof(Timberborn.BaseComponentSystem.ComponentCache) &&
         method.Name == "Initialize";
 
+    // BeaverBuddies numbers an entity's template from its own ID rather than a shared counter, so
+    // when a model is created and awakened doesn't change the number, and the load shortcuts that
+    // reorder or defer that work stay exact.
+    internal static bool ReviewedEverywhere(MethodBase method, string owner) =>
+        owner == BeaverBuddies.Plugin.ID && method.DeclaringType == typeof(Timberborn.TemplateSystem.InstantiatedTemplate) && method.Name == "Awake";
+
     internal static bool Unmodified(IEnumerable<MethodBase> methods, string owner, Func<MethodBase, string, bool>? reviewed = null)
     {
         var getInfo = LoadPatchBridge.Find("HarmonyLib.Harmony").GetMethod("GetPatchInfo", LoadPatchBridge.All)!;
@@ -61,7 +67,7 @@ internal static class LoadCompatibility
             var info = getInfo.Invoke(null, new object[] { method });
             if (info == null) continue;
             var owners = (IEnumerable<string>)info.GetType().GetProperty("Owners", LoadPatchBridge.All)!.GetValue(info)!;
-            var foreign = owners.FirstOrDefault(o => o != owner && !(reviewed?.Invoke(method, o) ?? false));
+            var foreign = owners.FirstOrDefault(o => o != owner && !ReviewedEverywhere(method, o) && !(reviewed?.Invoke(method, o) ?? false));
             if (foreign != null)
             {
                 UnityEngine.Debug.Log("[BeaverBuddies Perf] fallback " + method.DeclaringType?.FullName + "." + method.Name + " owner=" + foreign);

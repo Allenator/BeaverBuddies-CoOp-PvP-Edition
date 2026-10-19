@@ -179,6 +179,11 @@ namespace BeaverBuddies.Modding
             DistrictOwners.NameOf = playerName;
         }
 
+        // A mod that patches how some buildings join the navigation mesh says which, so the
+        // load-time shortcut that reuses the shapes the game builds skips those buildings
+        public static void AddNavigationShapeBypass(string harmonyId, Func<Timberborn.BlockSystem.BlockObject, bool> buildings) =>
+            Performance.NavigationShapePlans.AddBypass(harmonyId, buildings);
+
         // Whether this is a toll station, which anyone can place on another district's roads
         public static bool IsTollStation(Timberborn.BaseComponentSystem.BaseComponent component) =>
             component && component.GetComponent<Ziplines.TollStation>();
