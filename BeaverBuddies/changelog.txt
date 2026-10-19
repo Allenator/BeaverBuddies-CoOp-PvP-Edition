@@ -1,3 +1,6 @@
+v1.1.0-1.6.4
+* Hosting a new game no longer lets it run while the hosting box is still up.
+
 v1.1.0-1.6.3
 * New game setting for how many players can join a match, 4 by default.
 
