@@ -280,6 +280,8 @@ start_match() {
     bb_stack_windows
     for pick in ${BB_HOST_SETTINGS:-}; do send host "gamesetting ${pick%%=*} ${pick#*=}"; done
     for pick in ${BB_CLIENT_SETTINGS:-}; do send client "gamesetting ${pick%%=*} ${pick#*=}"; done
+    # BB_HOST_DIFFICULTY (Easy, Hard) is the game's difficulty, Normal otherwise
+    [ -n "${BB_HOST_DIFFICULTY:-}" ] && send host "difficulty $BB_HOST_DIFFICULTY"
     send host "hostmatch ${BB_MAP:-Waterfalls} $hostf $mode"
     wait_for_watch host "Server started listening" 120 || return 1
     # BB_JOIN_ADDRESS joins some other way than 127.0.0.1, rtc:CODE over WebRTC say

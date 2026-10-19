@@ -177,17 +177,26 @@ namespace BeaverBuddies.DevTools
             name.StartsWith("user:") ? MapFileReference.FromUserFolder(name.Substring(5)) : MapFileReference.FromResource(name);
 
 
+        // The game's difficulty the next hostmatch plays on ("difficulty Hard"), the usual one otherwise
+        private string _difficulty;
+        private Timberborn.NewGameConfigurationSystem.GameModeSpec PickedMode(GameModeSpecService modes) =>
+            _difficulty == null ? modes.GetDefaultSpec()
+                : modes.GetSpecsOrdered().First(m => m.DisplayNameLocKey.EndsWith("." + _difficulty));
+
         internal void Run(string[] a)
         {
             switch (a[0])
             {
+                case "difficulty":
+                    _difficulty = a[1];
+                    break;
                 case "hostmatch":
                 {
                     var modes = _gameModeSpecService ?? throw new Exception("not at the main menu");
                     string map = a[1], faction = a[2];
                     HostsMatch = true;
                     MatchHooks.RaiseStarting(faction, true, true);
-                    var mode = new MultiplayerNewGameModeSpec(modes.GetDefaultSpec(), 2);
+                    var mode = new MultiplayerNewGameModeSpec(PickedMode(modes), 2);
                     string settlement = "Test " + DateTime.Now.ToString("yyyy-MM-dd HH'h'mm", CultureInfo.InvariantCulture);
                     NewGameHosting.Pending = true;
                     // hostmatch Map Faction [game mode id], as the Game mode dropdown would pick it
