@@ -83,6 +83,7 @@ RUN_START="$BB_TEST_DIR/.run-start"
 touch "$RUN_START"
 
 cleanup() {
+    [ -n "${WATCHDOG:-}" ] && kill $WATCHDOG 2>/dev/null
     [ -n "${spid:-}" ] && kill -9 $spid 2>/dev/null
     bb_close
     find "$HOME/Documents/Timberborn/Saves/" -mindepth 1 -maxdepth 1 -type d \( -name 'Test *' -o -name 'Harness *' \) \
@@ -95,6 +96,17 @@ cleanup() {
 }
 trap cleanup EXIT
 trap 'exit 130' INT TERM
+# The whole run has a limit too (BB_RUN_TIMEOUT, 1800 s by default, 0 for none): stuck on anything, a hung game, a
+# wait, a build, past it everything running is killed, the copies are closed and the run says why it stopped
+RUN_TIMEOUT=${BB_RUN_TIMEOUT:-1800}
+if [ "$RUN_TIMEOUT" -gt 0 ]; then
+    RUN_PID=$$
+    ( sleep "$RUN_TIMEOUT"
+      echo; echo "STOPPED: the run passed its $RUN_TIMEOUT s limit (BB_RUN_TIMEOUT)."
+      osascript -e 'display notification "The test run hit its time limit" with title "Tests" sound name "Basso"' >/dev/null 2>&1 || true
+      pkill -9 -P $RUN_PID 2>/dev/null; kill -TERM $RUN_PID 2>/dev/null ) &
+    WATCHDOG=$!
+fi
 
 # A run that didn't finish may have left a mod off
 mod_enable_all

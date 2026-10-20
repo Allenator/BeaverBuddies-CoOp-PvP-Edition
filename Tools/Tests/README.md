@@ -15,6 +15,8 @@ Checks that every translation has English's keys, once each and in order (`trans
 Builds BeaverBuddies first (skipped when nothing changed since the last build), then runs each script in `scenarios/` (and in the folders of `BB_SCENARIOS`, a colon-separated list) on two windowed copies of Timberborn, a host and a guest, driven through the test harness (`BeaverBuddies/DevTools/TestHarness.cs`, only active with the `BB_INSTANCE` environment variable): each copy takes commands from a file and logs what it did. With names, only the scenarios whose file name contains one. The report is `report.md` in `$BB_TEST_DIR` (`$TMPDIR/bb-tests` by default), with the copies' logs and the scenarios' screenshots. The exit code is 1 if a check failed.
 
 - `bb-only`: with Timber Empires switched off, the New Game page has no mode column, and a hosted game starts as Co-op and stays in sync.
+A scenario past `BB_SCENARIO_TIMEOUT` (600 s) fails and is stopped, and the whole run has a limit too, `BB_RUN_TIMEOUT` (1800 s, 0 for none): past it everything is killed, the copies closed, and it says so and posts a notification.
+
 A desync during a scenario stops it there and fails it ("stays in sync", with the log lines that show why) and posts a notification, so a run never sits waiting after the host has resynced. A scenario that resyncs on purpose has a `BB_EXPECT_DESYNC` comment and is left alone.
 
 - `desync-resync`: a desync reloads both copies from the host's save over the connection they already have, and they carry on in sync; the dialog after it turns logging on, or with logging on saves the desync's trace next to Player.log for a report on Discord.
