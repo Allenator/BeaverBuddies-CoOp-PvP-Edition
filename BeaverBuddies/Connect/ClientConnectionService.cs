@@ -154,6 +154,8 @@ namespace BeaverBuddies.Connect
                 .SetCancelButton(CancelJoin, _dialogBoxShower._loc.T(Timberborn.Common.CommonLocKeys.CancelKey))
                 .Show();
             UnityEngine.UIElements.UQueryExtensions.Q<UnityEngine.UIElements.Button>(_waiting._root, "ConfirmButton")?.ToggleDisplayStyle(false);
+            // The game's overlay behind a dialog is clear: dim the menu while it waits
+            if (_waiting._root?.parent != null) _waiting._root.parent.style.backgroundColor = new UnityEngine.Color(0f, 0f, 0f, 0.6f);
         }
 
         private void CloseWaiting()
