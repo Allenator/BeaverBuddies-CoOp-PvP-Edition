@@ -357,6 +357,11 @@ namespace BeaverBuddies
     {
         static bool Prefix(float inclusiveMin, float inclusiveMax, ref float __result)
         {
+            if (BeaverBuddies.Fixes.NaturalResourceDelayFix.Override is { } own)
+            {
+                __result = inclusiveMin + (inclusiveMax - inclusiveMin) * (float)own.NextDouble();
+                return false;
+            }
             if (DeterminismService.ShouldUseNonGameRNG())
             {
                 __result = DeterminismService.Range(inclusiveMin, inclusiveMax);

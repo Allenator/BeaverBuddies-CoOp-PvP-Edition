@@ -3,6 +3,7 @@ using HarmonyLib;
 using System;
 using Timberborn.BaseComponentSystem;
 using Timberborn.EntitySystem;
+using Timberborn.NaturalResourcesContamination;
 using Timberborn.NaturalResourcesMoisture;
 
 namespace BeaverBuddies.Fixes
@@ -18,40 +19,50 @@ namespace BeaverBuddies.Fixes
      */
     static class NaturalResourceDelayFix
     {
-        public static void Begin(BaseComponent plant, out UnityEngine.Random.State? saved)
+        /** While a plant wakes up: its own roll, which the range patchers use in place of any shared generator. */
+        public static System.Random Override;
+
+        public static void Begin(BaseComponent plant, out bool seeded)
         {
-            saved = null;
+            seeded = false;
             if (EventIO.IsNull) return;
             Guid id = plant.GetComponent<EntityComponent>().EntityId;
             if (id == Guid.Empty) return;
-            saved = UnityEngine.Random.state;
-            UnityEngine.Random.InitState(BitConverter.ToInt32(id.ToByteArray(), 0));
+            Override = new System.Random(BitConverter.ToInt32(id.ToByteArray(), 0));
+            seeded = true;
         }
 
-        public static void End(UnityEngine.Random.State? saved)
+        public static void End(bool seeded)
         {
-            if (saved is { } state) UnityEngine.Random.state = state;
+            if (seeded) Override = null;
         }
     }
 
     [HarmonyPatch(typeof(WateredNaturalResource), nameof(WateredNaturalResource.Awake))]
     class WateredNaturalResourceDelayPatcher
     {
-        static void Prefix(WateredNaturalResource __instance, out UnityEngine.Random.State? __state) => NaturalResourceDelayFix.Begin(__instance, out __state);
-        static void Postfix(UnityEngine.Random.State? __state) => NaturalResourceDelayFix.End(__state);
+        static void Prefix(WateredNaturalResource __instance, out bool __state) => NaturalResourceDelayFix.Begin(__instance, out __state);
+        static void Postfix(bool __state) => NaturalResourceDelayFix.End(__state);
     }
 
     [HarmonyPatch(typeof(AridNaturalResource), nameof(AridNaturalResource.Awake))]
     class AridNaturalResourceDelayPatcher
     {
-        static void Prefix(AridNaturalResource __instance, out UnityEngine.Random.State? __state) => NaturalResourceDelayFix.Begin(__instance, out __state);
-        static void Postfix(UnityEngine.Random.State? __state) => NaturalResourceDelayFix.End(__state);
+        static void Prefix(AridNaturalResource __instance, out bool __state) => NaturalResourceDelayFix.Begin(__instance, out __state);
+        static void Postfix(bool __state) => NaturalResourceDelayFix.End(__state);
     }
 
     [HarmonyPatch(typeof(LivingWaterNaturalResource), nameof(LivingWaterNaturalResource.Awake))]
     class LivingWaterNaturalResourceDelayPatcher
     {
-        static void Prefix(LivingWaterNaturalResource __instance, out UnityEngine.Random.State? __state) => NaturalResourceDelayFix.Begin(__instance, out __state);
-        static void Postfix(UnityEngine.Random.State? __state) => NaturalResourceDelayFix.End(__state);
+        static void Prefix(LivingWaterNaturalResource __instance, out bool __state) => NaturalResourceDelayFix.Begin(__instance, out __state);
+        static void Postfix(bool __state) => NaturalResourceDelayFix.End(__state);
+    }
+
+    [HarmonyPatch(typeof(ContaminatedNaturalResource), nameof(ContaminatedNaturalResource.Awake))]
+    class ContaminatedNaturalResourceDelayPatcher
+    {
+        static void Prefix(ContaminatedNaturalResource __instance, out bool __state) => NaturalResourceDelayFix.Begin(__instance, out __state);
+        static void Postfix(bool __state) => NaturalResourceDelayFix.End(__state);
     }
 }
