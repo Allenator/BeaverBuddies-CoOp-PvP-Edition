@@ -1,3 +1,9 @@
+v1.1.0-1.8.1
+* A guest's lobby closes when the host starts the game, even if the host started before the guest had loaded.
+* The dialog shown while connecting to a host dims the menu behind it.
+* The Trades tab icon matches the game's own tabs.
+* Fixed a multiplayer desync with trees dying from drought, flooding or contamination.
+
 v1.1.0-1.8.0
 * A lobby for hosted games: the map, mode and settings, who's in with their color and faction, and the join code to copy, for the host and for everyone who has joined until the host starts the game.
 * Pick your nickname and color from the lobby, with the colors other players have taken crossed out.
