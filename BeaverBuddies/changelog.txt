@@ -1,3 +1,7 @@
+v1.1.0-1.7.0
+* Games load faster, and the water renders with less work.
+* A mod's New Game settings can follow the difficulty you pick.
+
 v1.1.0-1.6.4
 * Hosting a new game no longer lets it run while the hosting box is still up.
 
