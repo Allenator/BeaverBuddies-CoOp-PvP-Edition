@@ -333,6 +333,14 @@ namespace BeaverBuddies.Modding
                 MaxItems = maxItems, ItemLocKey = itemLabelLocKey, ItemDefault = itemDefault,
             });
 
+        // What each of the game's difficulties sets a setting to when the player picks it (the value for
+        // Easy, Normal and Hard), for a setting added before: they then change it as they like
+        public static void SetGamePresets(string id, string easy, string normal, string hard)
+        {
+            GameSetting setting = GameSettings.All.FirstOrDefault(s => s.Id == id);
+            if (setting != null) setting.Presets = new Dictionary<string, string> { ["Easy"] = easy, ["Normal"] = normal, ["Hard"] = hard };
+        }
+
         // A line of small print right under a setting's name on the New Game screens ("still in beta"),
         // for a setting added before; null takes it away
         public static void SetGameSettingNote(string id, string noteLocKey)

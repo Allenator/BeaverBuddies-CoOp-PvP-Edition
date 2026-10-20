@@ -47,6 +47,9 @@ namespace BeaverBuddies.NewGame
         public int Min, Max, Step = 1;
         public string ValueLocKey;
 
+        // The value each of the game's difficulties (Easy, Normal, Hard) sets it to when it's picked, or null for none
+        public Dictionary<string, string> Presets;
+
         public bool IsSlider => Max > Min;
         public bool IsToggle => Values == null && !IsSlider;
         public bool IsList => MaxItems > 0;
@@ -108,6 +111,38 @@ namespace BeaverBuddies.NewGame
         }
 
         public static string PrefsKey(string id) => "BeaverBuddies.GameSetting." + id;
+
+        // The difficulty the presets were last applied for, kept between sessions so the picks made after it stay
+        private const string PresetDifficultyKey = "BeaverBuddies.GameSettings.PresetDifficulty";
+        // Set while the screen puts a difficulty back by itself, which isn't a pick of the player's
+        public static bool Restoring;
+
+        /** The difficulty a game mode is (Easy, Normal or Hard, by its name's last part), or null for a custom one. */
+        public static string DifficultyOf(GameModeSpec mode)
+        {
+            string name = mode?.DisplayNameLocKey ?? "";
+            foreach (string difficulty in new[] { "Easy", "Normal", "Hard" }) if (name.EndsWith("." + difficulty)) return difficulty;
+            return null;
+        }
+
+        /**
+         * Sets every setting with presets to its value for a difficulty the player has just picked.
+         * Picking the one already applied leaves the settings as they are, so the player's changes
+         * to them stay when the screen is opened again.
+         */
+        public static void ApplyPresets(string difficulty)
+        {
+            if (difficulty == null || Restoring || PlayerPrefs.GetString(PresetDifficultyKey, null) == difficulty) return;
+            PlayerPrefs.SetString(PresetDifficultyKey, difficulty);
+            var set = new List<string>();
+            foreach (GameSetting setting in All)
+            {
+                if (setting.Presets == null || !setting.Presets.TryGetValue(difficulty, out string value) || !setting.Has(value)) continue;
+                Pick(setting.Id, value);
+                set.Add(setting.Id + "=" + value);
+            }
+            Plugin.Log($"[GameSettings] {difficulty} picked: settings set to its presets: {string.Join(" ", set)}");
+        }
 
         /** Every setting as this player has it picked. */
         public static Dictionary<string, string> Current() => All.ToDictionary(s => s.Id, s => ValueOf(s.Id));
@@ -367,7 +402,9 @@ namespace BeaverBuddies.NewGame
             if (changed.Count == 0 && _base != null && _baseButton != null)
             {
                 Plugin.Log($"[GameSettings] Customize closed with nothing changed: back to {_base.DisplayNameLocKey}");
-                if (panel._predefinedGameMode == null) panel.OnPredefinedModeButtonClicked(_baseButton, _base);
+                GameSettings.Restoring = true;
+                try { if (panel._predefinedGameMode == null) panel.OnPredefinedModeButtonClicked(_baseButton, _base); }
+                finally { GameSettings.Restoring = false; }
                 return;
             }
             Plugin.Log($"[GameSettings] Customize closed with {changed.Count} changed");
@@ -856,6 +893,14 @@ namespace BeaverBuddies.NewGame
             _shown = ids;
             Plugin.Log($"[GameSettings] Shown for {ids}");
         }
+    }
+
+    // Selecting a difficulty, by a click or as the page opens with one highlighted, sets the settings that
+    // have presets to its values, unless they already are its
+    [HarmonyLib.HarmonyPatch(typeof(NewGameModePanel), nameof(NewGameModePanel.SelectModeButton))]
+    class DifficultyPresetsPatcher
+    {
+        static void Postfix(object[] __args) => GameSettings.ApplyPresets(GameSettings.DifficultyOf(__args.OfType<GameModeSpec>().FirstOrDefault()));
     }
 
     // Customize opens the dialog in place of the game's own handler, which would make the
