@@ -1,3 +1,4 @@
+# BB_EXPECT_DESYNC: this scenario resyncs the copies on purpose
 # Both copies shaken up for a while: frames that stall or run at different rates, messages that arrive
 # late, and each player changing the speed, pausing, ticking once, placing and demolishing at random
 # moments. Nothing should desync or need a resync. BB_CHAOS_SECONDS (150 by default) is how long,

@@ -169,6 +169,7 @@ for f in $FILES; do
     echo
     echo "== $name"
     t0=$(date +%s)
+    started=$(date '+%H-%M-%S')
     (
         export BB_SCENARIO="$name" BB_SCENARIO_DIR="$(cd "$(dirname "$f")" && pwd)"
         source "$f"
@@ -187,6 +188,17 @@ for f in $FILES; do
             pkill -9 -P $spid 2>/dev/null; kill -9 $spid 2>/dev/null
             BB_SCENARIO="$name" fail "nothing fatal happens" "$fatal"
             break
+        fi
+        # A desync stops it too (a scenario that makes one on purpose says so with a BB_EXPECT_DESYNC comment): the host
+        # resyncing everyone means the copies have drifted apart or one lags past the limit, and nothing after it counts
+        if ! grep -q "BB_EXPECT_DESYNC" "$f"; then
+            desync=$(grep -ah "Resyncing everyone after the desync\|Event past time" "$(bb_log host)" 2>/dev/null | awk -v s="$started" 'substr($1, 2, 8) >= s' | grep -a -B1 "Resyncing" | head -2 | tr '\n' ' ' | cut -c1-200)
+            if [ -n "$desync" ]; then
+                pkill -9 -P $spid 2>/dev/null; kill -9 $spid 2>/dev/null
+                BB_SCENARIO="$name" fail "stays in sync" "the host resynced everyone: $desync"
+                osascript -e "display notification \"$name desynced\" with title \"Tests\" sound name \"Basso\"" >/dev/null 2>&1 || true
+                break
+            fi
         fi
         sleep 1
     done

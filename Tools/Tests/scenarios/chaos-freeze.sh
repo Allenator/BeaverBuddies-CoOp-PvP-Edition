@@ -1,3 +1,4 @@
+# BB_EXPECT_DESYNC: this scenario resyncs the copies on purpose
 # Chaos until the first desync, then both copies stopped as they are and their entities compared: what
 # one has and the other lacks, and the lines of both logs that mention them. Both copies shaken up for a while: frames that stall or run at different rates, messages that arrive
 # late, and each player changing the speed, pausing, ticking once, placing and demolishing at random

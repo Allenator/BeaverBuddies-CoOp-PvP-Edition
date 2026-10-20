@@ -1,3 +1,4 @@
+# BB_EXPECT_DESYNC: this scenario resyncs the copies on purpose
 # A construction site demolished while a builder is on it: the demolition has to take the site away
 # for both copies at the same moment, or one's builder finishes it and the other's walks off.
 bb_close

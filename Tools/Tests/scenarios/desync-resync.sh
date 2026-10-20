@@ -1,3 +1,4 @@
+# BB_EXPECT_DESYNC: this scenario resyncs the copies on purpose
 # A desync gets everyone back in sync without leaving the game: the copy that desynced tells the host,
 # the host saves and sends the save over the connection they already have, and both load it. Once
 # back, the dialog's button turns logging on, or with logging on saves the desync's trace next to
