@@ -182,14 +182,78 @@ namespace BeaverBuddies.Connect
         // does meanwhile is setting up, not played (see ModBridge.AboutToHost)
         public static bool BoxUp { get; private set; }
 
+        // A game hosted from its first load stays paused from the moment it loads
+        public static void HoldPausedFromLoad() => HoldingPaused = true;
+
         public static void HoldPaused(Timberborn.TimeSystem.SpeedManager speedManager)
         {
             HoldingPaused = true;
             Events.SpeedChangePatcher.SetSpeedSilentlyNow(speedManager, 0);
         }
 
+        /**
+         * A new game hosted from its first load: its server has been up since before it loaded
+         * (see NewGameHosting.PrepareServer), and now it's saved for those joining. The box asks
+         * to start it and the game plays on from where it is, started like a load from the save
+         * would be: the same random state.
+         */
+        public static void HostInPlace(DialogBoxShower shower, GameSaveRepository repository, SaveReference saveReference, MonoBehaviour behavior)
+        {
+            BoxUp = true;
+            NewGameHosting.Pending = false;
+            byte[] data = GetMapBtyes(repository, saveReference);
+            Plugin.Log($"Reading map with length {data.Length}");
+            SingletonManager.GetSingleton<ReplayService>()?.FreezeForHosting();
+            var io = (ServerEventIO)EventIO.Get();
+            io.SetMap(data);
+#if IS_STEAM
+            Matchmaking.HostedListing.Hosting(saveReference, data);
+            Matchmaking.HostedListing.Publish();
+            Matchmaking.MatchmakingSession.ServerStarted();
+#endif
+            Coroutine coroutine = null;
+            var loc = shower._loc;
+            Action start = () =>
+            {
+                HoldingPaused = false;
+                BoxUp = false;
+                NewGameHosting.SettingUp = false;
+                if (coroutine != null) behavior.StopCoroutine(coroutine);
+                DeterminismService.ApplyGameStartState(data);
+                TEBPatcher.SetHashes(0, 0);
+                HostingCover.Hide();
+                SingletonManager.GetSingleton<ReplayService>()?.UnfreezeForHosting();
+            };
+            var boxCreator = shower.Create()
+                .SetMessage("")
+                .SetConfirmButton(start, loc.T("BeaverBuddies.Host.StartGame"))
+                .SetCancelButton(() =>
+                {
+                    HoldingPaused = false;
+                    BoxUp = false;
+                    NewGameHosting.SettingUp = false;
+                    if (coroutine != null) behavior.StopCoroutine(coroutine);
+#if IS_STEAM
+                    Matchmaking.HostedListing.Unlist();
+#endif
+                    if (EventIO.Get() == io) EventIO.Set(new LocalEventIO());
+                    else io.Close();
+                    // Nothing to play: back to the Multiplayer page it came from
+                    HostingCover.Leave();
+                }, loc.T(CommonLocKeys.CancelKey));
+            if (WebRtc.JoinCode.Current != null)
+            {
+                boxCreator.SetInfoButton(() => Invites.Show(shower), loc.T("BeaverBuddies.Host.InviteFriends"));
+            }
+            DialogBox box = boxCreator.Show();
+            coroutine = behavior.StartCoroutine(UpdateDialogBox(box, io, loc, start));
+        }
+
         public static void LoadAndHost(ValidatingGameLoader loader, DialogBoxShower shower, SaveReference saveReference)
         {
+            // A new game only set up to be hosted: the map behind the box is
+            // loaded again when the host starts, so it's covered meanwhile
+            bool newGame = Modding.ModBridge.AboutToHost();
             BoxUp = true;
             NewGameHosting.Pending = false;
             var sceneLoader = loader._gameSceneLoader;
@@ -261,6 +325,12 @@ namespace BeaverBuddies.Connect
                     // them) recorded and never replayed
                     if (EventIO.Get() == io) EventIO.Set(new LocalEventIO());
                     else io.Close();
+                    if (newGame)
+                    {
+                        // Nothing to play: back to the Multiplayer page it came from
+                        HostingCover.Leave();
+                        return;
+                    }
                     SingletonManager.GetSingleton<ReplayService>()?.UnfreezeForHosting();
                 }, loc.T(CommonLocKeys.CancelKey));
             // The join code to pass on, and Steam friends with Steam
@@ -269,6 +339,7 @@ namespace BeaverBuddies.Connect
                 boxCreator.SetInfoButton(() => Invites.Show(shower), loc.T("BeaverBuddies.Host.InviteFriends"));
             }
 
+            if (newGame) HostingCover.Show();
             DialogBox box = boxCreator.Show();
             coroutine = behavior.StartCoroutine(UpdateDialogBox(box, io, shower._loc, start));
 

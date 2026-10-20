@@ -34,12 +34,12 @@ prefs_save() {
 
 prefs_windowed() {
     defaults write $BB_PREFS_DOMAIN FullScreen -int 0
-    defaults write $BB_PREFS_DOMAIN ResolutionWidth -int 1400
-    defaults write $BB_PREFS_DOMAIN ResolutionHeight -int 880
+    defaults write $BB_PREFS_DOMAIN ResolutionWidth -int ${BB_RES_W:-1400}
+    defaults write $BB_PREFS_DOMAIN ResolutionHeight -int ${BB_RES_H:-880}
     defaults write $BB_PREFS_DOMAIN "Screenmanager Fullscreen mode" -int 3
     defaults write $BB_PREFS_DOMAIN "Screenmanager Resolution Use Native" -int 0
-    defaults write $BB_PREFS_DOMAIN "Screenmanager Resolution Width" -int 1400
-    defaults write $BB_PREFS_DOMAIN "Screenmanager Resolution Height" -int 880
+    defaults write $BB_PREFS_DOMAIN "Screenmanager Resolution Width" -int ${BB_RES_W:-1400}
+    defaults write $BB_PREFS_DOMAIN "Screenmanager Resolution Height" -int ${BB_RES_H:-880}
     # The copies run silent
     defaults write $BB_PREFS_DOMAIN MasterVolume -float 0
     defaults write $BB_PREFS_DOMAIN MusicVolume -float 0
@@ -236,7 +236,7 @@ bb_open() {
         ${BB_RTC_CODE:+--env BB_RTC_CODE="$BB_RTC_CODE"} \
         ${BB_HITCH_MS:+--env BB_HITCH_MS="$BB_HITCH_MS"} \
         ${BB_LEAK_ROOTS:+--env BB_LEAK_ROOTS="$BB_LEAK_ROOTS"} ${BB_LEAK_SIZES:+--env BB_LEAK_SIZES=1} ${BB_LEAK_WALK:+--env BB_LEAK_WALK=1} \
-        --args -skipModManager -logFile "$(bb_log "$inst")" -screen-fullscreen 0 -screen-width 1400 -screen-height 880
+        --args -skipModManager -logFile "$(bb_log "$inst")" -screen-fullscreen 0 -screen-width ${BB_RES_W:-1400} -screen-height ${BB_RES_H:-880}
 }
 
 # Whether the player's own Timberborn is running (not one of the test copies)

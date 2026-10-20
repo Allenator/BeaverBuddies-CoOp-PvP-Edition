@@ -31,10 +31,14 @@ namespace BeaverBuddies.Matchmaking
         {
             MatchmakingSession.Update();
             if (MatchmakingSession.State != MatchState.Starting || !MatchmakingSession.IsHost) return;
-            if (_hostAt < 0) _hostAt = Time.realtimeSinceStartup + SettleTime;
+            if (_hostAt < 0)
+            {
+                _hostAt = Time.realtimeSinceStartup + SettleTime;
+                if (NewGameHosting.InPlace) HostingCover.Show();
+            }
             if (Time.realtimeSinceStartup < _hostAt) return;
             MatchmakingSession.Hosting();
-            if (!_rehostingService.RehostGame())
+            if (!(NewGameHosting.InPlace ? _rehostingService.HostInPlace() : _rehostingService.RehostGame()))
             {
                 MatchmakingSession.Fail("BeaverBuddies.Match.HostFailed");
                 _dialogBoxShower.Create().SetLocalizedMessage("BeaverBuddies.Match.HostFailed").Show();

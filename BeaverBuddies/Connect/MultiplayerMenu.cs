@@ -1,3 +1,4 @@
+using BeaverBuddies.IO;
 using BeaverBuddies.Steam;
 using HarmonyLib;
 using System;
@@ -62,6 +63,8 @@ namespace BeaverBuddies.Connect
         private readonly Dictionary<VisualElement, StyleEnum<DisplayStyle>> _hidden = new();
 
         public static NewGameIntent Intent { get; set; }
+        // The next main menu opens on the multiplayer buttons (a hosted new game that was cancelled)
+        public static bool OpenOnLoad;
         // Whether the Load Game box was opened to host a save, or to play one alone
         public static bool HostingSave { get; private set; }
 
@@ -124,6 +127,11 @@ namespace BeaverBuddies.Connect
             Add("MultiplayerBackButton", "BeaverBuddies.Menu.Back", () => ShowMultiplayer(false));
             _discord = DiscordRow(mainMenu);
             if (_discord != null) _container.Add(_discord);
+            if (OpenOnLoad)
+            {
+                OpenOnLoad = false;
+                ShowMultiplayer(true);
+            }
         }
 
         // The game's Discord button, copied to point at the mod's server, under what it is
@@ -232,6 +240,39 @@ namespace BeaverBuddies.Connect
 
         public static bool Pending;
 
+        /**
+         * The new game being set up is the one that's hosted: its server is up before it loads, it's
+         * saved once it has settled for the players joining it, and it plays on from there, instead of
+         * being loaded again from that save (see ServerHostingUtils.HostInPlace).
+         */
+        public static bool InPlace { get; private set; }
+        // The game hosted in place hasn't started yet: what it does meanwhile is setting up, not played
+        public static bool SettingUp { get; set; }
+
+        // Whether the new game about to load is one to host
+        private static bool WillHost =>
+            Pending
+#if IS_STEAM
+            || Matchmaking.MatchmakingSession.HostsNewGame
+#endif
+            ;
+
+        public static void PrepareServer()
+        {
+            InPlace = false;
+            if (!WillHost || !EventIO.IsNull) return;
+            var io = new BeaverBuddies.IO.ServerEventIO();
+            if (!io.Start(null))
+            {
+                EventIO.Reset();
+                return;
+            }
+            EventIO.Set(io);
+            InPlace = true;
+            SettingUp = true;
+            ServerHostingUtils.HoldPausedFromLoad();
+        }
+
         // Starts the new game to host it, with the picks next to the difficulties (the game mode)
         public static void Start(GameSceneLoader loader, NewGameConfiguration configuration, Dictionary<string, string> options)
         {
@@ -262,15 +303,29 @@ namespace BeaverBuddies.Connect
                 return;
             }
             if (_handedOver) return;
-            if (_hostAt < 0) _hostAt = Time.realtimeSinceStartup + SettleTime;
+            if (_hostAt < 0)
+            {
+                _hostAt = Time.realtimeSinceStartup + SettleTime;
+                if (InPlace)
+                {
+                    HostingCover.Show();
+                    SingletonManager.GetSingleton<ReplayService>()?.FreezeForHosting();
+                }
+            }
             if (Time.realtimeSinceStartup < _hostAt) return;
             _handedOver = true;
-            if (!_rehostingService.RehostGame())
+            if (!(InPlace ? _rehostingService.HostInPlace() : _rehostingService.RehostGame()))
             {
                 Pending = false;
                 _dialogBoxShower.Create().SetLocalizedMessage("BeaverBuddies.Menu.HostFailed").Show();
             }
         }
+    }
+
+    [HarmonyPatch(typeof(GameSceneLoader), nameof(GameSceneLoader.StartNewGame))]
+    class NewGameHostingPatcher
+    {
+        static void Prefix() => NewGameHosting.PrepareServer();
     }
 
     [HarmonyPatch(typeof(MainMenuPanel), nameof(MainMenuPanel.GetPanel))]

@@ -107,6 +107,20 @@ namespace BeaverBuddies.Connect
             return SaveRehostFile(LoadGame, true);
         }
 
+        /**
+         * For a new game hosted from its first load (see NewGameHosting.InPlace): saved for the
+         * players who join, and the box shown over it, with no load after.
+         */
+        public bool HostInPlace()
+        {
+            GameNames.Reset();
+            return SaveRehostFile(saveReference =>
+            {
+                ServerHostingUtils.HoldPaused(_speedManager);
+                ServerHostingUtils.HostInPlace(_dialogBoxShower, _gameSaveRepository, saveReference, ServerHostingUtils.GetMonoBehaviour(_settlementReferenceService._sceneLoader));
+            }, true);
+        }
+
         public void LoadGame(SaveReference saveReference)
         {
             ServerHostingUtils.HoldPaused(_speedManager);

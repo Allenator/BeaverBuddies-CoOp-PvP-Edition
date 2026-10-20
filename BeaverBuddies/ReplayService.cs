@@ -269,6 +269,7 @@ namespace BeaverBuddies
             // (a new game before it's hosted), and a running total from it never matches the others'
             TEBPatcher.SetHashes(0, 0);
             Plugin.Log("PostLoad");
+            DeterminismService.ReseedAfterLoad();
             Fixes.DeferredDestroyFix.Reset();
             if (DevTools.TestHarness.Active) Util.ObjectCensus.Log("after loading");
             if (HitchWatch.Profiling)

@@ -141,8 +141,20 @@ namespace BeaverBuddies
             {
                 Plugin.Log($"DeterminismService init with seed: {nextSeedOnLoad.Value:X8}");
                 UnityEngine.Random.InitState(nextSeedOnLoad.Value);
+                seedAfterLoad = nextSeedOnLoad;
                 nextSeedOnLoad = null;
             }
+        }
+
+        // Loading the game uses the random state up, by as much as the game happens to: everyone
+        // starts again from the seed once it's loaded, as a game that kept playing does (see ApplyGameStartState)
+        private static int? seedAfterLoad;
+
+        public static void ReseedAfterLoad()
+        {
+            if (!seedAfterLoad.HasValue) return;
+            UnityEngine.Random.InitState(seedAfterLoad.Value);
+            seedAfterLoad = null;
         }
 
         public static T GetNonGameRandom<T>(Func<T> getter)
@@ -322,6 +334,15 @@ namespace BeaverBuddies
                 state = TimberNetBase.CombineHash(state, mapBytes[i]);
             }
             InitGameStartState(state);
+        }
+
+        // For a game that keeps playing instead of loading the map: the state a load from it starts with
+        public static void ApplyGameStartState(byte[] mapBytes)
+        {
+            InitGameStartState(mapBytes);
+            if (!nextSeedOnLoad.HasValue) return;
+            UnityEngine.Random.InitState(nextSeedOnLoad.Value);
+            nextSeedOnLoad = null;
         }
 
         private static void InitGameStartState(int state)

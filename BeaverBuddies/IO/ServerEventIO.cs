@@ -44,6 +44,8 @@ namespace BeaverBuddies.IO
         // Once it has, the map they wait for: the game's, saved for them
         private TaskCompletionSource<byte[]> nextMap;
         private volatile bool joinWaiting;
+        // Started before the game it hosts has a map: anyone joining waits for SetMap
+        private bool preparing;
 
         /**
          * True once someone joined the game in progress: it's to be saved
@@ -56,6 +58,11 @@ namespace BeaverBuddies.IO
         public bool Start(byte[] mapBytes)
         {
             this.mapBytes = mapBytes;
+            if (mapBytes == null)
+            {
+                preparing = true;
+                nextMap = new TaskCompletionSource<byte[]>(TaskCreationOptions.RunContinuationsAsynchronously);
+            }
             try
             {
                 List<ISocketListener> listeners = [
@@ -126,9 +133,23 @@ namespace BeaverBuddies.IO
             lock (mapLock)
             {
                 if (nextMap == null) return Task.FromResult(mapBytes);
-                joinWaiting = true;
+                if (!preparing) joinWaiting = true;
                 return nextMap.Task;
             }
+        }
+
+        /** The map of the game this server was started for, once it's saved: those waiting to join get it. */
+        public void SetMap(byte[] mapBytes)
+        {
+            TaskCompletionSource<byte[]> waiting;
+            lock (mapLock)
+            {
+                this.mapBytes = mapBytes;
+                preparing = false;
+                waiting = nextMap;
+                nextMap = null;
+            }
+            waiting?.TrySetResult(mapBytes);
         }
 
         public void OnGameStarted()
