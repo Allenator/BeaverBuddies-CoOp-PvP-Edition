@@ -1,3 +1,8 @@
+v1.1.0-1.8.0
+* A lobby for hosted games: the map, mode and settings, who's in with their color and faction, and the join code to copy, for the host and for everyone who has joined until the host starts the game.
+* Pick your nickname and color from the lobby, with the colors other players have taken crossed out.
+* A new hosted game loads once instead of twice.
+
 v1.1.0-1.7.0
 * Games load faster, and the water renders with less work.
 * A mod's New Game settings can follow the difficulty you pick.
