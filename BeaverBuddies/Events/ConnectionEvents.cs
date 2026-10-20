@@ -24,11 +24,15 @@ namespace BeaverBuddies.Events
         public string serverAddOns;
         // The host's factions, other mods' too; null from hosts that don't send it
         public string serverFactions;
+        // The host's game hasn't been started yet: the host is in the box, and the map is of this name
+        public bool hostWaiting;
+        public string hostMapName;
 
         public override void Replay(IReplayContext context)
         {
             //context.GetSingleton<ReplayService>().SetServerMapName(mapName);
             DevToolsPolicy.HostAllowsDevTools = allowDevTools;
+            if (hostWaiting) Connect.GuestLobby.Open(hostMapName);
             Plugin.Log($"Host allows dev tools: {allowDevTools}");
             string warningMessage = null;
             if (serverGameVersion != GameVersions.CurrentVersion.ToString())
@@ -79,7 +83,8 @@ namespace BeaverBuddies.Events
                 allowDevTools = Settings.AllowDevTools,
                 serverAddOns = ReplayHooks.AddOnList,
                 serverFactions = ReplayHooks.FactionList,
-                //mapName = mapName,
+                hostWaiting = Connect.NewGameHosting.SettingUp,
+                hostMapName = Connect.HostLobby.MapName,
             };
             return message;
         }

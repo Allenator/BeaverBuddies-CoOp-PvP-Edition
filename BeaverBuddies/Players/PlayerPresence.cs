@@ -28,6 +28,38 @@ namespace BeaverBuddies.Players
         private readonly LoadingScreen _loadingScreen;
         private readonly Dictionary<string, float> _lastHeard = new();
         private readonly Dictionary<string, int> _preferredColors = new();
+        private readonly Dictionary<string, string> _names = new();
+        private readonly Dictionary<string, string> _infos = new();
+        private readonly HashSet<string> _hosts = new();
+        // Whether the host said it's still waiting in its box, the last time we heard from it; null if we haven't
+        private bool? _hostWaiting;
+
+        /** The host's game hasn't been started: it's still in its box. Null until we've heard from the host. */
+        public static bool? HostWaiting => _instance?._hostWaiting;
+
+        /**
+         * What a mod says about this player to the others, with their name: the
+         * faction they play, say. The host's box lists it.
+         */
+        public static Func<string> InfoProvider;
+
+        /** The players here other than this one, with each one's name, what they say of themselves and their color, as the match gives it. */
+        public static List<(string Id, string Name, string Info, int Color, bool Host)> Others()
+        {
+            var result = new List<(string, string, string, int, bool)>();
+            if (_instance == null) return result;
+            float now = Time.unscaledTime;
+            var preferences = _instance._lastHeard.Where(p => now - p.Value <= GoneSeconds && _instance._preferredColors.ContainsKey(p.Key))
+                .ToDictionary(p => p.Key, p => _instance._preferredColors[p.Key]);
+            string local = PlayerIdentity.LocalID;
+            if (local != null) preferences[local] = PlayerColors.Clamp(Settings.PreferredColorIndex);
+            var colors = PlayerColors.Assign(preferences);
+            foreach (string id in preferences.Keys.Where(k => k != local).OrderBy(k => k, StringComparer.Ordinal))
+            {
+                result.Add((id, _instance._names.TryGetValue(id, out string n) ? n : null, _instance._infos.TryGetValue(id, out string i) ? i : null, colors[id], _instance._hosts.Contains(id)));
+            }
+            return result;
+        }
         private float _lastSendTime = float.NegativeInfinity;
 
         public PlayerPresence(LoadingScreen loadingScreen)
@@ -75,6 +107,10 @@ namespace BeaverBuddies.Players
             EventIO.TransientMessageReceived -= OnTransientMessageReceived;
             _lastHeard.Clear();
             _preferredColors.Clear();
+            _names.Clear();
+            _infos.Clear();
+            _hosts.Clear();
+            _hostWaiting = null;
             if (_instance == this) _instance = null;
         }
 
@@ -91,7 +127,17 @@ namespace BeaverBuddies.Players
                 [TimberNet.TimberNetBase.TYPE_KEY] = MessageType,
                 ["playerID"] = local,
                 ["color"] = PlayerColors.Clamp(Settings.PreferredColorIndex),
+                ["name"] = PlayerIdentity.LocalName,
+                ["info"] = Info(),
+                ["host"] = io is ServerEventIO,
+                ["waiting"] = Connect.NewGameHosting.SettingUp,
             });
+        }
+
+        private static string Info()
+        {
+            try { return InfoProvider?.Invoke(); }
+            catch (Exception e) { Plugin.LogWarning($"The presence info failed: {e.Message}"); return null; }
         }
 
         private void OnTransientMessageReceived(JObject message)
@@ -102,6 +148,13 @@ namespace BeaverBuddies.Players
             if (!_lastHeard.ContainsKey(playerID)) Plugin.Log($"Player {playerID} is here");
             _lastHeard[playerID] = Time.unscaledTime;
             _preferredColors[playerID] = message.Value<int?>("color") ?? 0;
+            _names[playerID] = message.Value<string>("name");
+            _infos[playerID] = message.Value<string>("info");
+            if (message.Value<bool?>("host") == true)
+            {
+                _hosts.Add(playerID);
+                _hostWaiting = message.Value<bool?>("waiting") ?? false;
+            }
         }
     }
 }

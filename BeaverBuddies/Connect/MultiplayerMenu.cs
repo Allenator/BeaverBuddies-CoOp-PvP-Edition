@@ -223,6 +223,7 @@ namespace BeaverBuddies.Connect
             // As the game names autosaves: a settlement's name is its folder, which can't have dots or colons
             string settlement = "Co-op " + DateTime.Now.ToString("yyyy-MM-dd HH'h'mm", CultureInfo.InvariantCulture);
             var configuration = new NewGameConfiguration(panel._factionSpec.Id, panel._map.MapFileReference, mode, settlement);
+            HostLobby.NextMapName = panel._map.DisplayName;
 #if IS_STEAM
             Matchmaking.HostedListing.HostingNewGame(configuration, panel._map.DisplayName, panel._predefinedGameMode?.DisplayNameLocKey);
 #endif
@@ -325,7 +326,13 @@ namespace BeaverBuddies.Connect
     [HarmonyPatch(typeof(GameSceneLoader), nameof(GameSceneLoader.StartNewGame))]
     class NewGameHostingPatcher
     {
-        static void Prefix() => NewGameHosting.PrepareServer();
+        static void Prefix(NewGameConfiguration __0)
+        {
+            // The map as the player saw it picked, or its file's name
+            HostLobby.MapName = HostLobby.NextMapName ?? __0?.MapFileReference.Name;
+            HostLobby.NextMapName = null;
+            NewGameHosting.PrepareServer();
+        }
     }
 
     [HarmonyPatch(typeof(MainMenuPanel), nameof(MainMenuPanel.GetPanel))]

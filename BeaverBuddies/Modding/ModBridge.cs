@@ -227,6 +227,12 @@ namespace BeaverBuddies.Modding
             return false;
         }
 
+        // What the mod says of this player to the others, shown in the host's box next to their name: the faction they play
+        public static void AddPresenceInfo(Func<string> provider) => BeaverBuddies.Players.PlayerPresence.InfoProvider = provider;
+
+        // Told the loading background that covers a new game waiting to be hosted, to dress it as the mod does its loading screen's
+        public static void AddHostingCoverStyle(Action<UnityEngine.UIElements.VisualElement> hook) => Connect.HostingCover.Styled.Add(hook);
+
         // A reason to wait before the host first runs the game, or null for
         // none: with any, the host is asked before it starts
         public static void AddStartWarning(Func<string> hook) => Connect.StartConfirmation.Warnings.Add(hook);

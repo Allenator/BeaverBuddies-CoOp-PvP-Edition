@@ -214,6 +214,7 @@ namespace BeaverBuddies.Matchmaking
             _box = null;
             MatchOptions.StartGameWith(MatchmakingSession.Mine?.options);
             NewGame.GameSettings.StartGameWith(MatchmakingSession.ModePicks?.settings);
+            HostLobby.NextMapName = MatchmakingSession.MapPicks?.mapTitle;
             _gameSceneLoader.StartNewGame(configuration);
         }
 

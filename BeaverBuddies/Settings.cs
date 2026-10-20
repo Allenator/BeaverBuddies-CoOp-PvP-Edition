@@ -142,6 +142,14 @@ namespace BeaverBuddies
             }
         }
 
+        // From the host's box, where players set who they are
+        public static void SetPlayer(string name, int colorIndex)
+        {
+            if (instance == null) return;
+            if (!string.IsNullOrWhiteSpace(name)) instance.PingPlayerName.SetValue(name.Trim());
+            instance.PreferredColor.SetValue(Players.PlayerColors.Clamp(colorIndex).ToString());
+        }
+
         public static string PingDisplayName => instance?.PingPlayerName.Value ?? DefaultPingPlayerName;
 
         // Two test copies share these settings: the second prefers red (see DevTools.TestHarness)

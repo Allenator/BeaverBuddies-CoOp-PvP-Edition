@@ -14,6 +14,9 @@ namespace BeaverBuddies.Connect
      */
     public class HostingCover : RegisteredSingleton
     {
+        // Mods that dress the loading screen's picture for their games get the cover to do the same
+        internal static readonly System.Collections.Generic.List<System.Action<VisualElement>> Styled = new();
+
         private readonly IAssetLoader _assetLoader;
         private readonly PanelStack _panelStack;
         private readonly ILoc _loc;
@@ -49,11 +52,17 @@ namespace BeaverBuddies.Connect
             _cover.style.right = 0;
             _cover.style.top = 0;
             _cover.style.bottom = 0;
-            _cover.Q<Label>("LoadingLabel").text = _loc.T("Core.Loading");
+            // The ribbon says where this is, not that anything is loading
+            _cover.Q<Label>("LoadingLabel").text = _loc.T("BeaverBuddies.Lobby.Ribbon");
             _cover.Q<VisualElement>("TipWrapper").style.display = DisplayStyle.None;
             // Just ahead of the dialogs' container, after the rest of the UI
             VisualElement container = _panelStack._container;
             container.parent.Insert(container.parent.IndexOf(container), _cover);
+            foreach (var style in Styled)
+            {
+                try { style(_cover); }
+                catch (System.Exception e) { Plugin.LogWarning($"A hosting cover style failed: {e}"); }
+            }
             Plugin.Log("HostingCover shown");
         }
 

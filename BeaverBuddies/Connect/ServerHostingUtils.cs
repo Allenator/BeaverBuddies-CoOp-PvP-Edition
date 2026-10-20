@@ -108,10 +108,8 @@ namespace BeaverBuddies.Connect
             });
         }
 
-        private static IEnumerator UpdateDialogBox(DialogBox box, ServerEventIO io, ILoc loc, Action start)
+        private static IEnumerator UpdateDialogBox(DialogBox box, ServerEventIO io, ILoc loc, Action start, HostLobby lobby)
         {
-            var label = box._root.Q<Label>("Message");
-            string baseMessage = loc.T("BeaverBuddies.Host.ConnectedClients");
             // Not clickable for a moment: it opens under the cursor, where a
             // double click on Host started the game before anyone could join
             var confirm = box._root.Q<Button>("ConfirmButton");
@@ -121,16 +119,7 @@ namespace BeaverBuddies.Connect
             {
                 if (confirm != null && !confirm.enabledSelf && UnityEngine.Time.unscaledTime >= clickable) confirm.SetEnabled(true);
                 List<string> clients = io.NetBase.GetConnectedClients();
-                string content = baseMessage;
-                // For anyone joining from the list without Steam, or by typing it in
-                if (WebRtc.JoinCode.Current != null) content = loc.T("BeaverBuddies.Host.JoinCode", WebRtc.JoinCode.Display(WebRtc.JoinCode.Current)) + "\n\n" + content;
-                int nonLocalID = 1;
-                foreach (string client in clients)
-                {
-                    string name = client ?? $"{loc.T("BeaverBuddies.Host.DirectConnectClient")} ({nonLocalID++})";
-                    content += $"\n* {name}";
-                }
-                label.text = content;
+                lobby.Update();
 #if IS_STEAM
                 // A match's game starts by itself once the other player is in
                 Matchmaking.HostedListing.Joined(clients.Count);
@@ -241,12 +230,10 @@ namespace BeaverBuddies.Connect
                     // Nothing to play: back to the Multiplayer page it came from
                     HostingCover.Leave();
                 }, loc.T(CommonLocKeys.CancelKey));
-            if (WebRtc.JoinCode.Current != null)
-            {
-                boxCreator.SetInfoButton(() => Invites.Show(shower), loc.T("BeaverBuddies.Host.InviteFriends"));
-            }
+            var lobby = new HostLobby(shower, io, saveReference.SaveName);
+            boxCreator.AddContent(lobby.Build());
             DialogBox box = boxCreator.Show();
-            coroutine = behavior.StartCoroutine(UpdateDialogBox(box, io, loc, start));
+            coroutine = behavior.StartCoroutine(UpdateDialogBox(box, io, loc, start, lobby));
         }
 
         public static void LoadAndHost(ValidatingGameLoader loader, DialogBoxShower shower, SaveReference saveReference)
@@ -333,15 +320,10 @@ namespace BeaverBuddies.Connect
                     }
                     SingletonManager.GetSingleton<ReplayService>()?.UnfreezeForHosting();
                 }, loc.T(CommonLocKeys.CancelKey));
-            // The join code to pass on, and Steam friends with Steam
-            if (WebRtc.JoinCode.Current != null)
-            {
-                boxCreator.SetInfoButton(() => Invites.Show(shower), loc.T("BeaverBuddies.Host.InviteFriends"));
-            }
-
-            if (newGame) HostingCover.Show();
+            var lobby = new HostLobby(shower, io, saveReference.SaveName);
+            boxCreator.AddContent(lobby.Build());
             DialogBox box = boxCreator.Show();
-            coroutine = behavior.StartCoroutine(UpdateDialogBox(box, io, shower._loc, start));
+            coroutine = behavior.StartCoroutine(UpdateDialogBox(box, io, shower._loc, start, lobby));
 
         }
     }

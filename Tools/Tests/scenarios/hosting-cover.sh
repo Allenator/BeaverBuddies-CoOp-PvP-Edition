@@ -2,7 +2,7 @@
 # the Multiplayer page of the main menu.
 bb_close
 bb_launch host || { fail "the copy starts" "no main menu"; return; }
-send host "hostmatch ${BB_MAP:-Waterfalls} Folktails"
+send host "hostmatch ${BB_MAP:-Waterfalls} Folktails ${BB_MODE:-}"
 wait_for_watch host "Reading map with length" 120 || { fail "the box comes up" "never hosted"; return; }
 sleep 4
 shot "box-over-cover" host

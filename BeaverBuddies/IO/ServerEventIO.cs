@@ -58,6 +58,7 @@ namespace BeaverBuddies.IO
         public bool Start(byte[] mapBytes)
         {
             this.mapBytes = mapBytes;
+            Connect.HostLobby.ClearHellos();
             if (mapBytes == null)
             {
                 preparing = true;
@@ -96,6 +97,7 @@ namespace BeaverBuddies.IO
                 NetBase.MaxClients = () => PlayerLimit.Current - 1;
                 NetBase.OnLog += Plugin.Log;
                 NetBase.OnTransientMessage += EventIO.RaiseTransientMessageReceived;
+                NetBase.OnTransientMessage += Connect.HostLobby.OnTransientMessage;
                 NetBase.OnMapReceived += NetBase_OnClientConnected;
                 // Starts listening, which throws if the port is taken
                 NetBase.Start();
