@@ -203,6 +203,12 @@ internal static class LoadEventRouter
     private static Exception? EndDispatch(Exception? __exception, DispatchContext __state)
     {
         _dispatch = __state;
+        // Returning the exception rethrows it from this wrapper, which drops the handler's frames from the trace
+        if (__exception != null && __exception.Data["bb.logged"] == null)
+        {
+            __exception.Data["bb.logged"] = true;
+            Debug.LogWarning("[BeaverBuddies Perf] Event handler threw: " + __exception);
+        }
         return __exception;
     }
 
