@@ -227,6 +227,9 @@ namespace BeaverBuddies.Modding
             return false;
         }
 
+        // The host hasn't started the game yet: its lobby is up, on the host's own machine and on the guests'
+        public static bool HostInLobby() => Connect.NewGameHosting.SettingUp || BeaverBuddies.Players.PlayerPresence.HostWaiting == true;
+
         // What the mod says of this player to the others, shown in the host's box next to their name: the faction they play
         public static void AddPresenceInfo(Func<string> provider) => BeaverBuddies.Players.PlayerPresence.InfoProvider = provider;
 

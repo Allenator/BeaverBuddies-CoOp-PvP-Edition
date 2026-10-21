@@ -61,10 +61,13 @@ namespace BeaverBuddies.Connect
         private void Close()
         {
             Plugin.Log("The host started the game: leaving its lobby");
-            _box?.Close();
+            // Cleared first: a box already closed from outside makes Close throw, and it would throw again every frame
+            var box = _box;
             _box = null;
             _lobby = null;
             HostingCover.Hide();
+            try { box?.Close(); }
+            catch (System.InvalidOperationException) { }
         }
 
         // Out of the host's game, to the Multiplayer page
