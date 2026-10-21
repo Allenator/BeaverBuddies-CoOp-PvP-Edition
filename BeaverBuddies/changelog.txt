@@ -1,3 +1,6 @@
+v1.1.0-1.8.2
+* Fixed a crash when hovering over the planting buttons in multiplayer.
+
 v1.1.0-1.8.1
 * A guest's lobby closes when the host starts the game, even if the host started before the guest had loaded.
 * The dialog shown while connecting to a host dims the menu behind it.
