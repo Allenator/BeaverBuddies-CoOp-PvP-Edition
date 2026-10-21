@@ -141,11 +141,14 @@ bb_log() { echo "$BB_TEST_DIR/$1.log"; }
 bb_keep_log() {
     local log dir n=1
     log=$(bb_log "$1")
-    [ -s "$log" ] || { rm -f "$log"; return 0; }
+    [ -s "$log" ] || { [ -n "$(bb_pid "$1")" ] || rm -f "$log"; return 0; }
     dir="${BB_RUN_DIR:-$BB_TEST_DIR/runs/single}/logs"
     mkdir -p "$dir"
     while [ -e "$dir/${BB_SCENARIO:-x}-$1-$n.log" ]; do n=$((n + 1)); done
-    mv "$log" "$dir/${BB_SCENARIO:-x}-$1-$n.log"
+    # A copy still running (kept open for the next scenario, see TE_PARKED in te-lib.sh) goes on writing to its
+    # file, so the log is copied and emptied instead of moved
+    if [ -n "$(bb_pid "$1")" ]; then cp "$log" "$dir/${BB_SCENARIO:-x}-$1-$n.log" && : > "$log"
+    else mv "$log" "$dir/${BB_SCENARIO:-x}-$1-$n.log"; fi
 }
 
 # send <instance> <command...>: one harness command, once the last one's been taken
@@ -254,7 +257,7 @@ bb_close() {
     for p in $(pgrep -x Timberborn); do
         ps eww -p "$p" 2>/dev/null | grep -q "BB_INSTANCE=" && kill -9 "$p" 2>/dev/null
     done
-    rm -f "$BB_CMD_PREFIX-host" "$BB_CMD_PREFIX-client" "$BB_CMD_PREFIX-third"
+    rm -f "$BB_CMD_PREFIX-host" "$BB_CMD_PREFIX-client" "$BB_CMD_PREFIX-third" "$BB_TEST_DIR/.parked"
     local n=0
     while lsof -nP -iTCP -sTCP:LISTEN 2>/dev/null | grep -qi timberborn && [ $n -lt 40 ]; do sleep 1; n=$((n + 1)); done
 }

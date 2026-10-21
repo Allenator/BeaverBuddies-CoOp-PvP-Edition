@@ -176,7 +176,9 @@ export BB_RUN_DIR="$BB_TEST_DIR/runs/$(date '+%Y%m%d-%H%M%S')-$RUN_NAMES"
 mkdir -p "$BB_RUN_DIR/shots" "$BB_RUN_DIR/logs"
 
 START=$(date +%s)
+LAST_FILE=$(echo $FILES | awk '{print $NF}')
 for f in $FILES; do
+    killed=
     name=$(basename "$f" .sh)
     echo
     echo "== $name"
@@ -190,14 +192,14 @@ for f in $FILES; do
     # A scenario that runs past BB_SCENARIO_TIMEOUT (600 s by default) fails and its copies are closed
     while kill -0 $spid 2>/dev/null; do
         if [ $(( $(date +%s) - t0 )) -ge "${BB_SCENARIO_TIMEOUT:-600}" ]; then
-            pkill -9 -P $spid 2>/dev/null; kill -9 $spid 2>/dev/null
+            pkill -9 -P $spid 2>/dev/null; kill -9 $spid 2>/dev/null; killed=1
             BB_SCENARIO="$name" fail "finishes in time" "past the ${BB_SCENARIO_TIMEOUT:-600} s limit (BB_SCENARIO_TIMEOUT)"
             break
         fi
         # A copy that logs "[Test] FATAL: ..." (a beaver starved, say) can't pass: stopped there
         fatal=$(grep -ah "\[Test\] FATAL: " "$(bb_log host)" "$(bb_log client)" 2>/dev/null | head -1 | sed -E 's/.*\[Test\] FATAL: //')
         if [ -n "$fatal" ]; then
-            pkill -9 -P $spid 2>/dev/null; kill -9 $spid 2>/dev/null
+            pkill -9 -P $spid 2>/dev/null; kill -9 $spid 2>/dev/null; killed=1
             BB_SCENARIO="$name" fail "nothing fatal happens" "$fatal"
             break
         fi
@@ -206,7 +208,7 @@ for f in $FILES; do
         if ! grep -q "BB_EXPECT_DESYNC" "$f"; then
             desync=$(grep -ah "Resyncing everyone after the desync\|Event past time" "$(bb_log host)" 2>/dev/null | awk -v s="$started" 'substr($1, 2, 8) >= s' | grep -a -B1 "Resyncing" | head -2 | tr '\n' ' ' | cut -c1-200)
             if [ -n "$desync" ]; then
-                pkill -9 -P $spid 2>/dev/null; kill -9 $spid 2>/dev/null
+                pkill -9 -P $spid 2>/dev/null; kill -9 $spid 2>/dev/null; killed=1
                 BB_SCENARIO="$name" fail "stays in sync" "the host resynced everyone: $desync"
                 osascript -e "display notification \"$name desynced\" with title \"Tests\" sound name \"Basso\"" >/dev/null 2>&1 || true
                 break
@@ -216,7 +218,9 @@ for f in $FILES; do
     done
     wait $spid 2>/dev/null
     spid=
-    bb_close
+    # A scenario that parked its copies (te_start, see TE_PARKED in te-lib.sh) leaves them open for the next one
+    # to take back to the main menu, unless it was cut short or it's the last
+    if [ -z "$killed" ] && [ "$f" != "$LAST_FILE" ] && [ -f "$BB_TEST_DIR/.parked" ] && [ "${BB_KEEP_COPIES:-1}" = 1 ]; then :; else bb_close; fi
     # Its logs kept, and out of the way so their fatal lines aren't taken for the next one's
     BB_SCENARIO="$name" bb_keep_log host; BB_SCENARIO="$name" bb_keep_log client
     mod_enable_all
