@@ -26,7 +26,10 @@ namespace BeaverBuddies.Fixes
         {
             seeded = false;
             if (EventIO.IsNull) return;
-            Guid id = plant.GetComponent<EntityComponent>().EntityId;
+            // The planting tool's preview wakes up without an entity.
+            EntityComponent entity = plant.GetComponent<EntityComponent>();
+            if (entity == null) return;
+            Guid id = entity.EntityId;
             if (id == Guid.Empty) return;
             Override = new System.Random(BitConverter.ToInt32(id.ToByteArray(), 0));
             seeded = true;

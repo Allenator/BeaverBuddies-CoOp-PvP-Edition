@@ -625,6 +625,17 @@ namespace BeaverBuddies.DevTools
                     Plugin.Log($"[Test] Plantables: {string.Join(", ", names)}");
                     break;
                 }
+                case "plantpreview":
+                {
+                    // Hovering each planting button, as a player does: the tool becomes the temporary one and
+                    // its description builds a preview plant, which wakes up without an entity
+                    var tools = Get<Timberborn.ToolSystem.ToolService>();
+                    var planting = Get<Timberborn.ToolButtonSystem.ToolButtonService>().ToolButtons.Select(b => b.Tool)
+                        .OfType<Timberborn.PlantingUI.PlantingTool>().ToList();
+                    foreach (var tool in planting) tools.SetTemporaryTool(tool);
+                    Plugin.Log($"[Test] Planting previews: {planting.Count}");
+                    break;
+                }
                 case "toolstate":
                 {
                     // What the active build tool shows now, frames after it was moved
