@@ -164,6 +164,8 @@ namespace BeaverBuddies.Matchmaking
                 }
                 all.Add(listed);
             }
+            // The lobby filter only narrows what the places return; a match can still be incompatible in ways it can't see
+            if (!ShowIncompatible) all.RemoveAll(m => !m.compatible);
             // The ones that can be played first, keeping each list's order within each
             Matches.Clear();
             Matches.AddRange(all.Where(m => m.compatible).Concat(all.Where(m => !m.compatible)));
