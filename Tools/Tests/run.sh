@@ -178,7 +178,7 @@ mkdir -p "$BB_RUN_DIR/shots" "$BB_RUN_DIR/logs"
 START=$(date +%s)
 LAST_FILE=$(echo $FILES | awk '{print $NF}')
 for f in $FILES; do
-    killed=
+    killed=; gone_since=
     name=$(basename "$f" .sh)
     echo
     echo "== $name"
@@ -195,6 +195,17 @@ for f in $FILES; do
             pkill -9 -P $spid 2>/dev/null; kill -9 $spid 2>/dev/null; killed=1
             BB_SCENARIO="$name" fail "finishes in time" "past the ${BB_SCENARIO_TIMEOUT:-600} s limit (BB_SCENARIO_TIMEOUT)"
             break
+        fi
+        # No copy of the game left (the player closed it, or it crashed or never opened): nothing
+        # will come of waiting on it. Scenarios that restart copies are given time to
+        if [ -n "$(pgrep -x Timberborn)" ] && ps eww -p $(pgrep -x Timberborn | paste -sd, -) 2>/dev/null | grep -q "BB_INSTANCE="; then gone_since=
+        else
+            [ -n "$gone_since" ] || gone_since=$(date +%s)
+            if [ $(( $(date +%s) - gone_since )) -ge 60 ]; then
+                pkill -9 -P $spid 2>/dev/null; kill -9 $spid 2>/dev/null; killed=1
+                BB_SCENARIO="$name" fail "the game stays open" "no test copy of Timberborn has been running for 60 s (closed, crashed or never started)"
+                break
+            fi
         fi
         # A copy that logs "[Test] FATAL: ..." (a beaver starved, say) can't pass: stopped there
         fatal=$(grep -ah "\[Test\] FATAL: " "$(bb_log host)" "$(bb_log client)" 2>/dev/null | head -1 | sed -E 's/.*\[Test\] FATAL: //')
