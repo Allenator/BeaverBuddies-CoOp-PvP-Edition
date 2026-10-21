@@ -291,7 +291,7 @@ BeaverBuddies.Match.ModVersions,"{0}: ของเขา {1}, ของคุณ
 BeaverBuddies.Match.ModsOnlyMine,"มีแค่คุณ:","Only you have:"
 BeaverBuddies.Match.ModsAlsoSame,"อีก {0} รายการเหมือนของคุณ","{0} more the same as yours"
 BeaverBuddies.Match.Incompatible.BeaverBuddies,"เขามี BeaverBuddies {0} คุณมี {1} ฝ่ายที่มีเวอร์ชันเก่ากว่าต้องอัปเดต","They have BeaverBuddies {0}, you have {1}. Whoever has the older one needs to update."
-BeaverBuddies.Match.Incompatible.Build,"ม็อดเหมือนกัน แต่บิลด์หรือ DLC ไม่เหมือนกัน อัปเดตทุกอย่างเป็นเวอร์ชันล่าสุด","Your mods are the same, but not the same builds of them, or not the same DLC. Update everything to the latest version."
+BeaverBuddies.Match.Incompatible.Build,"ม็อดเหมือนกัน แต่บิลด์ไม่เหมือนกัน อัปเดตทุกอย่างเป็นเวอร์ชันล่าสุด","Your mods are the same, but not the same builds of them. Update everything to the latest version."
 BeaverBuddies.Match.Incompatible.ModsHosted,"ม็อดของคุณไม่เหมือนของเขา (ดูม็อดด้านล่าง) การเข้าเกมที่เปิดโฮสต์ต้องมีม็อดเหมือนกันทุกตัว","Your mods aren't the same as theirs (see Mods below). Joining a hosted game takes exactly the same ones."
 BeaverBuddies.Match.Incompatible.ModsNoWorkshop,"ม็อดของคุณไม่เหมือนของเขา (ดูม็อดด้านล่าง) และหากไม่มี Steam ก็ไม่มี Workshop ให้ดาวน์โหลดม็อดของเขา","Your mods aren't the same as theirs (see Mods below), and without Steam there's no Workshop to get theirs from."
 BeaverBuddies.Host.CopyCode,"คัดลอก","Copy"

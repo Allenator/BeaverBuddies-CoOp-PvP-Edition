@@ -291,7 +291,7 @@ BeaverBuddies.Match.ModVersions,"{0}: la loro {1}, la tua {2}","{0}: theirs {1},
 BeaverBuddies.Match.ModsOnlyMine,"Solo tu hai:","Only you have:"
 BeaverBuddies.Match.ModsAlsoSame,"Altre {0} uguali alle tue","{0} more the same as yours"
 BeaverBuddies.Match.Incompatible.BeaverBuddies,"Hanno BeaverBuddies {0}, tu hai {1}. Chi ha la versione più vecchia deve aggiornare.","They have BeaverBuddies {0}, you have {1}. Whoever has the older one needs to update."
-BeaverBuddies.Match.Incompatible.Build,"Avete le stesse mod, ma non le stesse build o non gli stessi DLC. Aggiornate tutto all'ultima versione.","Your mods are the same, but not the same builds of them, or not the same DLC. Update everything to the latest version."
+BeaverBuddies.Match.Incompatible.Build,"Avete le stesse mod, ma non le stesse build. Aggiornate tutto all'ultima versione.","Your mods are the same, but not the same builds of them. Update everything to the latest version."
 BeaverBuddies.Match.Incompatible.ModsHosted,"Le tue mod non sono le stesse delle loro (vedi Mod sotto). Per entrare in una partita ospitata servono esattamente le stesse.","Your mods aren't the same as theirs (see Mods below). Joining a hosted game takes exactly the same ones."
 BeaverBuddies.Match.Incompatible.ModsNoWorkshop,"Le tue mod non sono le stesse delle loro (vedi Mod sotto), e senza Steam non c'è il Workshop per prendere le loro.","Your mods aren't the same as theirs (see Mods below), and without Steam there's no Workshop to get theirs from."
 BeaverBuddies.Host.CopyCode,"Copia","Copy"

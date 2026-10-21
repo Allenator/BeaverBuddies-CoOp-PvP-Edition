@@ -291,7 +291,7 @@ BeaverBuddies.Match.ModVersions,"{0}: у них {1}, у вас {2}","{0}: theirs
 BeaverBuddies.Match.ModsOnlyMine,"Есть только у вас:","Only you have:"
 BeaverBuddies.Match.ModsAlsoSame,"Ещё {0} такие же, как у вас","{0} more the same as yours"
 BeaverBuddies.Match.Incompatible.BeaverBuddies,"У них BeaverBuddies {0}, у вас {1}. У кого версия старше, тому нужно обновиться.","They have BeaverBuddies {0}, you have {1}. Whoever has the older one needs to update."
-BeaverBuddies.Match.Incompatible.Build,"Моды те же, но сборки или DLC разные. Обновите всё до последней версии.","Your mods are the same, but not the same builds of them, or not the same DLC. Update everything to the latest version."
+BeaverBuddies.Match.Incompatible.Build,"Моды те же, но сборки разные. Обновите всё до последней версии.","Your mods are the same, but not the same builds of them. Update everything to the latest version."
 BeaverBuddies.Match.Incompatible.ModsHosted,"Ваши моды отличаются от их модов (см. Моды ниже). Для входа в открытую игру нужны точно такие же.","Your mods aren't the same as theirs (see Mods below). Joining a hosted game takes exactly the same ones."
 BeaverBuddies.Match.Incompatible.ModsNoWorkshop,"Ваши моды отличаются от их модов (см. Моды ниже), а без Steam нет Мастерской, чтобы получить их моды.","Your mods aren't the same as theirs (see Mods below), and without Steam there's no Workshop to get theirs from."
 BeaverBuddies.Host.CopyCode,"Копировать","Copy"

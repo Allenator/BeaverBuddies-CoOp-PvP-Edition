@@ -291,7 +291,7 @@ BeaverBuddies.Match.ModVersions,"{0}：他们 {1}，你 {2}","{0}: theirs {1}, y
 BeaverBuddies.Match.ModsOnlyMine,"只有你有：","Only you have:"
 BeaverBuddies.Match.ModsAlsoSame,"另有 {0} 个和你的相同","{0} more the same as yours"
 BeaverBuddies.Match.Incompatible.BeaverBuddies,"他们的 BeaverBuddies 是 {0}，你的是 {1}。版本较旧的一方需要更新。","They have BeaverBuddies {0}, you have {1}. Whoever has the older one needs to update."
-BeaverBuddies.Match.Incompatible.Build,"模组相同，但构建版本或 DLC 不同。请全部更新到最新版本。","Your mods are the same, but not the same builds of them, or not the same DLC. Update everything to the latest version."
+BeaverBuddies.Match.Incompatible.Build,"模组相同，但构建版本不同。请全部更新到最新版本。","Your mods are the same, but not the same builds of them. Update everything to the latest version."
 BeaverBuddies.Match.Incompatible.ModsHosted,"你的模组和他们的不同（见下方模组）。加入主持的游戏需要完全相同的模组。","Your mods aren't the same as theirs (see Mods below). Joining a hosted game takes exactly the same ones."
 BeaverBuddies.Match.Incompatible.ModsNoWorkshop,"你的模组和他们的不同（见下方模组），没有 Steam 就无法从创意工坊获取他们的模组。","Your mods aren't the same as theirs (see Mods below), and without Steam there's no Workshop to get theirs from."
 BeaverBuddies.Host.CopyCode,"复制","Copy"
