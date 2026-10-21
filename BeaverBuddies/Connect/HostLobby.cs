@@ -53,7 +53,12 @@ namespace BeaverBuddies.Connect
             if (message[TimberNet.TimberNetBase.TYPE_KEY]?.ToString() != HelloType) return;
             string id = message.Value<string>("playerID");
             if (string.IsNullOrEmpty(id) || id == PlayerIdentity.LocalID) return;
-            lock (Hellos) Hellos[id] = (message.Value<string>("name"), message.Value<int?>("color") ?? 0);
+            string name = message.Value<string>("name");
+            lock (Hellos)
+            {
+                if (!Hellos.ContainsKey(id)) Plugin.Log($"[Lobby] {name} said hello");
+                Hellos[id] = (name, message.Value<int?>("color") ?? 0);
+            }
         }
 
         // The title of the map the player picked, for the game about to start

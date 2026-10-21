@@ -23,11 +23,15 @@ namespace BeaverBuddies.IO
         private bool FailedToConnect = false;
         private bool _mapReceived;
         private float _nextHello;
+        private bool _saidHello;
 
         // Who this is, until the map comes: the host's box lists them from the moment they connect, not once they've loaded
         protected override void Updated()
         {
-            if (_mapReceived || NetBase == null || UnityEngine.Time.unscaledTime < _nextHello) return;
+            if (_saidHello || NetBase == null) return;
+            // Those sent while a WebRTC connection was still opening never left: with the map in it's open, so one last
+            if (_mapReceived) _saidHello = true;
+            else if (UnityEngine.Time.unscaledTime < _nextHello) return;
             _nextHello = UnityEngine.Time.unscaledTime + 1f;
             try { NetBase.SendTransientMessage(Connect.HostLobby.Hello()); }
             catch (Exception e) { Plugin.LogWarning($"Couldn't say hello to the host: {e.Message}"); }

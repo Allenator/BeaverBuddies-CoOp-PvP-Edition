@@ -63,16 +63,21 @@ namespace TimberNet
 
         private void Run()
         {
+            bool wasConnected = false;
             while (true)
             {
                 if (!queue.WaitAndTryDequeue(out Item? item)) continue;
                 if (item == null) return;
                 if (!stream.Connected)
                 {
+                    // Still connecting (WebRTC takes seconds): what's queued meanwhile is the
+                    // client's hello, sent again every second, so it's dropped and the thread waits on
+                    if (!wasConnected) continue;
                     // Gone: nothing more can reach them
                     stopped = true;
                     return;
                 }
+                wasConnected = true;
                 try
                 {
                     if (item.data != null) WriteWithLength(stream, item.data);
