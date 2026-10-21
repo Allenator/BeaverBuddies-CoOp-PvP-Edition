@@ -1,3 +1,8 @@
+v1.1.0-1.8.3
+1.1.0-1.8.3
+* Guests who join by code now reach the host, and the host's lobby shows their name and faction.
+* Fixed the mod mismatch message mentioning DLC.
+
 v1.1.0-1.8.2
 * Fixed a crash when hovering over the planting buttons in multiplayer.
 
