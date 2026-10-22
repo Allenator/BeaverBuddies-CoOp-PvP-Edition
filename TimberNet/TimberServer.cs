@@ -35,6 +35,9 @@ namespace TimberNet
         public Func<ISocketStream, JObject, bool>? AcceptTransientFrom;
         // Whether a client's events are taken: false drops them. On the Update() thread
         public Func<ISocketStream, bool>? AcceptEventsFrom;
+        // A client's connection has ended, they left or it dropped: nothing more comes from them. On that connection's
+        // listening thread
+        public event Action<ISocketStream>? OnClientGone;
 
         private Func<Task<byte[]>> mapProvider;
         private Func<JObject>? initEventProvider;
@@ -165,6 +168,7 @@ namespace TimberNet
                         // This must come last - it is an infinite loop
                         // until the client disconnects
                         StartListening(client, false);
+                        if (!IsStopped) OnClientGone?.Invoke(client);
                     });
                 }
             });

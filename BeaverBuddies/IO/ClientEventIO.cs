@@ -24,9 +24,38 @@ namespace BeaverBuddies.IO
         private bool _mapReceived;
         private float _nextHello;
         private bool _saidHello;
+        private ISocketStream _socket;
+        // Since when the host has said nothing, though it says it's there every 2 s (Players.PlayerPresence): a host
+        // whose end dropped this player, and this end didn't notice, leaves it waiting in silence
+        private DateTime? _silentSince;
+        private const double SilentSeconds = 10;
+
+        protected override void Updated()
+        {
+            CheckHostHeard();
+            SayHello();
+        }
+
+        private void CheckHostHeard()
+        {
+            if (!_mapReceived || HostLeft || NetBase == null) return;
+            DateTime heard = NetBase.LastReceived;
+            double silent = (DateTime.UtcNow - heard).TotalSeconds;
+            if (_silentSince == null && silent > SilentSeconds)
+            {
+                _silentSince = heard;
+                Plugin.LogWarning($"Nothing from the host for {silent:0} s; this end of the connection: " +
+                    (_socket is WebRtc.WebRtcSocket webRtc ? webRtc.State : $"{(_socket.Connected ? "open" : "ended")}"));
+            }
+            else if (_silentSince != null && silent < SilentSeconds)
+            {
+                Plugin.Log($"Heard from the host again, after {(heard - _silentSince.Value).TotalSeconds:0} s");
+                _silentSince = null;
+            }
+        }
 
         // Who this is, until the map comes: the host's box lists them from the moment they connect, not once they've loaded
-        protected override void Updated()
+        private void SayHello()
         {
             if (_saidHello || NetBase == null) return;
             // Those sent while a WebRTC connection was still opening never left: with the map in it's open, so one last
@@ -67,6 +96,7 @@ namespace BeaverBuddies.IO
             Action<string> onError)
         {
             this.mapReceivedCallback = mapReceivedCallback;
+            _socket = socket;
 
             TryRegisterSteamPacketReceiver(socket);
 

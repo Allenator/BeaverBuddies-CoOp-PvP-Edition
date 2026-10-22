@@ -4,6 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Threading.Tasks;
 using TimberNet;
 
@@ -37,9 +39,13 @@ namespace BeaverBuddies.WebRtc
         public string Name { get; private set; }
 
         private readonly string code;
+        // Who's at the other end, for the log: the host by its code, or a player by the id they joined with
+        private readonly string other;
         private RTCPeerConnection peer;
         private RTCDataChannel channel;
         private readonly ConcurrentQueueWithWait<byte[]> readBuffer = new ConcurrentQueueWithWait<byte[]>();
+        // SIPSorcery's threads and the game's can each end it, and it ends once
+        private readonly object ending = new object();
         private byte[] pending;
         private int readOffset;
 
@@ -47,19 +53,66 @@ namespace BeaverBuddies.WebRtc
         public WebRtcSocket(string code)
         {
             this.code = code;
+            other = $"host {code}";
         }
 
         // The host's side of a player who joined (see WebRtcListener)
-        internal WebRtcSocket(RTCPeerConnection peer, RTCDataChannel channel)
+        internal WebRtcSocket(RTCPeerConnection peer, RTCDataChannel channel, string from)
         {
+            other = $"player {from}";
             Attach(peer, channel);
             Connected = true;
         }
 
-        internal static RTCPeerConnection NewPeer() => new RTCPeerConnection(new RTCConfiguration
+        // Every step the connection to the other end takes is logged, and the way it settles on, for a log that shows
+        // how one that ended went (Ended says why it did)
+        internal static RTCPeerConnection NewPeer(string other)
         {
-            iceServers = StunServers.Select(url => new RTCIceServer { urls = url }).ToList(),
-        });
+            var peer = new RTCPeerConnection(new RTCConfiguration
+            {
+                iceServers = StunServers.Select(url => new RTCIceServer { urls = url }).ToList(),
+            });
+            peer.oniceconnectionstatechange += state =>
+            {
+                Plugin.Log($"[WebRTC] {other}: ICE {state}");
+                if (state == RTCIceConnectionState.connected) Plugin.Log($"[WebRTC] {other}: {Route(peer)}");
+            };
+            peer.onconnectionstatechange += state => Plugin.Log($"[WebRTC] {other}: connection {state}");
+            return peer;
+        }
+
+        // What this end makes of the connection, for a log
+        public string State =>
+            $"WebRTC with {other}: connection {peer?.connectionState}, ICE {peer?.iceConnectionState}, data channel {channel?.readyState}, {(Connected ? "open" : "ended")} here";
+
+        // The way the two settled on, by kind, never the addresses, as players post their logs: each side's own
+        // address on its network (host), or the one its router shows the internet (srflx, prflx)
+        private static string Route(RTCPeerConnection peer)
+        {
+            ChecklistEntry pair = peer.GetRtpChannel()?.NominatedEntry;
+            return pair == null ? "no route chosen" : $"through {Kind(pair.LocalCandidate)} here, {Kind(pair.RemoteCandidate)} there";
+        }
+
+        private static string Kind(RTCIceCandidate candidate) =>
+            candidate == null ? "?" : $"{candidate.type} {candidate.protocol} ({AddressKind(candidate.address)})";
+
+        private static string AddressKind(string address)
+        {
+            if (string.IsNullOrEmpty(address)) return "no address";
+            if (!IPAddress.TryParse(address, out IPAddress ip)) return address.EndsWith(".local") ? "mDNS name" : "a name";
+            string v6 = ip.AddressFamily == AddressFamily.InterNetworkV6 ? " IPv6" : "";
+            if (IPAddress.IsLoopback(ip)) return "loopback" + v6;
+            if (ip.IsIPv6LinkLocal) return "link-local IPv6";
+            byte[] b = ip.GetAddressBytes();
+            if (ip.AddressFamily == AddressFamily.InterNetwork)
+            {
+                if (b[0] == 10 || (b[0] == 172 && b[1] >= 16 && b[1] < 32) || (b[0] == 192 && b[1] == 168)) return "private";
+                if (b[0] == 169 && b[1] == 254) return "link-local";
+                if (b[0] == 100 && b[1] >= 64 && b[1] < 128) return "carrier-grade NAT";
+                return "public";
+            }
+            return (b[0] & 0xFE) == 0xFC ? "private IPv6" : "public IPv6";
+        }
 
         // Off Unity's thread, whoever calls it: nothing here needs to resume there
         public Task ConnectAsync() => Task.Run(Connect);
@@ -98,7 +151,7 @@ namespace BeaverBuddies.WebRtc
         private async Task ConnectThroughRoom()
         {
             using Signaling signaling = await OpenRoom();
-            peer = NewPeer();
+            peer = NewPeer(other);
             // Not inline on SIPSorcery's thread, which delivers the channel's messages: whatever awaits this mustn't hold it
             var opened = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
             peer.onicecandidate += candidate =>
@@ -143,19 +196,24 @@ namespace BeaverBuddies.WebRtc
             this.peer = peer;
             this.channel = channel;
             channel.onmessage += (_, _, data) => readBuffer.Enqueue(data);
-            channel.onclose += Ended;
+            channel.onclose += () => Ended("its data channel closed");
+            channel.onerror += error => Plugin.LogWarning($"[WebRTC] {other}: data channel error: {SipLog.Redact(error)}");
             peer.onconnectionstatechange += state =>
             {
                 // Not disconnected: that's often a moment's loss on the network, and ICE gets it back
-                if (state == RTCPeerConnectionState.failed || state == RTCPeerConnectionState.closed) Ended();
+                if (state == RTCPeerConnectionState.failed || state == RTCPeerConnectionState.closed) Ended($"the connection went {state}");
             };
         }
 
-        // The other side is gone: a read waiting on it ends
-        private void Ended()
+        // The other side is gone: a read waiting on it ends. Said once, with why, as nothing else on this end tells
+        private void Ended(string why)
         {
-            if (!Connected) return;
-            Connected = false;
+            lock (ending)
+            {
+                if (!Connected) return;
+                Connected = false;
+            }
+            Plugin.Log($"[WebRTC] {other}: the connection ended, as {why}; ICE {peer?.iceConnectionState}, data channel {channel?.readyState}");
             readBuffer.Enqueue(new byte[0]);
         }
 
@@ -197,8 +255,13 @@ namespace BeaverBuddies.WebRtc
 
         public void Close()
         {
-            bool was = Connected;
-            Connected = false;
+            bool was;
+            lock (ending)
+            {
+                was = Connected;
+                Connected = false;
+            }
+            if (was) Plugin.Log($"[WebRTC] {other}: closed from this end");
             try { channel?.close(); } catch (Exception) { }
             try { peer?.close(); } catch (Exception) { }
             if (was) readBuffer.Enqueue(new byte[0]);
