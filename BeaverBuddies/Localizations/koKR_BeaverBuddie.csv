@@ -52,15 +52,19 @@ BeaverBuddies.Settings.StrictBuildMatch,"정확히 같은 빌드와만 플레이
 BeaverBuddies.Settings.StrictBuildMatch.Tooltip,"BeaverBuddies 빌드가 당신과 정확히 같지 않은(게임 버전, 애드온 모드, 세력까지 같은) 플레이어를 거부하고, 그런 호스트에 참가하지 못하게 합니다. 끄면 경고 후 계속 플레이할 수 있지만 게임 동기화가 어긋날 수 있습니다.",""
 BeaverBuddies.Settings.KeepPlayingInBackground,"멀티플레이 중 백그라운드에서도 계속 플레이",""
 BeaverBuddies.Settings.KeepPlayingInBackground.Tooltip,"호스트하거나 다른 사람의 게임에 참가하는 동안에는 게임 자체의 백그라운드 설정과 관계없이 다른 앱이 앞에 있어도 게임이 계속 실행됩니다. 호스트의 게임이 멈추면 모두의 게임이 멈추기 때문입니다. 멀티플레이 밖에서는 게임 자체 설정이 적용됩니다. 노트북에서는 배터리를 더 사용합니다.",""
-BeaverBuddies.Settings.PauseReduction,"강제 일시정지 횟수 줄이기",""
-BeaverBuddies.Settings.PauseReduction.Tooltip,"최적의 경험을 위해 모든 플레이어가 동일한 설정을 사용하는 것이 좋습니다.
+BeaverBuddies.Settings.PauseReduction,"모두를 일시정지시키는 것 (호스트가 결정)",""
+BeaverBuddies.Settings.PauseReduction.Tooltip,"당신이 호스트하는 게임에서는 여기서의 선택이 모든 플레이어에게 적용됩니다: 무엇이 모두의 게임을 일시정지시키는지. 게스트의 선택은 그 게스트가 호스트하는 게임에서만 적용됩니다.
 
-끄기 - 기본 동작
-메뉴만 - 메뉴를 열 때만 자동 일시정지 (해체 시에는 일시정지하지 않음)
-자동 일시정지 안 함 - 메뉴를 열 때를 포함하여 게임이 자동으로 일시정지되지 않습니다. 저장하기 전에 게임을 일시정지하지 않으면 저장 파일이 손상될 수 있습니다.",""
-BeaverBuddies.Settings.PauseReduction.Off,"끄기",""
+메뉴와 대화상자 – 게임 기본 동작: 메뉴를 열면 모두 일시정지되고, 호스트의 대화상자(철거, 연구)도 마찬가지입니다
+메뉴만 – 메뉴를 열면 모두 일시정지되고, 대화상자는 그렇지 않습니다
+없음 – 각 플레이어의 메뉴는 각자의 것이며 아무도 일시정지시키지 않습니다
+
+일시정지 버튼과 속도 키는 항상 모두를 일시정지시킵니다. 저장은 항상 현재 틱이 끝날 때까지 기다리므로 어느 경우에도 일관됩니다.",""
+BeaverBuddies.Settings.PauseReduction.Off,"메뉴와 대화상자",""
 BeaverBuddies.Settings.PauseReduction.LowRisk,"메뉴만",""
-BeaverBuddies.Settings.PauseReduction.HighRisk,"자동 일시정지 안 함",""
+BeaverBuddies.Settings.PauseReduction.HighRisk,"없음: 각 플레이어의 메뉴는 각자의 것",""
+BeaverBuddies.Settings.PauseForHostSaves,"호스트가 저장하는 동안 게임 일시정지",""
+BeaverBuddies.Settings.PauseForHostSaves.Tooltip,"당신이 호스트하는 게임에서 직접 하는 저장은 혼자 할 때처럼 게임을 일시정지한 상태로 기록되고, 이후 게임은 원래 속도로 계속됩니다. 어느 쪽이든 당신이 저장하는 동안 게스트는 같은 시점에서 기다립니다. 자동 저장은 일시정지하지 않습니다.",""
 BeaverBuddies.Host.ConnectedClients,"클라이언트 연결 대기 중…
 현재 연결된 클라이언트:",""
 BeaverBuddies.Host.DirectConnectClient,"다이렉트 연결 클라이언트",""

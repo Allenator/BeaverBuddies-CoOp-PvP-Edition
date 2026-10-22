@@ -52,15 +52,19 @@ BeaverBuddies.Settings.StrictBuildMatch,"Only play with the exact same build",""
 BeaverBuddies.Settings.StrictBuildMatch.Tooltip,"Turns away players whose BeaverBuddies isn't the exact same build as yours, with the same game version, add-on mods and factions, and keeps you from joining a host that isn't. Off, you're warned and play on, but the game may fall out of sync.",""
 BeaverBuddies.Settings.KeepPlayingInBackground,"Keep playing in the background during multiplayer",""
 BeaverBuddies.Settings.KeepPlayingInBackground.Tooltip,"While you host or play in someone's game, it keeps running when another app is in front, whatever the game's own background setting says: a host whose game stops stops everyone's. Outside multiplayer, the game's own setting applies. Uses more battery on a laptop.",""
-BeaverBuddies.Settings.PauseReduction,"Reduce the number of forced pauses",""
-BeaverBuddies.Settings.PauseReduction.Tooltip,"For an optimal experience, all players should set it to the same value.
+BeaverBuddies.Settings.PauseReduction,"What pauses everyone (the host's choice)",""
+BeaverBuddies.Settings.PauseReduction.Tooltip,"In a game you host, your choice here applies to every player: what pauses the game for everyone. A guest's own choice only applies to games they host.
 
-Off - Default behaviour
-Menu only - Auto-pause only when opening the menu (not for deconstructions)
-Never auto-pause - The game will never auto-pause, including when opening the menu. This can lead to save corruptions if you don't pause the game before saving.",""
-BeaverBuddies.Settings.PauseReduction.Off,"Off",""
-BeaverBuddies.Settings.PauseReduction.LowRisk,"Menu only",""
-BeaverBuddies.Settings.PauseReduction.HighRisk,"Never auto-pause",""
+The menu and dialogs - the game's own behavior: opening the menu pauses everyone, and so do the host's dialogs (deconstruction, research)
+The menu only - opening the menu pauses everyone, dialogs don't
+Nothing - each player's menu is their own and pauses nobody
+
+The pause button and speed keys always pause everyone. Saves always wait for the end of the current tick, so they're consistent either way.",""
+BeaverBuddies.Settings.PauseReduction.Off,"The menu and dialogs",""
+BeaverBuddies.Settings.PauseReduction.LowRisk,"The menu only",""
+BeaverBuddies.Settings.PauseReduction.HighRisk,"Nothing: each player's menu is their own",""
+BeaverBuddies.Settings.PauseForHostSaves,"Pause the game while the host saves",""
+BeaverBuddies.Settings.PauseForHostSaves.Tooltip,"In a game you host, a save you make yourself is written with the game paused, as a save made alone is, and the game then plays on at its speed. Guests wait at the same moment while you save either way. Autosaves aren't paused.",""
 BeaverBuddies.Host.ConnectedClients,"Wait for clients to connect...
 Currently connected clients:",""
 BeaverBuddies.Host.DirectConnectClient,"Direct Connect Client",""

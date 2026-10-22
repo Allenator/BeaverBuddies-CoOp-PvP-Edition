@@ -52,15 +52,19 @@ BeaverBuddies.Settings.StrictBuildMatch,"完全に同じビルドとだけプレ
 BeaverBuddies.Settings.StrictBuildMatch.Tooltip,"BeaverBuddiesのビルドがあなたと完全に同じ（ゲームのバージョン、アドオンMOD、勢力も同じ）でないプレイヤーを拒否し、そうでないホストへの参加も防ぎます。オフにすると、警告が表示された上でプレイを続けられますが、ゲームが同期しなくなることがあります。",""
 BeaverBuddies.Settings.KeepPlayingInBackground,"マルチプレイ中はバックグラウンドでもプレイを続ける",""
 BeaverBuddies.Settings.KeepPlayingInBackground.Tooltip,"ホスト中や他の人のゲームに参加中は、ゲーム本体のバックグラウンド設定に関係なく、別のアプリが前面にあってもゲームが動き続けます。ホストのゲームが止まると全員のゲームが止まるためです。マルチプレイ以外ではゲーム本体の設定が使われます。ノートPCではバッテリーを多く消費します。",""
-BeaverBuddies.Settings.PauseReduction,"強制一時停止の回数を減らす",""
-BeaverBuddies.Settings.PauseReduction.Tooltip,"最適な体験のため、全プレイヤーが同じ設定を使用することを推奨します。
+BeaverBuddies.Settings.PauseReduction,"全員を一時停止させるもの（ホストが決定）",""
+BeaverBuddies.Settings.PauseReduction.Tooltip,"あなたがホストするゲームでは、ここでの選択が全プレイヤーに適用されます: 何が全員のゲームを一時停止させるか。ゲストの選択は、そのゲストがホストするゲームでのみ使われます。
 
-オフ - デフォルトの動作
-メニューのみ - メニューを開いた時のみ自動一時停止します（解体時は一時停止しません）
-自動一時停止なし - メニューを開いた時を含め、ゲームが自動で一時停止することはありません。保存前にゲームを一時停止しないとセーブデータが破損する可能性があります。",""
-BeaverBuddies.Settings.PauseReduction.Off,"オフ",""
+メニューとダイアログ – ゲーム本来の動作: メニューを開くと全員が一時停止し、ホストのダイアログ（解体、研究）でも同様です
+メニューのみ – メニューを開くと全員が一時停止し、ダイアログでは止まりません
+なし – 各プレイヤーのメニューはその人だけのもので、誰も一時停止しません
+
+一時停止ボタンと速度キーは常に全員を一時停止させます。セーブは常に現在のティックの終わりを待つので、どの場合も整合しています。",""
+BeaverBuddies.Settings.PauseReduction.Off,"メニューとダイアログ",""
 BeaverBuddies.Settings.PauseReduction.LowRisk,"メニューのみ",""
-BeaverBuddies.Settings.PauseReduction.HighRisk,"自動一時停止なし",""
+BeaverBuddies.Settings.PauseReduction.HighRisk,"なし: 各プレイヤーのメニューは個別",""
+BeaverBuddies.Settings.PauseForHostSaves,"ホストのセーブ中はゲームを一時停止する",""
+BeaverBuddies.Settings.PauseForHostSaves.Tooltip,"あなたがホストするゲームでは、自分で行うセーブはゲームを一時停止した状態で書き込まれ（一人で遊ぶときと同じ）、その後ゲームは元の速度で再開します。いずれにせよ、あなたがセーブしている間ゲストは同じ時点で待ちます。オートセーブでは一時停止しません。",""
 BeaverBuddies.Host.ConnectedClients,"クライアントを待っています…
 現在接続中のクライアント：",""
 BeaverBuddies.Host.DirectConnectClient,"ダイレクト接続クライアント",""

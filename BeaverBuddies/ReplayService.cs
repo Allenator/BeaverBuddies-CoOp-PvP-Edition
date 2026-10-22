@@ -863,6 +863,34 @@ namespace BeaverBuddies
             // If we're not paused, we need to wait until the end of the tick
             _tickingService.FinishFullTickAndThen(action);
         }
+
+        /**
+         * Does something with the game paused, then plays on at the speed it had: the host's own saves
+         * (see GameSaverSavePatcher), at the end of a tick. The players behind the host wait at that
+         * tick while it's paused, as they would while it saves, so it's told to nobody.
+         */
+        public void WhilePaused(Action action)
+        {
+            float speed = _speedManager.CurrentSpeed, target = TargetSpeed;
+            if (speed == 0)
+            {
+                action();
+                return;
+            }
+            Plugin.Log("Pausing for the host's save");
+            SetTargetSpeed(0);
+            SpeedChangePatcher.SetSpeedSilentlyNow(_speedManager, 0);
+            try
+            {
+                action();
+            }
+            finally
+            {
+                SetTargetSpeed(target);
+                SpeedChangePatcher.SetSpeedSilentlyNow(_speedManager, speed);
+                Plugin.Log($"Playing on at speed {speed} after the host's save");
+            }
+        }
     }
 
     [HarmonyPatch(typeof(TickableSingletonService), nameof(TickableSingletonService.Load))]

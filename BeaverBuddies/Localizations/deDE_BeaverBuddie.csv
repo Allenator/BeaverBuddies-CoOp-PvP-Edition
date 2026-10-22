@@ -52,15 +52,19 @@ BeaverBuddies.Settings.StrictBuildMatch,"Nur mit genau demselben Build spielen",
 BeaverBuddies.Settings.StrictBuildMatch.Tooltip,"Weist Spieler ab, deren BeaverBuddies nicht genau derselbe Build ist wie deiner, mit derselben Spielversion, denselben Zusatz-Mods und Fraktionen, und lässt dich keinem solchen Host beitreten. Aus: Du wirst gewarnt und spielst weiter, aber das Spiel kann asynchron werden.",""
 BeaverBuddies.Settings.KeepPlayingInBackground,"Im Mehrspielermodus im Hintergrund weiterspielen",""
 BeaverBuddies.Settings.KeepPlayingInBackground.Tooltip,"Während du hostest oder in einem fremden Spiel spielst, läuft es weiter, wenn eine andere App im Vordergrund ist, egal was die Hintergrund-Einstellung des Spiels sagt: Hält das Spiel des Hosts an, halten alle an. Außerhalb des Mehrspielermodus gilt die Einstellung des Spiels. Verbraucht auf Laptops mehr Akku.",""
-BeaverBuddies.Settings.PauseReduction,"Anzahl der erzwungenen Pausen reduzieren",""
-BeaverBuddies.Settings.PauseReduction.Tooltip,"Für ein optimales Erlebnis sollten alle Spieler die gleiche Einstellung verwenden.
+BeaverBuddies.Settings.PauseReduction,"Was alle pausiert (der Host entscheidet)",""
+BeaverBuddies.Settings.PauseReduction.Tooltip,"In einem Spiel, das du hostest, gilt deine Wahl hier für alle Spieler: was das Spiel für alle pausiert. Die eigene Wahl eines Gasts gilt nur in Spielen, die er hostet.
 
-Aus - Standardverhalten
-Nur Menü - Automatische Pause nur beim Öffnen des Menüs (nicht bei Abrissen)
-Nie automatisch pausieren - Das Spiel wird nie automatisch pausiert, auch nicht beim Öffnen des Menüs. Dies kann zu Speicherschäden führen, wenn du das Spiel vor dem Speichern nicht pausierst.",""
-BeaverBuddies.Settings.PauseReduction.Off,"Aus",""
-BeaverBuddies.Settings.PauseReduction.LowRisk,"Nur Menü",""
-BeaverBuddies.Settings.PauseReduction.HighRisk,"Nie automatisch pausieren",""
+Menü und Dialoge – das Verhalten des Spiels: Das Menü zu öffnen pausiert alle, ebenso die Dialoge des Hosts (Abriss, Forschung)
+Nur das Menü – das Menü pausiert alle, Dialoge nicht
+Nichts – jedes Menü gehört dem jeweiligen Spieler und pausiert niemanden
+
+Die Pausentaste und die Geschwindigkeitstasten pausieren immer alle. Speichern wartet immer auf das Ende des laufenden Ticks und ist so in jedem Fall stimmig.",""
+BeaverBuddies.Settings.PauseReduction.Off,"Menü und Dialoge",""
+BeaverBuddies.Settings.PauseReduction.LowRisk,"Nur das Menü",""
+BeaverBuddies.Settings.PauseReduction.HighRisk,"Nichts: jedes Menü gehört dem Spieler",""
+BeaverBuddies.Settings.PauseForHostSaves,"Spiel pausieren, während der Host speichert",""
+BeaverBuddies.Settings.PauseForHostSaves.Tooltip,"In einem Spiel, das du hostest, wird ein Spielstand, den du selbst speicherst, bei pausiertem Spiel geschrieben, wie allein auch, danach läuft das Spiel mit seiner Geschwindigkeit weiter. Die Gäste warten so oder so im selben Moment, während du speicherst. Automatische Speicherungen werden nicht pausiert.",""
 BeaverBuddies.Host.ConnectedClients,"Warte auf Clients…
 Derzeit verbundene Clients:",""
 BeaverBuddies.Host.DirectConnectClient,"Direkt‑Connect‑Client",""

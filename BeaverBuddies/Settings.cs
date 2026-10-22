@@ -72,15 +72,24 @@ namespace BeaverBuddies
 
         // ---- Quality of Life Settings ----
 
-        // Menu only by default: pausing everyone whenever someone opens a
-        // building's deletion or a research dialog interrupts too much
+        // What pauses everyone in a game: the host's choice, for every player in it (see PauseReductionSetting).
+        // Nothing by default: each player's menu is their own, and pausing everyone whenever someone opens
+        // the menu, a building's deletion or a research dialog interrupts too much
         public LimitedStringModSetting PauseReduction { get; } =
-            new(1, new[] {
+            new(2, new[] {
                 new LimitedStringModSettingValue("0", "BeaverBuddies.Settings.PauseReduction.Off"),
                 new LimitedStringModSettingValue("1", "BeaverBuddies.Settings.PauseReduction.LowRisk"),
                 new LimitedStringModSettingValue("2", "BeaverBuddies.Settings.PauseReduction.HighRisk")
             }, ModSettingDescriptor.CreateLocalized("BeaverBuddies.Settings.PauseReduction")
                 .SetLocalizedTooltip("BeaverBuddies.Settings.PauseReduction.Tooltip")
+        );
+
+        // A save the host makes itself is written with the game paused, as a save made alone is (see GameSaverSavePatcher)
+        public ModSetting<bool> PauseForHostSaves { get; } =
+            new(true,
+            ModSettingDescriptor.CreateLocalized(
+                "BeaverBuddies.Settings.PauseForHostSaves"
+            ).SetLocalizedTooltip("BeaverBuddies.Settings.PauseForHostSaves.Tooltip")
         );
 
         // ---- Developer Settings ----
@@ -152,10 +161,21 @@ namespace BeaverBuddies
         // Saved with each game, picked when it's created (see DevTools.DevToolsRule)
         public static bool AllowDevTools => DevTools.DevToolsRule.Allowed;
 
-        public static PauseReductionLevel PauseReductionSetting
+        public static bool PauseHostSaves => instance?.PauseForHostSaves.Value ?? true;
+
+        // What pauses everyone: in another's game, the host's choice (see IO.ClientEventIO.HostPauses), so one
+        // player's own can't pause the rest; this player's own when it hosts or plays alone
+        public static PauseReductionLevel PauseReductionSetting =>
+            IO.EventIO.Get() is IO.ClientEventIO { HostPauses: int host } ? (PauseReductionLevel)host : OwnPauseReduction;
+
+        // This player's own choice. Test copies share these settings: each can be told otherwise (BB_PAUSES)
+        public static PauseReductionLevel OwnPauseReduction
         {
             get
             {
+                if (DevTools.TestHarness.Active && int.TryParse(System.Environment.GetEnvironmentVariable("BB_PAUSES"), out int told))
+                    return (PauseReductionLevel)told;
+
                 if (instance?.PauseReduction?.Value == null)
                     return PauseReductionLevel.Off;
 

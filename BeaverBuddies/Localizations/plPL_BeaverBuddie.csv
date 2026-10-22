@@ -52,15 +52,19 @@ BeaverBuddies.Settings.StrictBuildMatch,"Graj tylko z dokładnie tą samą kompi
 BeaverBuddies.Settings.StrictBuildMatch.Tooltip,"Odrzuca graczy, których BeaverBuddies nie jest dokładnie tą samą kompilacją co twoja, z tą samą wersją gry, modami dodatkowymi i frakcjami, i nie pozwala ci dołączyć do takiego hosta. Wyłączone: dostajesz ostrzeżenie i grasz dalej, ale gra może się rozsynchronizować.",""
 BeaverBuddies.Settings.KeepPlayingInBackground,"Graj dalej w tle w trybie wieloosobowym",""
 BeaverBuddies.Settings.KeepPlayingInBackground.Tooltip,"Gdy hostujesz lub grasz w czyjejś grze, działa ona dalej, gdy na wierzchu jest inna aplikacja, niezależnie od ustawienia gry dotyczącego działania w tle: gdy gra hosta się zatrzymuje, zatrzymują się gry wszystkich. Poza trybem wieloosobowym obowiązuje ustawienie gry. Zużywa więcej baterii na laptopie.",""
-BeaverBuddies.Settings.PauseReduction,"Zmniejsz liczbę wymuszonych pauz",""
-BeaverBuddies.Settings.PauseReduction.Tooltip,"Dla najlepszego efektu wszyscy gracze powinni mieć to samo ustawienie.
+BeaverBuddies.Settings.PauseReduction,"Co pauzuje wszystkich (decyduje host)",""
+BeaverBuddies.Settings.PauseReduction.Tooltip,"W grze, którą hostujesz, twój wybór tutaj dotyczy wszystkich graczy: co pauzuje grę wszystkim. Własny wybór gościa obowiązuje tylko w grach, które on hostuje.
 
-Wyłączone - Domyślne zachowanie
-Tylko menu - Automatyczna pauza tylko przy otwieraniu menu (nie podczas rozbiórek)
-Nigdy nie pauzuj automatycznie - Gra nigdy nie będzie automatycznie wstrzymywana, nawet przy otwieraniu menu. Może to prowadzić do uszkodzenia zapisów, jeśli nie zatrzymasz gry przed zapisaniem.",""
-BeaverBuddies.Settings.PauseReduction.Off,"Wyłączone",""
+Menu i okna dialogowe – zachowanie gry: otwarcie menu pauzuje wszystkich, tak samo okna dialogowe hosta (rozbiórka, badania)
+Tylko menu – otwarcie menu pauzuje wszystkich, okna dialogowe nie
+Nic – menu każdego gracza jest jego własne i nikogo nie pauzuje
+
+Przycisk pauzy i klawisze prędkości zawsze pauzują wszystkich. Zapis zawsze czeka na koniec bieżącego ticku, więc w każdym przypadku jest spójny.",""
+BeaverBuddies.Settings.PauseReduction.Off,"Menu i okna dialogowe",""
 BeaverBuddies.Settings.PauseReduction.LowRisk,"Tylko menu",""
-BeaverBuddies.Settings.PauseReduction.HighRisk,"Nigdy nie pauzuj automatycznie",""
+BeaverBuddies.Settings.PauseReduction.HighRisk,"Nic: menu każdego gracza jest jego własne",""
+BeaverBuddies.Settings.PauseForHostSaves,"Pauzuj grę, gdy host zapisuje",""
+BeaverBuddies.Settings.PauseForHostSaves.Tooltip,"W grze, którą hostujesz, zapis zrobiony przez ciebie jest zapisywany przy zapauzowanej grze, jak przy grze w pojedynkę, a potem gra wraca do swojej prędkości. Goście i tak czekają w tym samym momencie, gdy zapisujesz. Autozapisy nie są pauzowane.",""
 BeaverBuddies.Host.ConnectedClients,"Oczekiwanie na klientów…
 Obecnie połączeni klienci:",""
 BeaverBuddies.Host.DirectConnectClient,"Klient połączenia bezpośredniego",""

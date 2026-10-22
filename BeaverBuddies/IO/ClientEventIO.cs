@@ -42,10 +42,20 @@ namespace BeaverBuddies.IO
         public string RefusedByHost { get; private set; }
         // ...or because it never heard which build this one is, in time
         public bool RefusedSilently { get; private set; }
+        // What pauses everyone, as the host chose it for every player in its game (see Settings.PauseReductionSetting);
+        // null until the host's welcome or presence says, or from a host that doesn't
+        public int? HostPauses { get; set; }
 
         private void OnTransientMessage(Newtonsoft.Json.Linq.JObject message)
         {
-            if (message[TYPE_KEY]?.ToString() != Connect.BuildIdentity.RefusedType) return;
+            string type = message[TYPE_KEY]?.ToString();
+            // The host says it again with its presence, should it change its mind mid-game
+            if (type == Players.PlayerPresence.MessageType && message.Value<bool?>("host") == true && message.Value<int?>("pauses") is int pauses)
+            {
+                HostPauses = pauses;
+                return;
+            }
+            if (type != Connect.BuildIdentity.RefusedType) return;
             RefusedSilently = message.Value<string>("reason") == Connect.BuildIdentity.RefusedSilent;
             RefusedByHost = message.Value<string>("host") ?? "?";
             Plugin.LogWarning(RefusedSilently

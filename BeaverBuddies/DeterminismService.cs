@@ -760,7 +760,20 @@ namespace BeaverBuddies
                 original(instance, queuedSave);
                 return;
             }
-            replayService.FinishFullTickIfNeededAndThen(() => SaveNow(original, instance, queuedSave));
+            // A save the host makes itself is written with the game paused, as a save made alone is
+            // (Settings.PauseHostSaves); autosaves aren't
+            bool paused = EventIO.Get() is ServerEventIO && Settings.PauseHostSaves && !IsAutosave(replayService, queuedSave);
+            replayService.FinishFullTickIfNeededAndThen(() =>
+            {
+                if (paused) replayService.WhilePaused(() => SaveNow(original, instance, queuedSave));
+                else SaveNow(original, instance, queuedSave);
+            });
+        }
+
+        // By the name the game gives its autosaves
+        private static bool IsAutosave(ReplayService replayService, QueuedSave queuedSave) {
+            Autosaver autosaver = replayService.GetSingleton<Autosaver>();
+            return autosaver == null || autosaver._autosaveNameService.IsAutosaveName(queuedSave.SaveReference.SaveName);
         }
 
         // IsSaving is static, so it must never outlive the save or the next

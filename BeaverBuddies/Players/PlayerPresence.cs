@@ -122,7 +122,7 @@ namespace BeaverBuddies.Players
             string local = PlayerIdentity.LocalID;
             if (local == null) return;
             _lastSendTime = now;
-            io.SendTransientMessage(new JObject
+            var presence = new JObject
             {
                 [TimberNet.TimberNetBase.TYPE_KEY] = MessageType,
                 ["playerID"] = local,
@@ -134,7 +134,10 @@ namespace BeaverBuddies.Players
                 // For a host that missed the hello: who's on which build (see ServerEventIO)
                 ["compat"] = Connect.BuildIdentity.CompatValue,
                 ["build"] = Connect.BuildIdentity.Describe,
-            });
+            };
+            // The host's choice of what pauses everyone, for every player (see Settings.PauseReductionSetting)
+            if (io is ServerEventIO) presence["pauses"] = (int)Settings.PauseReductionSetting;
+            io.SendTransientMessage(presence);
         }
 
         private static string Info()
