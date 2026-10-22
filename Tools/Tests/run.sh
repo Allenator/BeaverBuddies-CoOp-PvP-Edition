@@ -77,7 +77,6 @@ while true; do
     # Waiting this long, nothing is running of this one: said again every 2 minutes, with a notification
     if [ -n "${WAIT_START:-}" ] && [ $(( $(date +%s) - WAIT_START )) -ge "${WAIT_NEXT:-120}" ]; then
         echo "STILL WAITING for another test run ($(( $(date +%s) - WAIT_START )) s): no game of this run is up. Held by pid ${owner:-none}, queue: $(ls "$QUEUE" | tr '\n' ' ')"
-        osascript -e 'display notification "Test run still waiting for another run to finish" with title "Tests" sound name "Basso"' >/dev/null 2>&1 || true
         WAIT_NEXT=$(( ${WAIT_NEXT:-120} + 120 ))
     fi
     sleep 2
@@ -109,7 +108,6 @@ if [ "$RUN_TIMEOUT" -gt 0 ]; then
     RUN_PID=$$
     ( sleep "$RUN_TIMEOUT"
       echo; echo "STOPPED: the run passed its $RUN_TIMEOUT s limit (BB_RUN_TIMEOUT)."
-      osascript -e 'display notification "The test run hit its time limit" with title "Tests" sound name "Basso"' >/dev/null 2>&1 || true
       pkill -9 -P $RUN_PID 2>/dev/null; kill -TERM $RUN_PID 2>/dev/null ) &
     WATCHDOG=$!
 fi
@@ -146,7 +144,7 @@ if [ $BUILD -eq 1 ] && [ -n "${BB_BUILD:-}" ]; then
         echo "Nothing changed since the last build: not building."
     else
         echo "Building..."
-        ( export BB_HOLDS_LOCK=1; set -o pipefail; eval "$BB_BUILD" ) || { echo "The build failed."; osascript -e 'display notification "The test run stopped: the build failed" with title "Tests" sound name "Basso"' >/dev/null 2>&1; exit 1; }
+        ( export BB_HOLDS_LOCK=1; set -o pipefail; eval "$BB_BUILD" ) || { echo "The build failed."; :; exit 1; }
         [ -n "${BB_BUILD_SOURCES:-}" ] && echo "$BB_BUILD_SOURCES" > "$BB_TEST_DIR/.build-stamp"
     fi
 fi
@@ -169,7 +167,6 @@ stale_install() {
 if why=$(stale_install); then
     echo "The installed mod is older than its code ($why): this run would test old code."
     [ $BUILD -eq 0 ] && echo "Run without --no-build to build it first." || echo "The build didn't install it: is the test lock held by another run?"
-    osascript -e 'display notification "The test run stopped: the installed mod is older than its code" with title "Tests" sound name "Basso"' >/dev/null 2>&1
     exit 1
 fi
 prefs_save
@@ -214,7 +211,6 @@ for f in $FILES; do
                 pkill -9 -P $spid 2>/dev/null; kill -9 $spid 2>/dev/null; killed=1
                 BB_SCENARIO="$name" fail "the game stays open" "no test copy of Timberborn has been running for ${BB_GONE_SECONDS:-30} s (closed, crashed or never started)"
                 echo; echo "STOPPED: NO GAME IS RUNNING. $name was cut short: no test copy of Timberborn has been up for ${BB_GONE_SECONDS:-30} s."
-                osascript -e "display notification \"No game is running: $name was stopped\" with title \"Tests\" sound name \"Basso\"" >/dev/null 2>&1 || true
                 break
             fi
         fi
@@ -228,7 +224,6 @@ for f in $FILES; do
             why=$(grep -a -m1 -A2 "First uncaught exception" "$crashed" | sed -n '3p' | cut -c1-200)
             BB_SCENARIO="$name" fail "no copy crashes" "$(basename "$crashed" .log) hit an uncaught exception: $why"
             echo; echo "STOPPED: A COPY CRASHED ($(basename "$crashed")): $why"
-            osascript -e "display notification \"$name: a game copy crashed\" with title \"Tests\" sound name \"Basso\"" >/dev/null 2>&1 || true
             break
         fi
         # A copy that logs "[Test] FATAL: ..." (a beaver starved, say) can't pass: stopped there
@@ -245,7 +240,6 @@ for f in $FILES; do
             if [ -n "$desync" ]; then
                 pkill -9 -P $spid 2>/dev/null; kill -9 $spid 2>/dev/null; killed=1
                 BB_SCENARIO="$name" fail "stays in sync" "the host resynced everyone: $desync"
-                osascript -e "display notification \"$name desynced\" with title \"Tests\" sound name \"Basso\"" >/dev/null 2>&1 || true
                 break
             fi
         fi
