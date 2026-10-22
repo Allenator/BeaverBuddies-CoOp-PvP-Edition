@@ -68,7 +68,7 @@ namespace BeaverBuddies.Connect
             {
                 if (__instance._gameSaveRepository.SaveExists(selectedSave.SaveReference))
                 {
-                    ServerHostingUtils.LoadIfSaveValidAndHost(__instance._validatingGameLoader, __instance._dialogBoxShower, selectedSave.SaveReference);
+                    ServerHostingUtils.LoadIfSaveValidAndHostLoaded(__instance._validatingGameLoader, __instance._dialogBoxShower, selectedSave.SaveReference);
                 }
                 // Debug.LogWarning("Save: " + selectedSave.DisplayName + " doesn't exist, failed to load.");
             }
@@ -79,7 +79,13 @@ namespace BeaverBuddies.Connect
     {
         public static void LoadIfSaveValidAndHost(ValidatingGameLoader loader, DialogBoxShower shower, SaveReference saveReferece)
         {
-            CheckNextValidator(loader, shower, saveReferece, 0);
+            CheckNextValidator(loader, shower, saveReferece, 0, LoadAndHost);
+        }
+
+        // The Load game box's Host: the save is loaded for the host to wait in, and again when it starts (see SavedGameHosting)
+        public static void LoadIfSaveValidAndHostLoaded(ValidatingGameLoader loader, DialogBoxShower shower, SaveReference saveReferece)
+        {
+            CheckNextValidator(loader, shower, saveReferece, 0, SavedGameHosting.Begin);
         }
 
         [ManualMethodOverwrite]
@@ -95,16 +101,17 @@ namespace BeaverBuddies.Connect
 	        CheckNextValidator(saveReference, index + 1);
         });
          */
-        private static void CheckNextValidator(ValidatingGameLoader loader, DialogBoxShower shower, SaveReference saveReference, int index)
+        private static void CheckNextValidator(ValidatingGameLoader loader, DialogBoxShower shower, SaveReference saveReference, int index,
+            Action<ValidatingGameLoader, DialogBoxShower, SaveReference> host)
         {
             if (index >= loader._gameLoadValidators.Length)
             {
-                LoadAndHost(loader, shower, saveReference);
+                host(loader, shower, saveReference);
                 return;
             }
             loader._gameLoadValidators[index].ValidateSave(saveReference, delegate
             {
-                CheckNextValidator(loader, shower, saveReference, index + 1);
+                CheckNextValidator(loader, shower, saveReference, index + 1, host);
             });
         }
 
@@ -234,6 +241,82 @@ namespace BeaverBuddies.Connect
             boxCreator.AddContent(lobby.Build());
             DialogBox box = boxCreator.Show();
             coroutine = behavior.StartCoroutine(UpdateDialogBox(box, io, loc, start, lobby));
+        }
+
+        /**
+         * A saved game loaded to be hosted (see SavedGameHosting): its server has been up since before
+         * it loaded, offering the save as it is, and the box shows over the game it loaded, frozen, as
+         * over a new game's. Start loads the save again, from the same seed as every guest, so they
+         * all start from the same load.
+         */
+        public static void HostLoadedSave(DialogBoxShower shower, GameSceneLoader sceneLoader, ServerEventIO io, SaveReference saveReference, byte[] data)
+        {
+            BoxUp = true;
+            SingletonManager.GetSingleton<ReplayService>()?.FreezeForHosting();
+            var behavior = GetMonoBehaviour(sceneLoader._sceneLoader);
+            Coroutine coroutine = null;
+            var loc = shower._loc;
+            Action leave = () =>
+            {
+#if IS_STEAM
+                Matchmaking.HostedListing.Unlist();
+#endif
+                if (EventIO.Get() == io) EventIO.Set(new LocalEventIO());
+                else io.Close();
+                // Nothing to play: back to the Multiplayer page it came from
+                HostingCover.Leave();
+            };
+            Action start = () =>
+            {
+                HoldingPaused = false;
+                BoxUp = false;
+                NewGameHosting.SettingUp = false;
+                if (coroutine != null) behavior.StopCoroutine(coroutine);
+                // The guests' lobbies stay up until the game this loads is in (see ReplayService.PostLoad)
+                io.Stage = ServerEventIO.HostingStage.Loading;
+                // What the guests did meanwhile was for no game: not played at its first tick
+                io.DiscardPendingClientEvents();
+                // Loaded again from its file, which has to be what the guests were sent
+                if (!SameSave(sceneLoader._gameSaveRepository, saveReference, data))
+                {
+                    Plugin.LogError($"{saveReference.SaveName} changed or went since the guests were sent it: not hosted");
+                    shower.Create().SetLocalizedMessage("BeaverBuddies.Menu.HostFailed").SetConfirmButton(leave).Show();
+                    return;
+                }
+                // Make sure to set the RNG seed before loading the map
+                // The client will do the same
+                DeterminismService.InitGameStartState(data);
+                sceneLoader.StartSaveGame(saveReference);
+            };
+            var boxCreator = shower.Create()
+                .SetMessage("")
+                .SetConfirmButton(start, loc.T("BeaverBuddies.Host.StartGame"))
+                .SetCancelButton(() =>
+                {
+                    HoldingPaused = false;
+                    BoxUp = false;
+                    NewGameHosting.SettingUp = false;
+                    if (coroutine != null) behavior.StopCoroutine(coroutine);
+                    leave();
+                }, loc.T(CommonLocKeys.CancelKey));
+            var lobby = new HostLobby(shower, io, saveReference.SaveName);
+            boxCreator.AddContent(lobby.Build());
+            DialogBox box = boxCreator.Show();
+            coroutine = behavior.StartCoroutine(UpdateDialogBox(box, io, loc, start, lobby));
+        }
+
+        // Whether the save is still the one read before, byte for byte
+        private static bool SameSave(GameSaveRepository repository, SaveReference saveReference, byte[] data)
+        {
+            try
+            {
+                return GetMapBtyes(repository, saveReference).AsSpan().SequenceEqual(data);
+            }
+            catch (Exception e)
+            {
+                Plugin.LogWarning($"Couldn't read {saveReference.SaveName} again: {e.Message}");
+                return false;
+            }
         }
 
         public static void LoadAndHost(ValidatingGameLoader loader, DialogBoxShower shower, SaveReference saveReference)

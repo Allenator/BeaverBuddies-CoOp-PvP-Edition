@@ -280,6 +280,11 @@ namespace BeaverBuddies
             }
             Performance.ActionLatency.Hook();
             _determinismService.UnityThread = Thread.CurrentThread;
+            // A saved game hosted by loading it twice is in: its guests' lobbies close (see Connect.SavedGameHosting)
+            if (io is ServerEventIO server && server.Stage == ServerEventIO.HostingStage.Loading)
+            {
+                server.Stage = ServerEventIO.HostingStage.Running;
+            }
         }
 
         private T AddSingleton<T>(T singleton)
@@ -310,6 +315,13 @@ namespace BeaverBuddies
             if (!IsLoaded) return;
             replayEvent.playerID ??= ReplayEvent.ActingPlayerID ?? Players.PlayerIdentity.LocalID;
             if (!ReplayHooks.AllowSend(replayEvent)) return;
+            // A guest in the host's lobby has no game to act in yet: what it did would play when the host
+            // starts. Mods' own events still go, for what they do in the lobby
+            if (EventIO.Get() is ClientEventIO && Connect.GuestLobby.IsOpen && replayEvent is not Modding.ModEvent)
+            {
+                Plugin.Log($"Not sending {replayEvent.type}: the host hasn't started the game");
+                return;
+            }
             Performance.ActionLatency.Stamp(replayEvent);
 
             string json = JsonSettings.Serialize(replayEvent);
@@ -811,9 +823,11 @@ namespace BeaverBuddies
             // Update speed and pause if needed for the new tick.
             UpdateSpeed();
 
-            if (io is ServerEventIO && ticksSinceLoad == 1)
+            if (io is ServerEventIO server && ticksSinceLoad == 1)
             {
-                ((ServerEventIO)io).OnGameStarted();
+                // A game that ticks is in, should PostLoad not have said so
+                if (server.Stage == ServerEventIO.HostingStage.Loading) server.Stage = ServerEventIO.HostingStage.Running;
+                server.OnGameStarted();
             }
         }
 

@@ -56,6 +56,8 @@ namespace BeaverBuddies
             // A match's host saves and hosts its new game, which starts alone
             containerDefinition.Bind<RehostingService>().AsSingleton();
             containerDefinition.Bind<NewGameHosting>().AsSingleton();
+            // A saved game's host waits in its box over the game, loaded again when it starts
+            containerDefinition.Bind<SavedGameHosting>().AsSingleton();
             if (DevTools.TestHarness.Active) containerDefinition.Bind<DevTools.TestHarness>().AsSingleton();
 #if IS_STEAM
             // Matchmaking works without Steam too (see Matchmaking.Lobbies)
@@ -105,6 +107,8 @@ namespace BeaverBuddies
             // so it's best to reset everything.
             SingletonManager.Reset();
             EventIO.Reset();
+            // Nothing is being set up to host here, even if a game that was failed to load
+            NewGameHosting.SettingUp = false;
 
             Plugin.Log($"Registering Main Menu Services");
             containerDefinition.Bind<ClientConnectionService>().AsSingleton();

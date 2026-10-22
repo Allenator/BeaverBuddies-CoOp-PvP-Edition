@@ -244,6 +244,19 @@ namespace TimberNet
             }
         }
 
+        /**
+         * Forgets the events the clients sent that haven't been played yet,
+         * and says how many: the host's own never wait here, and the clients
+         * only get an event once the host has played it, so nobody has them.
+         * On the Update() thread, as they're received.
+         */
+        public int DiscardReceivedEvents()
+        {
+            int count = receivedEvents.Count;
+            receivedEvents.Clear();
+            return count;
+        }
+
         // Under the lock: forgets the clients that have gone
         private void PruneClients()
         {
