@@ -104,6 +104,6 @@ namespace BeaverBuddies
         public static UnityEngine.Color PingColorValue =>
             Players.PlayerColors.Palette[Players.PlayerPresence.LocalColorIndex()].Color;
 
-        public static bool ShowCursors => You?.ShowPlayerCursors.Value ?? true;
+        public static bool ShowCursors => Multiplayer?.ShowPlayerCursors.Value ?? true;
     }
 }

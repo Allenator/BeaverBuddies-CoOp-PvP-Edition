@@ -48,8 +48,6 @@ namespace BeaverBuddies
                     new LimitedStringModSettingValue(i.ToString(), "BeaverBuddies.Settings.PreferredColor." + c.Key)).ToArray(),
                 Described(nameof(PreferredColor)));
 
-        public readonly ModSetting<bool> ShowPlayerCursors = new(true, Described(nameof(ShowPlayerCursors)));
-
         public readonly ModSetting<bool> ShowFirstTimerMessage = new(true, Described(nameof(ShowFirstTimerMessage)));
 
         public YouSettings(ISettings settings, ModSettingsOwnerRegistry modSettingsOwnerRegistry, ModRepository modRepository) :
@@ -64,7 +62,6 @@ namespace BeaverBuddies
         {
             Add(PingPlayerName, nameof(PingPlayerName));
             Add(PreferredColor, nameof(PreferredColor));
-            Add(ShowPlayerCursors, nameof(ShowPlayerCursors));
             Add(ShowFirstTimerMessage, nameof(ShowFirstTimerMessage));
         }
 
@@ -78,6 +75,9 @@ namespace BeaverBuddies
     /** What applies both hosting and joining. */
     public class MultiplayerSettings : SettingsSection
     {
+        // Each player's own: on, they see the others' cursors and share theirs; off, neither (see Cursors.PlayerCursorService)
+        public readonly ModSetting<bool> ShowPlayerCursors = new(true, Described(nameof(ShowPlayerCursors)));
+
         // On, the game runs on behind other apps while hosted or joined, whatever the game's own
         // "Run in background" says (see Connect.BackgroundPlay); off, the game's own setting applies
         public readonly ModSetting<bool> KeepPlayingInBackground = new(true, Described(nameof(KeepPlayingInBackground)));
@@ -103,6 +103,7 @@ namespace BeaverBuddies
 
         protected override void AddSettings()
         {
+            Add(ShowPlayerCursors, nameof(ShowPlayerCursors));
             Add(KeepPlayingInBackground, nameof(KeepPlayingInBackground));
             Add(StrictBuildMatch, nameof(StrictBuildMatch));
             Add(EnableSteamConnection, nameof(EnableSteamConnection));
