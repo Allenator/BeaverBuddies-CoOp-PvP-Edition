@@ -78,28 +78,60 @@ while true; do
 done
 echo $$ > "$LOCK/pid"
 rm -f "$TICKET"
-# The saves this run's games make go once it ends: the settlements started during it under the names the harness
-# gives them ("Test ...", "Harness ...", and "Co-op ..." as Host new game names them, the player's own games too: so
-# nobody plays during a run), and what the guests save in Multiplayer. A guest's save there replaces the player's own of
-# the same name, so theirs are kept aside first and put back; kept from a run that didn't finish, they stay as they were
+# The saves this run's games make go once it ends: the settlements made during it under the names the harness
+# gives them ("Test ...", "Harness ...", and "Co-op ..." as Host new game names them), and what the guests save in
+# Multiplayer. A settlement of the player's own a test only saved into stays. A guest's save in Multiplayer replaces the
+# player's own of the same name, so theirs are kept aside first and put back; kept from a run that didn't finish, they
+# stay as they were
 SAVES="$HOME/Documents/Timberborn/Saves"
 RUN_START="$BB_TEST_DIR/.run-start"
 touch "$RUN_START"
 MULTIPLAYER_KEPT="$BB_TEST_DIR/multiplayer-kept"
 [ -d "$MULTIPLAYER_KEPT" ] || { [ -d "$SAVES/Multiplayer" ] && cp -Rp "$SAVES/Multiplayer" "$MULTIPLAYER_KEPT"; }
 
+# Steam Cloud has what the copies saved, uploaded whenever none had run for a few seconds, and drops a file only in a
+# sync after the file is gone, or puts it back the next time it syncs in full. Steam syncs a few seconds after the last
+# copy closes, usually after the saves went; if it synced before, one more copy started and closed has it sync again
+STEAM_CLOUD_LOG="$HOME/Library/Application Support/Steam/logs/cloud_log.txt"
+# steam_synced <line> <seconds>: Timberborn's Steam Cloud log has a sync after that line within the time (an offline
+# Steam's "Sync Disabled" isn't one)
+steam_synced() {
+    local i
+    for ((i = 0; i < $2 * 2; i++)); do
+        tail -n +"$(($1 + 1))" "$STEAM_CLOUD_LOG" 2>/dev/null | grep -q "AppID 1062090\] Starting sync (up,AC Exit" && return 0
+        sleep 0.5
+    done
+    return 1
+}
+steam_forget() {
+    local n
+    pgrep -x steam_osx > /dev/null || return 0
+    n=$(wc -l < "$STEAM_CLOUD_LOG" 2>/dev/null || echo 0)
+    steam_synced "$n" 10 && return 0
+    echo "Starting and closing one copy, so Steam Cloud drops this run's saves..."
+    bb_launch host > /dev/null 2>&1
+    bb_close
+    steam_synced "$n" 15 && return 0
+    echo "Steam didn't sync as the copy closed (offline?): this run's saves may come back from Steam Cloud."
+}
+
 cleanup() {
+    local d started removed=0
     [ -n "${WATCHDOG:-}" ] && kill $WATCHDOG 2>/dev/null
     [ -n "${spid:-}" ] && kill -9 $spid 2>/dev/null
     bb_close
-    find "$SAVES/" -mindepth 1 -maxdepth 1 -type d \( -name 'Test *' -o -name 'Harness *' -o -name 'Co-op *' \) \
-        -newer "$RUN_START" -exec rm -rf {} + 2>/dev/null
+    started=$(stat -f %m "$RUN_START")
+    for d in "$SAVES"/Test\ * "$SAVES"/Harness\ * "$SAVES"/Co-op\ *; do
+        [ -d "$d" ] && [ "$(stat -f %B "$d")" -ge "$started" ] && rm -rf "$d" && removed=1
+    done
     if [ -d "$SAVES/Multiplayer" ]; then
+        [ -n "$(find "$SAVES/Multiplayer" -mindepth 1 -maxdepth 1 -type f -newer "$RUN_START" -print -quit)" ] && removed=1
         find "$SAVES/Multiplayer" -mindepth 1 -maxdepth 1 -type f -newer "$RUN_START" -exec rm -f {} + 2>/dev/null
         # The player's own back where a guest replaced them, or no folder if the run made it
         if [ -d "$MULTIPLAYER_KEPT" ]; then cp -Rpn "$MULTIPLAYER_KEPT/" "$SAVES/Multiplayer/"; else rmdir "$SAVES/Multiplayer" 2>/dev/null; fi
     fi
     rm -rf "$MULTIPLAYER_KEPT"
+    [ $removed -eq 1 ] && steam_forget
     mod_enable_all
     prefs_restore_overrides
     prefs_restore
