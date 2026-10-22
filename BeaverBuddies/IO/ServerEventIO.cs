@@ -110,6 +110,8 @@ namespace BeaverBuddies.IO
                 NetBase.OnTransientMessage += EventIO.RaiseTransientMessageReceived;
                 NetBase.OnTransientMessage += Connect.HostLobby.OnTransientMessage;
                 NetBase.OnMapReceived += NetBase_OnClientConnected;
+                NetBase.AcceptTransientFrom = CheckBuild;
+                NetBase.AcceptEventsFrom = client => !refused.Contains(client) && (verified.Contains(client) || !Settings.StrictBuild);
                 // Starts listening, which throws if the port is taken
                 NetBase.Start();
                 return true;
@@ -250,8 +252,69 @@ namespace BeaverBuddies.IO
             WebRtc.JoinCode.Clear();
         }
 
+        // ---- Who's on this same build (see Connect.BuildIdentity), all on the Update() thread
+
+        // Each guest's connection once its hello or presence says its build is this one's, or once
+        // it says another to a host that doesn't mind; those turned away, whatever they say after
+        private readonly HashSet<ISocketStream> verified = new();
+        private readonly HashSet<ISocketStream> refused = new();
+        // When each guest's connection was first seen, to turn away one that never says its build: a
+        // build from before it said, or one so slow its last hello came long after its map
+        private readonly Dictionary<ISocketStream, float> firstSeen = new();
+        private const float SayBuildWithin = 120;
+
+        // What a guest says of itself as it joins, and once it's in, says which build it plays
+        private bool CheckBuild(ISocketStream client, JObject message)
+        {
+            if (refused.Contains(client)) return false;
+            if (verified.Contains(client)) return true;
+            string type = message[TimberNetBase.TYPE_KEY]?.ToString();
+            if (type != Connect.HostLobby.HelloType && type != Players.PlayerPresence.MessageType) return true;
+            string theirs = message.Value<string>("compat");
+            if (theirs == Connect.BuildIdentity.CompatValue)
+            {
+                verified.Add(client);
+                return true;
+            }
+            string name = message.Value<string>("name") ?? client.Name ?? "A player";
+            string build = message.Value<string>("build") ?? "an older build that doesn't say it";
+            if (!Settings.StrictBuild)
+            {
+                Plugin.LogWarning($"Letting in {name}, who plays BeaverBuddies {build}, though this hosts {Connect.BuildIdentity.Describe}");
+                verified.Add(client);
+                return true;
+            }
+            Refuse(client, name, build);
+            return false;
+        }
+
+        private void Refuse(ISocketStream client, string name, string build)
+        {
+            Plugin.LogWarning($"Turning away {name}: they play BeaverBuddies {build}, this hosts {Connect.BuildIdentity.Describe}");
+            refused.Add(client);
+            NetBase.Refuse(client, new JObject
+            {
+                [TimberNetBase.TYPE_KEY] = Connect.BuildIdentity.RefusedType,
+                ["host"] = Connect.BuildIdentity.Describe,
+            });
+            Connect.BuildNotice.Show(name, build);
+        }
+
+        private void TurnAwayUnsaid()
+        {
+            if (NetBase == null || !Settings.StrictBuild) return;
+            float now = Time.unscaledTime;
+            foreach (ISocketStream client in NetBase.ConnectedStreams())
+            {
+                if (verified.Contains(client) || refused.Contains(client)) continue;
+                if (!firstSeen.TryGetValue(client, out float since)) firstSeen[client] = now;
+                else if (now - since >= SayBuildWithin) Refuse(client, client.Name ?? "A player", "a build it never said");
+            }
+        }
+
         protected override void Updated()
         {
+            TurnAwayUnsaid();
 #if IS_STEAM
             if (UnityEngine.Time.unscaledTime < _nextListingCheck) return;
             _nextListingCheck = UnityEngine.Time.unscaledTime + 2f;

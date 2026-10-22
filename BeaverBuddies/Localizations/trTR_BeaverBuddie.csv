@@ -48,6 +48,8 @@ Not: Ağınız P2P’yi desteklemiyorsa bu özellik çalışmayabilir.
 Ayrıca eşler arası bağlantılar doğrudan bağlantılardan daha yavaş olabilir.",""
 BeaverBuddies.Settings.FriendsCanJoinSteamGame,"Arkadaşların Steam Üzerinden Katılmasına İzin Ver",""
 BeaverBuddies.Settings.FriendsCanJoinSteamGame.Tooltip,"Etkinleştirilirse, arkadaşlarınız Steam üzerinden sizi davet etmeden doğrudan katılabilir ve oyun herkes için Açık maçlar listesinde görünür.",""
+BeaverBuddies.Settings.StrictBuildMatch,"Yalnızca birebir aynı derlemeyle oyna",""
+BeaverBuddies.Settings.StrictBuildMatch.Tooltip,"BeaverBuddies'i seninkiyle birebir aynı derleme olmayan, aynı oyun sürümü, eklenti modları ve gruplara sahip olmayan oyuncuları reddeder ve böyle bir sunucuya katılmanı engeller. Kapalıyken uyarılırsın ve oynamaya devam edersin, ama oyun eşzamanlılığını kaybedebilir.",""
 BeaverBuddies.Settings.PauseReduction,"Zorunlu duraklamaların sayısını azalt",""
 BeaverBuddies.Settings.PauseReduction.Tooltip,"En iyi deneyim için tüm oyuncuların aynı ayarı kullanması önerilir.
 
@@ -69,6 +71,7 @@ BeaverBuddies.JoinCoopGame.Error.InvalidAddress,"Adres geçerli bir IP adresi de
 Ana bilgisayar adı olarak çözümlemeye çalışıldı, ancak bir IP adresine çözümlenmedi.",""
 BeaverBuddies.JoinCoopGame.Error.Incompatible,"Sunucu başka modlarla ya da BeaverBuddies'in başka bir derlemesiyle oynuyor. Aynılarını aynı yerden kur, sonra tekrar katıl.",""
 BeaverBuddies.JoinCoopGame.Error.Full,"Oyun dolu.",""
+BeaverBuddies.Host.RefusedBuild,"{0} katılamadı: BeaverBuddies {1} kullanıyor, sen ise {2} ile sunuyorsun. Herkesin birebir aynı derlemeye ihtiyacı var.",""
 BeaverBuddies.JoinCoopGame.Error.CouldNotConnect,"Ana bilgisayara bağlanılamadı. Adresi ve portu kontrol edin ve ana bilgisayarın gerçekten sunucuyu barındırdığından ve gerekiyorsa port yönlendirmesinin etkin olduğundan emin olun. Hata ayrıntıları:",""
 BeaverBuddies.KeyBindings.Group,"BeaverBuddies",""
 BeaverBuddies.KeyBindings.Ping,"Konum işaretle",""

@@ -131,6 +131,9 @@ namespace BeaverBuddies.Players
                 ["info"] = Info(),
                 ["host"] = io is ServerEventIO,
                 ["waiting"] = Connect.NewGameHosting.SettingUp || io is ServerEventIO { Waiting: true },
+                // For a host that missed the hello: who's on which build (see ServerEventIO)
+                ["compat"] = Connect.BuildIdentity.CompatValue,
+                ["build"] = Connect.BuildIdentity.Describe,
             });
         }
 

@@ -48,6 +48,8 @@ BeaverBuddies.Settings.EnableSteamConnection.Tooltip,"SteamのP2Pネットワー
 また、P2P接続は直接接続より遅くなる場合があります。",""
 BeaverBuddies.Settings.FriendsCanJoinSteamGame,"Steam経由で友達が参加可能に",""
 BeaverBuddies.Settings.FriendsCanJoinSteamGame.Tooltip,"有効にすると、あなたの友達がSteam経由で招待なしで直接参加でき、誰でも見られる「募集中の対戦」にも表示されます。",""
+BeaverBuddies.Settings.StrictBuildMatch,"完全に同じビルドとだけプレイする",""
+BeaverBuddies.Settings.StrictBuildMatch.Tooltip,"BeaverBuddiesのビルドがあなたと完全に同じ（ゲームのバージョン、アドオンMOD、勢力も同じ）でないプレイヤーを拒否し、そうでないホストへの参加も防ぎます。オフにすると、警告が表示された上でプレイを続けられますが、ゲームが同期しなくなることがあります。",""
 BeaverBuddies.Settings.PauseReduction,"強制一時停止の回数を減らす",""
 BeaverBuddies.Settings.PauseReduction.Tooltip,"最適な体験のため、全プレイヤーが同じ設定を使用することを推奨します。
 
@@ -69,6 +71,7 @@ BeaverBuddies.JoinCoopGame.Error.InvalidAddress,"アドレスが有効なIPア�
 ホスト名として解決を試みましたが、IPアドレスに解決できませんでした。",""
 BeaverBuddies.JoinCoopGame.Error.Incompatible,"ホストは別のMOD、または別のビルドのBeaverBuddiesを使っています。同じ入手元から同じものをインストールしてから、もう一度参加してください。",""
 BeaverBuddies.JoinCoopGame.Error.Full,"ゲームは満員です。",""
+BeaverBuddies.Host.RefusedBuild,"{0} は参加できませんでした: 相手は BeaverBuddies {1}、あなたのホストは {2} です。全員が完全に同じビルドである必要があります。",""
 BeaverBuddies.JoinCoopGame.Error.CouldNotConnect,"ホストに接続できませんでした。アドレスとポートを確認し、ホストが実際にホスティングしており、必要に応じてポート転送が設定されていることを確認してください。エラー詳細:",""
 BeaverBuddies.KeyBindings.Group,"BeaverBuddies",""
 BeaverBuddies.KeyBindings.Ping,"場所をピン",""

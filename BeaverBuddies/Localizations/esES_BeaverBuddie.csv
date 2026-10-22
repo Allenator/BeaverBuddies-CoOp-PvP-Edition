@@ -48,6 +48,8 @@ Nota: esta función puede no funcionar si tu red no soporta conexiones P2P.
 Además, las conexiones P2P pueden ser más lentas que las directas.",""
 BeaverBuddies.Settings.FriendsCanJoinSteamGame,"Permitir que amigos se unan directamente vía Steam",""
 BeaverBuddies.Settings.FriendsCanJoinSteamGame.Tooltip,"Si está activado, tus amigos pueden unirse directamente a tu juego mediante Steam sin que los invites, y aparece en Partidas abiertas para cualquiera.",""
+BeaverBuddies.Settings.StrictBuildMatch,"Jugar solo con exactamente la misma compilación",""
+BeaverBuddies.Settings.StrictBuildMatch.Tooltip,"Rechaza a los jugadores cuyo BeaverBuddies no sea exactamente la misma compilación que la tuya, con la misma versión del juego, los mismos mods complementarios y facciones, y te impide unirte a un anfitrión que no lo sea. Desactivado, se te avisa y sigues jugando, pero la partida puede desincronizarse.",""
 BeaverBuddies.Settings.PauseReduction,"Reducir el número de pausas forzadas",""
 BeaverBuddies.Settings.PauseReduction.Tooltip,"Para una experiencia óptima, todos los jugadores deberían usar el mismo ajuste.
 
@@ -69,6 +71,7 @@ BeaverBuddies.JoinCoopGame.Error.InvalidAddress,"La dirección no era una direcc
 Se intentó resolver como un nombre de host, pero no se resolvió a una dirección IP.",""
 BeaverBuddies.JoinCoopGame.Error.Incompatible,"El anfitrión juega con otros mods o con otra compilación de BeaverBuddies. Instala los mismos desde el mismo sitio y vuelve a unirte.",""
 BeaverBuddies.JoinCoopGame.Error.Full,"La partida está llena.",""
+BeaverBuddies.Host.RefusedBuild,"{0} no pudo unirse: tiene BeaverBuddies {1} y tú alojas {2}. Todos necesitan exactamente la misma compilación.",""
 BeaverBuddies.JoinCoopGame.Error.CouldNotConnect,"No se pudo conectar al host. Verifica la dirección y el puerto, y asegúrate de que el host esté en línea y tenga el puerto reenviado si es necesario. Detalles del error:",""
 BeaverBuddies.KeyBindings.Group,"BeaverBuddies",""
 BeaverBuddies.KeyBindings.Ping,"Marcar ubicación",""

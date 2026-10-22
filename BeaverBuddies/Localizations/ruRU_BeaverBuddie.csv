@@ -48,6 +48,8 @@ BeaverBuddies.Settings.EnableSteamConnection.Tooltip,"Позволяет игр�
 Кроме того, P2P‑соединения могут быть медленнее прямых.",""
 BeaverBuddies.Settings.FriendsCanJoinSteamGame,"Разрешить друзьям присоединяться через Steam",""
 BeaverBuddies.Settings.FriendsCanJoinSteamGame.Tooltip,"Если включено, ваши друзья смогут напрямую подключаться к вашей игре через Steam без приглашения, а игра будет видна всем в списке «Открытые матчи».",""
+BeaverBuddies.Settings.StrictBuildMatch,"Играть только с точно такой же сборкой",""
+BeaverBuddies.Settings.StrictBuildMatch.Tooltip,"Не пускает игроков, у которых BeaverBuddies — не точно такая же сборка, как у вас, с той же версией игры, дополнительными модами и фракциями, и не даёт вам подключиться к такому хосту. Если выключено, вы получите предупреждение и продолжите игру, но она может рассинхронизироваться.",""
 BeaverBuddies.Settings.PauseReduction,"Уменьшить число принудительных пауз",""
 BeaverBuddies.Settings.PauseReduction.Tooltip,"Для лучшего опыта всем игрокам стоит использовать одинаковую настройку.
 
@@ -69,6 +71,7 @@ BeaverBuddies.JoinCoopGame.Error.InvalidAddress,"Адрес не являетс�
 Была предпринята попытка разрешить его как имя хоста, но оно не разрешилось в IP-адрес.",""
 BeaverBuddies.JoinCoopGame.Error.Incompatible,"Хост играет с другими модами или другой сборкой BeaverBuddies. Установите те же из того же источника и подключитесь снова.",""
 BeaverBuddies.JoinCoopGame.Error.Full,"Игра заполнена.",""
+BeaverBuddies.Host.RefusedBuild,"{0} не может подключиться: у этого игрока BeaverBuddies {1}, а вы хостите {2}. Всем нужна точно такая же сборка.",""
 BeaverBuddies.JoinCoopGame.Error.CouldNotConnect,"Не удалось подключиться к хосту. Проверьте адрес и порт, убедитесь, что хост запущен и, при необходимости, настроена переадресация порта. Подробности ошибки:",""
 BeaverBuddies.KeyBindings.Group,"BeaverBuddies",""
 BeaverBuddies.KeyBindings.Ping,"Отметить место",""

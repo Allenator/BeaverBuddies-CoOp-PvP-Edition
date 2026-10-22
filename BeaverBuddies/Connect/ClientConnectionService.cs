@@ -1,6 +1,7 @@
 using BeaverBuddies.IO;
 using BeaverBuddies.Steam;
 using BeaverBuddies.Util;
+using Newtonsoft.Json.Linq;
 using Steamworks;
 using System;
 using System.IO;
@@ -252,7 +253,53 @@ namespace BeaverBuddies.Connect
                 return;
             }
 
-            LoadReceivedMap(_gameSaveRepository, _gameSceneLoader, mapBytes);
+            // Not loaded until the host's welcome, which follows the map, says it's the same build (see LoadHeldMap)
+            _heldMap = mapBytes;
+            _heldSince = UnityEngine.Time.realtimeSinceStartup;
+        }
+
+        // The host's map, until its welcome says what it plays
+        private byte[] _heldMap;
+        private float _heldSince;
+        // How long to wait for the welcome: a host that sends none can't say its build
+        private const float WelcomeWait = 10;
+
+        /**
+         * Loads the held map once the host's welcome is in, if the host plays this same build, or
+         * this player doesn't mind (Settings.StrictBuild off). Otherwise it leaves, saying why,
+         * before anything's loaded.
+         */
+        private void LoadHeldMap()
+        {
+            JObject welcome = client.NetBase?.FindReceivedEvent(nameof(Events.InitializeClientEvent));
+            if (welcome == null && UnityEngine.Time.realtimeSinceStartup - _heldSince < WelcomeWait) return;
+            byte[] map = _heldMap;
+            _heldMap = null;
+            string theirs = welcome?.Value<string>("serverCompat");
+            if (theirs != BuildIdentity.CompatValue)
+            {
+                string host = welcome?.Value<string>("serverBuild") is string build
+                    ? $"{welcome.Value<string>("serverModVersion")} (build {build})"
+                    : "a build it doesn't say";
+                if (Settings.StrictBuild)
+                {
+                    Plugin.LogWarning($"Not loading: the host plays {host}, not {BuildIdentity.Describe}");
+                    Leave(BuildIdentity.Mismatch(host));
+                    return;
+                }
+                Plugin.LogWarning($"Loading though the host plays {host}, not {BuildIdentity.Describe}");
+            }
+            LoadReceivedMap(_gameSaveRepository, _gameSceneLoader, map);
+        }
+
+        // Out of a host's game before loading it, saying why
+        private void Leave(string details)
+        {
+            _heldMap = null;
+            client = null;
+            CloseWaiting();
+            EventIO.Reset();
+            ShowError("BeaverBuddies.JoinCoopGame.Error.Incompatible", details);
         }
 
         /**
@@ -292,6 +339,13 @@ namespace BeaverBuddies.Connect
             if (client == null) return;
             //Plugin.Log("Updating client!");
             client.Update();
+            // Once in its game, the game says so (see ReplayService)
+            if (client.RefusedByHost != null && EventIO.Get() == client)
+            {
+                Leave(BuildIdentity.Mismatch(client.RefusedByHost));
+                return;
+            }
+            if (_heldMap != null) LoadHeldMap();
         }
 
         /// <summary>

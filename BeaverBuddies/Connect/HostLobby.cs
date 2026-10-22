@@ -29,13 +29,15 @@ namespace BeaverBuddies.Connect
         // Who has connected to the game hosted here, by their ID, from the hello each sends as it connects
         private static readonly Dictionary<string, (string Name, int Color)> Hellos = new();
 
-        /** What a guest sends the host as it connects, before it has loaded anything: who they are. */
+        /** What a guest sends the host as it connects, before it has loaded anything: who they are, and on which build (see ServerEventIO). */
         public static JObject Hello() => new JObject
         {
             [TimberNet.TimberNetBase.TYPE_KEY] = HelloType,
             ["playerID"] = PlayerIdentity.LocalID,
             ["name"] = PlayerIdentity.LocalName,
             ["color"] = PlayerColors.Clamp(Settings.PreferredColorIndex),
+            ["compat"] = BuildIdentity.CompatValue,
+            ["build"] = BuildIdentity.Describe,
         };
 
         /** The colors of the players who've connected and not loaded the game yet, as they asked for them. */

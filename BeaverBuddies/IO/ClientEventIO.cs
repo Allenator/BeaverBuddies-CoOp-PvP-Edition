@@ -38,6 +38,15 @@ namespace BeaverBuddies.IO
         }
         // The host's end closed mid-game: the game can't go on without it
         public bool HostLeft { get; private set; }
+        // The host turned this player away for another build: the one it plays (see Connect.BuildIdentity)
+        public string RefusedByHost { get; private set; }
+
+        private void OnTransientMessage(Newtonsoft.Json.Linq.JObject message)
+        {
+            if (message[TYPE_KEY]?.ToString() != Connect.BuildIdentity.RefusedType) return;
+            RefusedByHost = message.Value<string>("host") ?? "?";
+            Plugin.LogWarning($"Turned away by the host, which plays {RefusedByHost}");
+        }
 
         private ClientEventIO(ISocketStream socket, MapReceived mapReceivedCallback,
             Action<string> onError)
@@ -52,6 +61,7 @@ namespace BeaverBuddies.IO
             NetBase.OnReload += Connect.ResyncService.ReceiveSave;
             NetBase.OnLog += Plugin.Log;
             NetBase.OnTransientMessage += EventIO.RaiseTransientMessageReceived;
+            NetBase.OnTransientMessage += OnTransientMessage;
             NetBase.OnDisconnected += () => HostLeft = true;
             NetBase.OnError += (error) =>
             {
@@ -83,6 +93,7 @@ namespace BeaverBuddies.IO
             NetBase.OnReload -= Connect.ResyncService.ReceiveSave;
             NetBase.OnLog -= Plugin.Log;
             NetBase.OnTransientMessage -= EventIO.RaiseTransientMessageReceived;
+            NetBase.OnTransientMessage -= OnTransientMessage;
             // Let go of the socket (and a Steam P2P session) too
             try { NetBase.Close(); }
             catch (Exception e) { Plugin.LogWarning($"Couldn't close the connection: {e.Message}"); }

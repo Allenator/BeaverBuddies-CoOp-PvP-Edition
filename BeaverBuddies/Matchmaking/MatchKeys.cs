@@ -39,20 +39,13 @@ namespace BeaverBuddies.Matchmaking
         public static string BaseValue => Hash($"match {ProtocolVersion}|{GameVersions.CurrentVersion}|{Settings.Debug}");
 
         // The same game, mod and add-on versions and the same factions,
-        // which any two players in a game need
-        internal static string CompatParts =>
-            $"{GameVersions.CurrentVersion}|{Plugin.Version} {Build}|{ReplayHooks.AddOnList}|{ReplayHooks.FactionList}";
+        // which any two players in a game need: the same as a game joined
+        // by address or by code checks (see Connect.BuildIdentity)
+        internal static string CompatParts => Connect.BuildIdentity.CompatParts;
 
-        // This exact build: two builds of the same version can still play differently
-        private static string Build => InitializeClientEvent.ModBuild;
+        public static string CompatValue => Connect.BuildIdentity.CompatValue;
 
-        public static string CompatValue => Hash(CompatParts);
-
-        public static string Hash(string text)
-        {
-            using var sha = SHA1.Create();
-            return string.Concat(sha.ComputeHash(Encoding.UTF8.GetBytes(text)).Take(8).Select(b => b.ToString("x2")));
-        }
+        public static string Hash(string text) => Connect.BuildIdentity.Hash(text);
 
         // Everything a match's listing says
         public static Dictionary<string, string> Describe(MatchPicks picks, string kind) => new()
