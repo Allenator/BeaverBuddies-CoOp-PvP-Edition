@@ -29,42 +29,42 @@ BeaverBuddies.ClientDesynced.ReportOnDiscord,"Discord에 보고",""
 BeaverBuddies.ClientDesynced.TraceSaved,"Player.log 옆에 추적 기록 저장됨",""
 BeaverBuddies.ClientDesynced.EnableTracing,"로그 기록 활성화",""
 BeaverBuddies.ClientDesynced.NeedToEnableTracing,"이 비동기화를 보고하려면 *모든 플레이어*가 아래 '로그 기록 활성화'를 눌러 더 상세한 로그 기록을 활성화해야 합니다. 이후 다른 비동기화가 발생하면 상세한 로그와 함께 Discord에 보고할 수 있습니다. 로그 모드는 약간의 지연을 유발할 수 있지만, 게임을 다시 시작할 때까지 만 활성화됩니다.",""
-BeaverBuddies.Settings.ClientConnectionAddress,"클라이언트 연결 주소",""
-BeaverBuddies.Settings.ClientConnectionAddress.Tooltip,"호스트에 연결할 때 기본으로 사용하는 IP 주소입니다.",""
+BeaverBuddies.Settings.Section.You,"개인",""
+BeaverBuddies.Settings.Section.Multiplayer,"멀티플레이",""
+BeaverBuddies.Settings.Section.Hosting,"호스팅",""
+BeaverBuddies.Settings.Section.Developer,"개발자",""
+BeaverBuddies.Settings.Section.Hosting.Note,"이 설정은 내가 호스트하는 게임에 적용됩니다. 다른 사람의 게임에 참가하면 호스트가 고른 설정이 사용됩니다.",""
+BeaverBuddies.Settings.ClientConnectionAddress,"기본 참가 주소",""
+BeaverBuddies.Settings.ClientConnectionAddress.Tooltip,"게임 참가 입력란에 미리 채워지는 주소나 참가 코드입니다. 마지막으로 참가한 것이 들어갑니다.",""
 BeaverBuddies.Settings.Port,"포트",""
-BeaverBuddies.Settings.Port.Tooltip,"게임을 호스트하거나 참가할 때 사용하는 포트입니다. 호스트에서 포트 포워딩된 것과 일치해야 합니다.",""
+BeaverBuddies.Settings.Port.Tooltip,"호스트할 때 게임이 연결을 기다리는 포트이며, 포트가 없는 주소로 참가할 때도 이 포트를 사용합니다. 인터넷에서 주소로 참가를 받으려면 호스트는 공유기에서 이 포트를 포워딩해야 합니다.",""
 BeaverBuddies.Settings.SilenceLogging,"로그 기록 중지",""
-BeaverBuddies.Settings.SilenceLogging.Tooltip,"이 모드가 플레이어 로그 파일에 기록하지 않도록 합니다(경고 및 오류 제외).
-이 설정은 개발자를 위한 것입니다.",""
-BeaverBuddies.Settings.ShowFirstTimerMessage,"첫 참가자 메시지 표시",""
+BeaverBuddies.Settings.SilenceLogging.Tooltip,"경고와 오류를 제외하고 이 모드의 메시지를 게임 로그 파일에 기록하지 않습니다. 개발자용입니다.",""
+BeaverBuddies.Settings.ShowFirstTimerMessage,"환영 메시지 표시",""
+BeaverBuddies.Settings.ShowFirstTimerMessage.Tooltip,"다음에 메인 메뉴가 열릴 때 설정 가이드 링크가 담긴 첫 실행 환영 메시지를 표시합니다. 응답하면 자동으로 꺼집니다.",""
 BeaverBuddies.Settings.AlwaysTrace,"항상 자세한 로그 사용",""
-BeaverBuddies.Settings.AlwaysTrace.Tooltip,"활성화하면 게임이 항상 자세한 로그를 사용하며, 첫 비동기 발생 시 수동 설정 없이도 보고서를 제출할 수 있습니다.
-모든 플레이어가 이 설정을 활성화해야 합니다.
-이 설정은 약간의 지연을 유발할 수 있어 대부분의 플레이어에게는 권장되지 않습니다.",""
+BeaverBuddies.Settings.AlwaysTrace.Tooltip,"모든 게임을 첫 틱부터 자세히 기록하므로, 비동기화가 처음 발생했을 때 나중에 로그 기록을 켜지 않아도 보고할 수 있습니다. 모든 플레이어가 켜야 합니다. 게임이 조금 느려지므로 대부분의 플레이어에게는 권장되지 않습니다.",""
 BeaverBuddies.Settings.EnableSteamConnection,"Steam 네트워크 사용",""
-BeaverBuddies.Settings.EnableSteamConnection.Tooltip,"Steam의 P2P 네트워크를 통해 플레이어가 당신의 게임에 참여할 수 있습니다.
-플레이어는 포트 포워딩을 통해서도 참여할 수 있습니다.
-주의: 네트워크가 P2P를 지원하지 않으면 이 기능이 작동하지 않을 수 있습니다.
-또한 P2P 연결은 직접 연결보다 느릴 수 있습니다.",""
-BeaverBuddies.Settings.FriendsCanJoinSteamGame,"친구가 Steam에서 바로 참여 가능",""
-BeaverBuddies.Settings.FriendsCanJoinSteamGame.Tooltip,"활성화하면 당신의 친구들이 Steam을 통해 초대 없이 바로 참여할 수 있고, 누구나 볼 수 있는 열린 대전 목록에도 표시됩니다.",""
+BeaverBuddies.Settings.EnableSteamConnection.Tooltip,"플레이어가 Steam을 통해 내 게임에 참가할 수 있게 하고, 빠른 대전과 열린 대전에서 게임을 찾을 때 Steam을 사용합니다. 끄면 플레이어는 코드나 주소로 참가하고, 게임은 Steam 없이 찾습니다. 일부 네트워크에서는 Steam의 P2P 연결이 작동하지 않거나 직접 연결보다 느립니다.",""
+BeaverBuddies.Settings.FriendsCanJoinSteamGame,"Steam 친구가 초대 없이 참가 가능",""
+BeaverBuddies.Settings.FriendsCanJoinSteamGame.Tooltip,"내 Steam 친구가 초대 없이 내 게임에 참가할 수 있고, 게임이 누구나 볼 수 있는 열린 대전에 표시됩니다. 단, 호스트할 때 ""초대 전용""에 체크하면 그렇지 않습니다. 끄면 플레이어는 초대, 코드 또는 주소로만 참가할 수 있습니다.",""
 BeaverBuddies.Settings.StrictBuildMatch,"정확히 같은 빌드와만 플레이",""
-BeaverBuddies.Settings.StrictBuildMatch.Tooltip,"BeaverBuddies 빌드가 당신과 정확히 같지 않은(게임 버전, 애드온 모드, 세력까지 같은) 플레이어를 거부하고, 그런 호스트에 참가하지 못하게 합니다. 끄면 경고 후 계속 플레이할 수 있지만 게임 동기화가 어긋날 수 있습니다.",""
-BeaverBuddies.Settings.KeepPlayingInBackground,"멀티플레이 중 백그라운드에서도 계속 플레이",""
-BeaverBuddies.Settings.KeepPlayingInBackground.Tooltip,"호스트하거나 다른 사람의 게임에 참가하는 동안에는 게임 자체의 백그라운드 설정과 관계없이 다른 앱이 앞에 있어도 게임이 계속 실행됩니다. 호스트의 게임이 멈추면 모두의 게임이 멈추기 때문입니다. 멀티플레이 밖에서는 게임 자체 설정이 적용됩니다. 노트북에서는 배터리를 더 사용합니다.",""
-BeaverBuddies.Settings.PauseReduction,"모두를 일시정지시키는 것 (호스트가 결정)",""
-BeaverBuddies.Settings.PauseReduction.Tooltip,"당신이 호스트하는 게임에서는 여기서의 선택이 모든 플레이어에게 적용됩니다: 무엇이 모두의 게임을 일시정지시키는지. 게스트의 선택은 그 게스트가 호스트하는 게임에서만 적용됩니다.
+BeaverBuddies.Settings.StrictBuildMatch.Tooltip,"BeaverBuddies 빌드가 내 것과 정확히 같지 않은(게임 버전, 애드온 모드, 세력까지 같은) 플레이어를 거부하고, 빌드가 다른 호스트에 참가하지 못하게 합니다. 끄면 경고 후 계속 플레이할 수 있지만 게임 동기화가 어긋날 수 있습니다. 빌드가 다른 플레이어끼리는 호스트와 게스트 모두 이 설정을 끈 경우에만 함께 플레이할 수 있습니다.",""
+BeaverBuddies.Settings.KeepPlayingInBackground,"백그라운드에서도 계속 플레이",""
+BeaverBuddies.Settings.KeepPlayingInBackground.Tooltip,"호스트하거나 다른 사람의 게임에서 플레이하는 동안에는 게임 자체의 ""백그라운드 실행 유지"" 설정과 관계없이 다른 앱이 앞에 있어도 게임이 계속 실행됩니다. 호스트의 게임이 멈추면 모두의 게임이 멈추고, 게스트의 게임이 멈추면 그 게스트는 뒤처졌다가 따라잡습니다. 멀티플레이 밖에서는 게임 자체 설정이 적용됩니다. 노트북에서는 배터리를 더 사용합니다.",""
+BeaverBuddies.Settings.PauseReduction,"모두를 일시정지시키는 것",""
+BeaverBuddies.Settings.PauseReduction.Tooltip,"내가 호스트하는 게임에서 무엇이 모든 플레이어의 게임을 일시정지시키는지 정합니다.
 
-메뉴와 대화상자 – 게임 기본 동작: 메뉴를 열면 모두 일시정지되고, 호스트의 대화상자(철거, 연구)도 마찬가지입니다
-메뉴만 – 메뉴를 열면 모두 일시정지되고, 대화상자는 그렇지 않습니다
-없음 – 각 플레이어의 메뉴는 각자의 것이며 아무도 일시정지시키지 않습니다
+메뉴와 대화상자: 게임 기본 동작입니다. 메뉴를 열면 모두 일시정지되고, 호스트의 대화상자(철거, 연구)도 마찬가지입니다.
+메뉴만: 메뉴를 열면 모두 일시정지되지만, 대화상자는 그렇지 않습니다.
+없음: 각 플레이어의 메뉴는 각자의 것이며 아무도 일시정지시키지 않습니다.
 
-일시정지 버튼과 속도 키는 항상 모두를 일시정지시킵니다. 저장은 항상 현재 틱이 끝날 때까지 기다리므로 어느 경우에도 일관됩니다.",""
+일시정지 버튼과 속도 키는 항상 모두를 일시정지시킵니다. 저장은 항상 현재 틱이 끝날 때까지 기다리므로 어느 쪽이든 일관성이 유지됩니다.",""
 BeaverBuddies.Settings.PauseReduction.Off,"메뉴와 대화상자",""
 BeaverBuddies.Settings.PauseReduction.LowRisk,"메뉴만",""
-BeaverBuddies.Settings.PauseReduction.HighRisk,"없음: 각 플레이어의 메뉴는 각자의 것",""
-BeaverBuddies.Settings.PauseForHostSaves,"호스트가 저장하는 동안 게임 일시정지",""
-BeaverBuddies.Settings.PauseForHostSaves.Tooltip,"당신이 호스트하는 게임에서 직접 하는 저장은 혼자 할 때처럼 게임을 일시정지한 상태로 기록되고, 이후 게임은 원래 속도로 계속됩니다. 어느 쪽이든 당신이 저장하는 동안 게스트는 같은 시점에서 기다립니다. 자동 저장은 일시정지하지 않습니다.",""
+BeaverBuddies.Settings.PauseReduction.HighRisk,"없음",""
+BeaverBuddies.Settings.PauseForHostSaves,"내가 저장하는 동안 게임 일시정지",""
+BeaverBuddies.Settings.PauseForHostSaves.Tooltip,"직접 하는 저장은 싱글 플레이처럼 게임을 일시정지한 상태로 기록되고, 이후 게임은 원래 속도로 계속됩니다. 자동 저장은 일시정지하지 않습니다. 어느 쪽이든 내가 저장하는 동안 게스트는 같은 시점에서 기다립니다.",""
 BeaverBuddies.Host.ConnectedClients,"클라이언트 연결 대기 중…
 현재 연결된 클라이언트:",""
 BeaverBuddies.Host.DirectConnectClient,"다이렉트 연결 클라이언트",""
@@ -83,10 +83,10 @@ BeaverBuddies.Host.RefusedSilent,"{0} 님이 거부되었습니다: 그 게임�
 BeaverBuddies.JoinCoopGame.Error.CouldNotConnect,"호스트에 연결할 수 없습니다. 주소와 포트를 확인하고, 호스트가 실제로 호스팅 중이며 필요한 경우 포트가 포워딩되어 있는지 확인하세요. 오류 세부 정보:",""
 BeaverBuddies.KeyBindings.Group,"BeaverBuddies",""
 BeaverBuddies.KeyBindings.Ping,"위치 핑",""
-BeaverBuddies.Settings.PingPlayerName,"핑 표시 이름",""
-BeaverBuddies.Settings.PingPlayerName.Tooltip,"다른 플레이어의 화면에서 핑 옆에 표시되는 이름입니다.",""
+BeaverBuddies.Settings.PingPlayerName,"표시 이름",""
+BeaverBuddies.Settings.PingPlayerName.Tooltip,"멀티플레이에서 쓰이는 내 이름입니다. 호스트의 로비, 열린 대전, 내 핑과 커서 옆에 표시됩니다. ""Player""로 두면 Steam 이름이 사용됩니다.",""
 BeaverBuddies.Settings.PreferredColor,"선호 색상",""
-BeaverBuddies.Settings.PreferredColor.Tooltip,"경기에서 사용할 색상입니다. 다른 플레이어가 이미 사용 중이면 남은 색상을 받습니다.",""
+BeaverBuddies.Settings.PreferredColor.Tooltip,"멀티플레이에서 내 핑, 커서, 이름에 쓰이는 색상입니다. 다른 플레이어가 이미 사용 중이면 남은 색상을 받습니다.",""
 BeaverBuddies.Settings.PreferredColor.Yellow,"노랑",""
 BeaverBuddies.Settings.PreferredColor.Red,"빨강",""
 BeaverBuddies.Settings.PreferredColor.Blue,"파랑",""
@@ -105,7 +105,7 @@ BeaverBuddies.Settings.MaxPlayers.Value,"{0}",""
 BeaverBuddies.DevTools.DisabledByHost,"호스트가 이 게임에서 개발자 도구를 비활성화했습니다.",""
 BeaverBuddies.DevTools.NotSynced,"이 개발자 도구는 동기화할 수 없어 협동 플레이에서 사용할 수 없습니다.",""
 BeaverBuddies.Settings.ShowPlayerCursors,"플레이어 커서 표시",""
-BeaverBuddies.Settings.ShowPlayerCursors.Tooltip,"다른 플레이어가 가리키는 위치를 표시하고 내 커서를 공유합니다. 핑 색상을 사용합니다.",""
+BeaverBuddies.Settings.ShowPlayerCursors.Tooltip,"다른 플레이어가 가리키는 위치를 표시하고, 내 커서도 내 색상으로 공유합니다.",""
 BeaverBuddies.Match.FindMatch,"빠른 대전","Quick match"
 BeaverBuddies.Match.LookingExact,"{0}, {1}을(를) 고른 상대를 찾는 중입니다.","Looking for an opponent who picked {0}, {1}."
 BeaverBuddies.Match.LookingSameMap,"{0}을(를) 고른 상대를 찾는 중입니다 (난이도 무관).","Looking for an opponent who picked {0}, any difficulty."

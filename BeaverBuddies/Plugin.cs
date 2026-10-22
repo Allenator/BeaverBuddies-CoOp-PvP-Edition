@@ -46,6 +46,11 @@ namespace BeaverBuddies
             }
             containerDefinition.Bind<RegisteredLocalizationService>().AsSingleton();
             containerDefinition.Bind<Settings>().AsSingleton();
+            // Its sections, each under its own heading in the settings screen
+            containerDefinition.Bind<YouSettings>().AsSingleton();
+            containerDefinition.Bind<MultiplayerSettings>().AsSingleton();
+            containerDefinition.Bind<HostingSettings>().AsSingleton();
+            containerDefinition.Bind<DeveloperSettings>().AsSingleton();
 
             MultiStartConfigurator.Configure(containerDefinition);
 
@@ -127,6 +132,11 @@ namespace BeaverBuddies
             containerDefinition.Bind<RegisteredLocalizationService>().AsSingleton();
             containerDefinition.Bind<MultiplayerMapMetadataService>().AsSingleton();
             containerDefinition.Bind<Settings>().AsSingleton();
+            // Its sections, each under its own heading in the settings screen
+            containerDefinition.Bind<YouSettings>().AsSingleton();
+            containerDefinition.Bind<MultiplayerSettings>().AsSingleton();
+            containerDefinition.Bind<HostingSettings>().AsSingleton();
+            containerDefinition.Bind<DeveloperSettings>().AsSingleton();
 #if IS_STEAM
             if (Steam.SteamSupport.Installed)
             {

@@ -29,42 +29,42 @@ BeaverBuddies.ClientDesynced.ReportOnDiscord,"Сообщить в Discord",""
 BeaverBuddies.ClientDesynced.TraceSaved,"Трассировка сохранена рядом с Player.log",""
 BeaverBuddies.ClientDesynced.EnableTracing,"Включить ведение журнала",""
 BeaverBuddies.ClientDesynced.NeedToEnableTracing,"Для того чтобы сообщить об этой десинхронизации, *все игроки* должны сначала включить более подробное ведение журнала, нажав 'Включить ведение журнала' ниже. Если произойдет другая десинхронизация, вы сможете сообщить о ней в нашем Discord, приложив подробный журнал. Режим ведения журнала может вызвать небольшую задержку, но будет активен только до перезапуска игры.",""
-BeaverBuddies.Settings.ClientConnectionAddress,"Адрес подключения клиента",""
-BeaverBuddies.Settings.ClientConnectionAddress.Tooltip,"IP‑адрес по умолчанию при подключении к хосту.",""
+BeaverBuddies.Settings.Section.You,"Личное",""
+BeaverBuddies.Settings.Section.Multiplayer,"Мультиплеер",""
+BeaverBuddies.Settings.Section.Hosting,"Хостинг",""
+BeaverBuddies.Settings.Section.Developer,"Для разработчиков",""
+BeaverBuddies.Settings.Section.Hosting.Note,"Эти настройки действуют в играх, которые вы хостите. Когда вы присоединяетесь к чужой игре, используются настройки хоста.",""
+BeaverBuddies.Settings.ClientConnectionAddress,"Адрес подключения по умолчанию",""
+BeaverBuddies.Settings.ClientConnectionAddress.Tooltip,"Адрес или код для входа, который уже вписан, когда вы нажимаете Присоединиться к игре: последний, по которому вы подключались.",""
 BeaverBuddies.Settings.Port,"Порт",""
-BeaverBuddies.Settings.Port.Tooltip,"Порт, используемый при хостинге или подключении к игре. Должен совпадать с переадресованным портом хоста.",""
+BeaverBuddies.Settings.Port.Tooltip,"Порт, который слушает ваша игра, когда вы хостите, и порт, используемый при подключении к адресу без порта. Чтобы к хосту можно было подключиться по адресу через интернет, на его роутере должен быть проброшен этот порт.",""
 BeaverBuddies.Settings.SilenceLogging,"Отключить логирование",""
-BeaverBuddies.Settings.SilenceLogging.Tooltip,"Запретить этому модулю писать в лог игрока (кроме предупреждений и ошибок).
-Эта настройка предназначена для разработчиков.",""
-BeaverBuddies.Settings.ShowFirstTimerMessage,"Показать сообщение для новичков",""
+BeaverBuddies.Settings.SilenceLogging.Tooltip,"Не записывает сообщения этого мода в лог-файл игры, кроме предупреждений и ошибок. Предназначено для разработчиков.",""
+BeaverBuddies.Settings.ShowFirstTimerMessage,"Показать приветственное сообщение",""
+BeaverBuddies.Settings.ShowFirstTimerMessage.Tooltip,"При следующем открытии главного меню показывает приветствие для новичков со ссылкой на руководство по настройке. После ответа отключается автоматически.",""
 BeaverBuddies.Settings.AlwaysTrace,"Всегда подробное логирование",""
-BeaverBuddies.Settings.AlwaysTrace.Tooltip,"Если включено, игра всегда будет вести подробный лог, что позволит отправлять отчёты о десинхронизации при первом событии без ручной активации.
-Все игроки должны включить эту настройку.
-Это может вызвать небольшие задержки и не рекомендуется для большинства игроков.",""
-BeaverBuddies.Settings.EnableSteamConnection,"Включить подключение через Steam",""
-BeaverBuddies.Settings.EnableSteamConnection.Tooltip,"Позволяет игрокам присоединяться к вашей игре через peer‑to‑peer сеть Steam.
-Игроки всё ещё смогут подключаться через проброс портов.
-Примечание: эта функция может не работать, если ваша сеть не поддерживает P2P.
-Кроме того, P2P‑соединения могут быть медленнее прямых.",""
-BeaverBuddies.Settings.FriendsCanJoinSteamGame,"Разрешить друзьям присоединяться через Steam",""
-BeaverBuddies.Settings.FriendsCanJoinSteamGame.Tooltip,"Если включено, ваши друзья смогут напрямую подключаться к вашей игре через Steam без приглашения, а игра будет видна всем в списке «Открытые матчи».",""
+BeaverBuddies.Settings.AlwaysTrace.Tooltip,"Подробно логирует каждую игру с первого тика, чтобы о десинхронизации можно было сообщить, как только она случится впервые, не включая логирование потом. Это должно быть включено у всех игроков. Немного замедляет игру, поэтому не рекомендуется большинству игроков.",""
+BeaverBuddies.Settings.EnableSteamConnection,"Использовать сеть Steam",""
+BeaverBuddies.Settings.EnableSteamConnection.Tooltip,"Позволяет игрокам подключаться к вашим играм через Steam и использует Steam для поиска игр в Быстром матче и Открытых матчах. Если выключено, игроки подключаются по коду или адресу, а игры ищутся без Steam. В некоторых сетях P2P-соединения Steam не работают или работают медленнее прямого подключения.",""
+BeaverBuddies.Settings.FriendsCanJoinSteamGame,"Разрешить друзьям в Steam входить без приглашения",""
+BeaverBuddies.Settings.FriendsCanJoinSteamGame.Tooltip,"Ваши друзья в Steam могут присоединиться к вашей игре без приглашения, а сама игра видна всем в Открытых матчах, если только вы не отметите ""Только по приглашению"", когда хостите. Если выключено, игроки входят только по приглашению, коду или адресу.",""
 BeaverBuddies.Settings.StrictBuildMatch,"Играть только с точно такой же сборкой",""
-BeaverBuddies.Settings.StrictBuildMatch.Tooltip,"Не пускает игроков, у которых BeaverBuddies — не точно такая же сборка, как у вас, с той же версией игры, дополнительными модами и фракциями, и не даёт вам подключиться к такому хосту. Если выключено, вы получите предупреждение и продолжите игру, но она может рассинхронизироваться.",""
-BeaverBuddies.Settings.KeepPlayingInBackground,"Продолжать игру в фоне в мультиплеере",""
-BeaverBuddies.Settings.KeepPlayingInBackground.Tooltip,"Пока вы хостите или играете в чужой игре, она продолжает работать, когда впереди другое приложение, независимо от фоновой настройки самой игры: если игра хоста останавливается, останавливаются все. Вне мультиплеера действует настройка игры. На ноутбуке расходует больше заряда.",""
-BeaverBuddies.Settings.PauseReduction,"Что ставит всех на паузу (решает хост)",""
-BeaverBuddies.Settings.PauseReduction.Tooltip,"В игре, которую вы хостите, ваш выбор здесь действует для всех игроков: что ставит игру на паузу для всех. Собственный выбор гостя действует только в играх, которые хостит он.
+BeaverBuddies.Settings.StrictBuildMatch.Tooltip,"Не пускает игроков, у которых BeaverBuddies — не точно такая же сборка, как у вас, с той же версией игры, дополнительными модами и фракциями, и не даёт вам подключиться к хосту, у которого она другая. Если выключено, вы получите предупреждение и продолжите игру, но она может рассинхронизироваться. Игроки с разными сборками могут играть вместе, только если это выключено и у хоста, и у гостя.",""
+BeaverBuddies.Settings.KeepPlayingInBackground,"Продолжать игру в фоне",""
+BeaverBuddies.Settings.KeepPlayingInBackground.Tooltip,"Пока вы хостите или играете в чужой игре, ваша игра продолжает работать, когда на переднем плане другое приложение, независимо от собственной настройки игры ""Работа в фоновом режиме"". Если останавливается игра хоста, останавливаются игры у всех; если останавливается игра гостя, он отстаёт, а потом догоняет. Вне мультиплеера действует собственная настройка игры. На ноутбуке расходует больше заряда.",""
+BeaverBuddies.Settings.PauseReduction,"Что ставит всех на паузу",""
+BeaverBuddies.Settings.PauseReduction.Tooltip,"Что ставит игру на паузу для всех игроков в игре, которую вы хостите.
 
-Меню и диалоги – поведение самой игры: открытие меню ставит всех на паузу, как и диалоги хоста (снос, исследования)
-Только меню – открытие меню ставит всех на паузу, диалоги нет
-Ничего – меню каждого игрока принадлежит только ему и никого не ставит на паузу
+Меню и диалоги: поведение самой игры. Открытие меню ставит всех на паузу, как и диалоги хоста (снос, исследования).
+Только меню: открытие меню ставит всех на паузу, диалоги — нет.
+Ничего: меню у каждого игрока своё и никого не ставит на паузу.
 
-Кнопка паузы и клавиши скорости всегда ставят на паузу всех. Сохранение всегда ждёт конца текущего тика, поэтому оно согласовано в любом случае.",""
+Кнопка паузы и клавиши скорости всегда ставят на паузу всех. Сохранения всегда ждут конца текущего тика, поэтому в любом случае они целостны.",""
 BeaverBuddies.Settings.PauseReduction.Off,"Меню и диалоги",""
 BeaverBuddies.Settings.PauseReduction.LowRisk,"Только меню",""
-BeaverBuddies.Settings.PauseReduction.HighRisk,"Ничего: меню у каждого своё",""
-BeaverBuddies.Settings.PauseForHostSaves,"Пауза, пока хост сохраняется",""
-BeaverBuddies.Settings.PauseForHostSaves.Tooltip,"В игре, которую вы хостите, ваше собственное сохранение записывается при поставленной на паузу игре, как в одиночной игре, а затем игра продолжается с прежней скоростью. Гости в любом случае ждут в тот же момент, пока вы сохраняетесь. Автосохранения на паузу не ставятся.",""
+BeaverBuddies.Settings.PauseReduction.HighRisk,"Ничего",""
+BeaverBuddies.Settings.PauseForHostSaves,"Ставить игру на паузу при сохранении",""
+BeaverBuddies.Settings.PauseForHostSaves.Tooltip,"Сохранение, которое вы делаете сами, записывается, пока игра на паузе, как в одиночной игре, а затем игра продолжается со своей скоростью. Автосохранения выполняются без паузы. В любом случае гости ждут в тот же момент, пока вы сохраняетесь.",""
 BeaverBuddies.Host.ConnectedClients,"Ожидание клиентов…
 В настоящее время подключено:",""
 BeaverBuddies.Host.DirectConnectClient,"Клиент прямого подключения",""
@@ -83,10 +83,10 @@ BeaverBuddies.Host.RefusedSilent,"{0} не пущен: его игра так и
 BeaverBuddies.JoinCoopGame.Error.CouldNotConnect,"Не удалось подключиться к хосту. Проверьте адрес и порт, убедитесь, что хост запущен и, при необходимости, настроена переадресация порта. Подробности ошибки:",""
 BeaverBuddies.KeyBindings.Group,"BeaverBuddies",""
 BeaverBuddies.KeyBindings.Ping,"Отметить место",""
-BeaverBuddies.Settings.PingPlayerName,"Отображаемое имя меток",""
-BeaverBuddies.Settings.PingPlayerName.Tooltip,"Имя, отображаемое другим игрокам рядом с вашими метками.",""
+BeaverBuddies.Settings.PingPlayerName,"Отображаемое имя",""
+BeaverBuddies.Settings.PingPlayerName.Tooltip,"Ваше имя в мультиплеере: в лобби хоста, в Открытых матчах и рядом с вашими метками и курсором. Если оставить ""Player"", используется ваше имя в Steam.",""
 BeaverBuddies.Settings.PreferredColor,"Предпочитаемый цвет",""
-BeaverBuddies.Settings.PreferredColor.Tooltip,"Ваш цвет в матче. Если он уже занят другим игроком, вы получите свободный.",""
+BeaverBuddies.Settings.PreferredColor.Tooltip,"Ваш цвет в мультиплеере — для ваших меток, курсора и имени. Если он уже занят другим игроком, вы получите свободный.",""
 BeaverBuddies.Settings.PreferredColor.Yellow,"Жёлтый",""
 BeaverBuddies.Settings.PreferredColor.Red,"Красный",""
 BeaverBuddies.Settings.PreferredColor.Blue,"Синий",""
@@ -105,7 +105,7 @@ BeaverBuddies.Settings.MaxPlayers.Value,"{0}",""
 BeaverBuddies.DevTools.DisabledByHost,"Хост отключил инструменты разработчика в этой игре.",""
 BeaverBuddies.DevTools.NotSynced,"Этот инструмент разработчика нельзя использовать в кооперативе, потому что его нельзя синхронизировать.",""
 BeaverBuddies.Settings.ShowPlayerCursors,"Показывать курсоры игроков",""
-BeaverBuddies.Settings.ShowPlayerCursors.Tooltip,"Показывает, куда указывают другие игроки, и делится с ними вашим курсором. Использует цвет ваших меток.",""
+BeaverBuddies.Settings.ShowPlayerCursors.Tooltip,"Показывает, куда указывают другие игроки, и делится с ними вашим курсором, окрашенным в ваш цвет.",""
 BeaverBuddies.Match.FindMatch,"Быстрый матч","Quick match"
 BeaverBuddies.Match.LookingExact,"Ищем соперника, выбравшего {0}, {1}.","Looking for an opponent who picked {0}, {1}."
 BeaverBuddies.Match.LookingSameMap,"Ищем соперника, выбравшего {0}, любая сложность.","Looking for an opponent who picked {0}, any difficulty."

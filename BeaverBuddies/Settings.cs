@@ -1,8 +1,4 @@
-using ModSettings.Common;
 using ModSettings.Core;
-using System.Linq;
-using Timberborn.Modding;
-using Timberborn.SettingsSystem;
 
 namespace BeaverBuddies
 {
@@ -13,131 +9,34 @@ namespace BeaverBuddies
         NeverAutoPause = 2,
     }
 
-    public class Settings : ModSettingsOwner
+    /**
+     * BeaverBuddies' settings, read from wherever they're needed. Each is kept in a section of the mod's settings
+     * screen (see SettingsSection), and read here from the section's copy that last loaded: each scene makes its own,
+     * which holds only the defaults until its values are loaded, so what's read as a scene loads (the desync traces,
+     * a WebRTC connection being set up) still gets the player's choices.
+     */
+    public class Settings
     {
-        public ModSetting<string> ClientConnectionAddress { get; } =
-            new("127.0.0.1",
-                ModSettingDescriptor.CreateLocalized(
-                    "BeaverBuddies.Settings.ClientConnectionAddress"
-                ).SetLocalizedTooltip("BeaverBuddies.Settings.ClientConnectionAddress.Tooltip")
-            );
+        // Each section once its values are loaded (see SettingsSection)
+        internal static YouSettings You;
+        internal static MultiplayerSettings Multiplayer;
+        internal static HostingSettings Hosting;
+        internal static DeveloperSettings Developer;
 
-        public ModSetting<int> DefaultPort { get; } =
-            new(25565,
-                ModSettingDescriptor.CreateLocalized(
-                    "BeaverBuddies.Settings.Port"
-                ).SetLocalizedTooltip("BeaverBuddies.Settings.Port.Tooltip")
-            );
+        // This scene's own, for what sets a setting
+        private readonly YouSettings _you;
+        private readonly MultiplayerSettings _multiplayer;
 
-        public ModSetting<bool> ShowFirstTimerMessage { get; } =
-            new(true,
-                ModSettingDescriptor.CreateLocalized(
-                    "BeaverBuddies.Settings.ShowFirstTimerMessage"
-                )
-        );
+        public Settings(YouSettings you, MultiplayerSettings multiplayer)
+        {
+            _you = you;
+            _multiplayer = multiplayer;
+        }
 
-        // ---- Steam Settings ----
-
-        public ModSetting<bool> EnableSteamConnection { get; } =
-            new(true,
-            ModSettingDescriptor.CreateLocalized(
-                "BeaverBuddies.Settings.EnableSteamConnection"
-            ).SetLocalizedTooltip("BeaverBuddies.Settings.EnableSteamConnection.Tooltip")
-        );
-
-        public ModSetting<bool> FriendsCanJoinSteamGame { get; } =
-            new(true,
-            ModSettingDescriptor.CreateLocalized(
-                "BeaverBuddies.Settings.FriendsCanJoinSteamGame"
-            ).SetLocalizedTooltip("BeaverBuddies.Settings.FriendsCanJoinSteamGame.Tooltip")
-        );
-
-        // On, a player on another build (see Connect.BuildIdentity) can't join this player's game, nor
-        // this player theirs, however they join; off, they're warned and play on, maybe out of sync
-        public ModSetting<bool> StrictBuildMatch { get; } =
-            new(true,
-            ModSettingDescriptor.CreateLocalized(
-                "BeaverBuddies.Settings.StrictBuildMatch"
-            ).SetLocalizedTooltip("BeaverBuddies.Settings.StrictBuildMatch.Tooltip")
-        );
-
-        // On, the game runs on behind other apps while hosted or joined, whatever the game's own
-        // "Run in background" says (see Connect.BackgroundPlay); off, the game's own setting applies
-        public ModSetting<bool> KeepPlayingInBackground { get; } =
-            new(true,
-            ModSettingDescriptor.CreateLocalized(
-                "BeaverBuddies.Settings.KeepPlayingInBackground"
-            ).SetLocalizedTooltip("BeaverBuddies.Settings.KeepPlayingInBackground.Tooltip")
-        );
-
-        // ---- Quality of Life Settings ----
-
-        // What pauses everyone in a game: the host's choice, for every player in it (see PauseReductionSetting).
-        // Nothing by default: each player's menu is their own, and pausing everyone whenever someone opens
-        // the menu, a building's deletion or a research dialog interrupts too much
-        public LimitedStringModSetting PauseReduction { get; } =
-            new(2, new[] {
-                new LimitedStringModSettingValue("0", "BeaverBuddies.Settings.PauseReduction.Off"),
-                new LimitedStringModSettingValue("1", "BeaverBuddies.Settings.PauseReduction.LowRisk"),
-                new LimitedStringModSettingValue("2", "BeaverBuddies.Settings.PauseReduction.HighRisk")
-            }, ModSettingDescriptor.CreateLocalized("BeaverBuddies.Settings.PauseReduction")
-                .SetLocalizedTooltip("BeaverBuddies.Settings.PauseReduction.Tooltip")
-        );
-
-        // A save the host makes itself is written with the game paused, as a save made alone is (see GameSaverSavePatcher)
-        public ModSetting<bool> PauseForHostSaves { get; } =
-            new(true,
-            ModSettingDescriptor.CreateLocalized(
-                "BeaverBuddies.Settings.PauseForHostSaves"
-            ).SetLocalizedTooltip("BeaverBuddies.Settings.PauseForHostSaves.Tooltip")
-        );
-
-        // ---- Developer Settings ----
-
-        public ModSetting<bool> AlwaysTrace { get; } =
-            new(false,
-            ModSettingDescriptor.CreateLocalized(
-                "BeaverBuddies.Settings.AlwaysTrace"
-            ).SetLocalizedTooltip("BeaverBuddies.Settings.AlwaysTrace.Tooltip")
-        );
-
-        public ModSetting<bool> SilenceLogging { get; } =
-            new(false,
-                ModSettingDescriptor.CreateLocalized(
-                    "BeaverBuddies.Settings.SilenceLogging"
-                ).SetLocalizedTooltip("BeaverBuddies.Settings.SilenceLogging.Tooltip")
-        );
-
-        // ---- Ping Settings ----
-
-        public const string DefaultPingPlayerName = "Player";
-        public ModSetting<string> PingPlayerName { get; } =
-            new(DefaultPingPlayerName,
-                ModSettingDescriptor.CreateLocalized(
-                    "BeaverBuddies.Settings.PingPlayerName"
-                ).SetLocalizedTooltip("BeaverBuddies.Settings.PingPlayerName.Tooltip")
-        );
-
-        public LimitedStringModSetting PreferredColor { get; } =
-            new(0, Players.PlayerColors.Palette.Select((c, i) =>
-                    new LimitedStringModSettingValue(i.ToString(), "BeaverBuddies.Settings.PreferredColor." + c.Key)).ToArray(),
-                ModSettingDescriptor.CreateLocalized("BeaverBuddies.Settings.PreferredColor")
-                    .SetLocalizedTooltip("BeaverBuddies.Settings.PreferredColor.Tooltip")
-        );
-
-        public ModSetting<bool> ShowPlayerCursors { get; } =
-            new(true,
-                ModSettingDescriptor.CreateLocalized(
-                    "BeaverBuddies.Settings.ShowPlayerCursors"
-                ).SetLocalizedTooltip("BeaverBuddies.Settings.ShowPlayerCursors.Tooltip")
-        );
-
-        // We keep a static instance because
-        // 1) The settings are saved in a static manner, so all instances
-        //    should be identical, and
-        // 2) We need to access the settings frequently without an easy
-        //    way to pass the instance around.
-        private static Settings instance = null;
+        public ModSetting<string> PingPlayerName => _you.PingPlayerName;
+        public ModSetting<bool> ShowFirstTimerMessage => _you.ShowFirstTimerMessage;
+        public ModSetting<string> ClientConnectionAddress => _multiplayer.ClientConnectionAddress;
+        public ModSetting<int> DefaultPort => _multiplayer.DefaultPort;
 
         /**
          * Indicates that the player has temporarily enabled debug mode.
@@ -145,23 +44,23 @@ namespace BeaverBuddies
          */
         public static bool TemporarilyDebug { get; set; } = false;
 
-        public static bool Debug => TemporarilyDebug || (instance?.AlwaysTrace.Value ?? false);
+        public static bool Debug => TemporarilyDebug || (Developer?.AlwaysTrace.Value ?? false);
 
-        public static bool VerboseLogging => !(instance?.SilenceLogging.Value == true);
-        public static int Port => instance?.DefaultPort.Value ?? 25565;
-        public static bool EnableSteam => instance?.EnableSteamConnection.Value ?? true;
-        public static bool LobbyJoinable => instance?.FriendsCanJoinSteamGame.Value ?? true;
+        public static bool VerboseLogging => !(Developer?.SilenceLogging.Value == true);
+        public static int Port => Multiplayer?.DefaultPort.Value ?? 25565;
+        public static bool EnableSteam => Multiplayer?.EnableSteamConnection.Value ?? true;
+        public static bool LobbyJoinable => Hosting?.FriendsCanJoinSteamGame.Value ?? true;
         // Two test copies share these settings: each can be told otherwise (BB_STRICT, see DevTools.TestHarness)
         public static bool StrictBuild =>
             DevTools.TestHarness.Active && System.Environment.GetEnvironmentVariable("BB_STRICT") is string strict && strict != ""
                 ? strict != "0"
-                : instance?.StrictBuildMatch.Value ?? true;
-        public static bool PlayInBackground => instance?.KeepPlayingInBackground.Value ?? true;
-        public static bool ShouldShowFirstTimerMessage => instance?.ShowFirstTimerMessage.Value ?? true;
+                : Multiplayer?.StrictBuildMatch.Value ?? true;
+        public static bool PlayInBackground => Multiplayer?.KeepPlayingInBackground.Value ?? true;
+        public static bool ShouldShowFirstTimerMessage => You?.ShowFirstTimerMessage.Value ?? true;
         // Saved with each game, picked when it's created (see DevTools.DevToolsRule)
         public static bool AllowDevTools => DevTools.DevToolsRule.Allowed;
 
-        public static bool PauseHostSaves => instance?.PauseForHostSaves.Value ?? true;
+        public static bool PauseHostSaves => Hosting?.PauseForHostSaves.Value ?? true;
 
         // What pauses everyone: in another's game, the host's choice (see IO.ClientEventIO.HostPauses), so one
         // player's own can't pause the rest; this player's own when it hosts or plays alone
@@ -176,10 +75,10 @@ namespace BeaverBuddies
                 if (DevTools.TestHarness.Active && int.TryParse(System.Environment.GetEnvironmentVariable("BB_PAUSES"), out int told))
                     return (PauseReductionLevel)told;
 
-                if (instance?.PauseReduction?.Value == null)
+                if (Hosting?.PauseReduction?.Value == null)
                     return PauseReductionLevel.Off;
 
-                if (int.TryParse(instance.PauseReduction.Value, out int level))
+                if (int.TryParse(Hosting.PauseReduction.Value, out int level))
                     return (PauseReductionLevel)level;
 
                 return PauseReductionLevel.Off;
@@ -189,40 +88,22 @@ namespace BeaverBuddies
         // From the host's box, where players set who they are
         public static void SetPlayer(string name, int colorIndex)
         {
-            if (instance == null) return;
-            if (!string.IsNullOrWhiteSpace(name)) instance.PingPlayerName.SetValue(name.Trim());
-            instance.PreferredColor.SetValue(Players.PlayerColors.Clamp(colorIndex).ToString());
+            if (You == null) return;
+            if (!string.IsNullOrWhiteSpace(name)) You.PingPlayerName.SetValue(name.Trim());
+            You.PreferredColor.SetValue(Players.PlayerColors.Clamp(colorIndex).ToString());
         }
 
-        public static string PingDisplayName => instance?.PingPlayerName.Value ?? DefaultPingPlayerName;
+        public const string DefaultPingPlayerName = "Player";
+        public static string PingDisplayName => You?.PingPlayerName.Value ?? DefaultPingPlayerName;
 
         // Two test copies share these settings: the second prefers red (see DevTools.TestHarness)
         public static int PreferredColorIndex =>
             DevTools.TestHarness.Active && DevTools.TestHarness.Instance != "host" ? 1
-            : int.TryParse(instance?.PreferredColor?.Value, out int index) ? index : 0;
+            : int.TryParse(You?.PreferredColor?.Value, out int index) ? index : 0;
 
         public static UnityEngine.Color PingColorValue =>
             Players.PlayerColors.Palette[Players.PlayerPresence.LocalColorIndex()].Color;
 
-        public static bool ShowCursors => instance?.ShowPlayerCursors.Value ?? true;
-
-        public Settings(ISettings settings,
-                        ModSettingsOwnerRegistry modSettingsOwnerRegistry,
-                        ModRepository modRepository) :
-            base(settings, modSettingsOwnerRegistry, modRepository)
-        {
-        }
-
-        // The one read from once its values are loaded: each scene makes its own, which holds only the defaults until
-        // then, so what's read as a scene loads (the desync traces, a WebRTC connection being set up) gets the player's
-        // choices, as the last scene's still has them
-        protected override void OnAfterLoad()
-        {
-            base.OnAfterLoad();
-            instance = this;
-        }
-
-        protected override string ModId => Plugin.ID;
-
+        public static bool ShowCursors => You?.ShowPlayerCursors.Value ?? true;
     }
 }

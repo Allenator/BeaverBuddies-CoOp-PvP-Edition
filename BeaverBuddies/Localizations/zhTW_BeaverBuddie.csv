@@ -29,42 +29,42 @@ BeaverBuddies.ClientDesynced.ReportOnDiscord,"在 Discord 上回報",""
 BeaverBuddies.ClientDesynced.TraceSaved,"追蹤已儲存至 Player.log 旁",""
 BeaverBuddies.ClientDesynced.EnableTracing,"啟用日誌記錄",""
 BeaverBuddies.ClientDesynced.NeedToEnableTracing,"若要回報此不同步，*所有玩家* 必須先按下下方的「啟用日誌記錄」，以啟用更詳細的日誌記錄。如果再次發生不同步，您將能附上詳細日誌在我們的 Discord 上回報。日誌模式可能會造成一些延遲，但僅在您重新啟動遊戲之前有效。",""
-BeaverBuddies.Settings.ClientConnectionAddress,"客戶端連接位址",""
-BeaverBuddies.Settings.ClientConnectionAddress.Tooltip,"連接主機時使用的預設 IP 位址。",""
+BeaverBuddies.Settings.Section.You,"個人",""
+BeaverBuddies.Settings.Section.Multiplayer,"多人遊戲",""
+BeaverBuddies.Settings.Section.Hosting,"主持遊戲",""
+BeaverBuddies.Settings.Section.Developer,"開發者",""
+BeaverBuddies.Settings.Section.Hosting.Note,"這些設定適用於你主持的遊戲。加入別人的遊戲時，會採用主機的設定。",""
+BeaverBuddies.Settings.ClientConnectionAddress,"預設加入位址",""
+BeaverBuddies.Settings.ClientConnectionAddress.Tooltip,"開啟「加入遊戲」時輸入框中預先填入的位址或加入代碼，即你上次加入的那個。",""
 BeaverBuddies.Settings.Port,"連接埠",""
-BeaverBuddies.Settings.Port.Tooltip,"托管或加入遊戲時使用的連接埠。應與主機轉發的連接埠一致。",""
+BeaverBuddies.Settings.Port.Tooltip,"你主持遊戲時監聽的連接埠，也是加入未指定連接埠的位址時使用的連接埠。若要讓別人透過網際網路以位址加入，主機需要在路由器上轉發此連接埠。",""
 BeaverBuddies.Settings.SilenceLogging,"靜默日誌",""
-BeaverBuddies.Settings.SilenceLogging.Tooltip,"防止此模組寫入玩家日誌檔（警告與錯誤除外）。
-此設置僅供開發者使用。",""
-BeaverBuddies.Settings.ShowFirstTimerMessage,"顯示新手訊息",""
+BeaverBuddies.Settings.SilenceLogging.Tooltip,"除警告與錯誤外，不將此模組的訊息寫入遊戲日誌檔。供開發者使用。",""
+BeaverBuddies.Settings.ShowFirstTimerMessage,"顯示歡迎訊息",""
+BeaverBuddies.Settings.ShowFirstTimerMessage.Tooltip,"下次開啟主選單時，顯示首次使用的歡迎訊息，並附上設定指南的連結。回應後，此選項會自動關閉。",""
 BeaverBuddies.Settings.AlwaysTrace,"始終使用詳細日誌",""
-BeaverBuddies.Settings.AlwaysTrace.Tooltip,"開啟後，遊戲將始終使用詳細日誌，使你在首次 desync 時即可提交報告，無需手動切換。
-請注意，所有玩家都需啟用此設置。
-此設置可能導致延遲，不建議大多數玩家使用。",""
-BeaverBuddies.Settings.EnableSteamConnection,"啟用 Steam 網路連接",""
-BeaverBuddies.Settings.EnableSteamConnection.Tooltip,"允許玩家通過 Steam 的 P2P 網絡加入你的遊戲。
-玩家仍可通過連接埠轉發加入。
-注意：若你的網絡不支援 P2P，該功能可能無法使用。
-此外，P2P 連接可能比直接連接慢。",""
-BeaverBuddies.Settings.FriendsCanJoinSteamGame,"允許好友透過 Steam 直接加入",""
-BeaverBuddies.Settings.FriendsCanJoinSteamGame.Tooltip,"啟用後，好友可以透過 Steam 無需邀請直接加入遊戲，遊戲也會出現在「開放對局」列表中，任何人都看得到。",""
+BeaverBuddies.Settings.AlwaysTrace.Tooltip,"從第一個遊戲刻起詳細記錄每局遊戲，這樣在首次發生不同步時就能回報，無需事後再開啟日誌記錄。所有玩家都需要開啟此選項。它會讓遊戲稍微變慢，因此不建議大多數玩家使用。",""
+BeaverBuddies.Settings.EnableSteamConnection,"使用 Steam 網路",""
+BeaverBuddies.Settings.EnableSteamConnection.Tooltip,"讓玩家透過 Steam 加入你的遊戲，並在「快速對局」和「開放對局」中使用 Steam 尋找遊戲。關閉後，玩家透過代碼或位址加入，尋找遊戲也不經過 Steam。在某些網路上，Steam 的 P2P 連線無法使用，或比直接連線更慢。",""
+BeaverBuddies.Settings.FriendsCanJoinSteamGame,"允許 Steam 好友無需邀請即可加入",""
+BeaverBuddies.Settings.FriendsCanJoinSteamGame.Tooltip,"你的 Steam 好友無需邀請即可加入你的遊戲，遊戲也會出現在「開放對局」中供任何人查看，除非你在主持時勾選了「僅限邀請」。關閉後，玩家只能透過邀請、代碼或位址加入。",""
 BeaverBuddies.Settings.StrictBuildMatch,"僅與完全相同的版本建置一起遊戲",""
-BeaverBuddies.Settings.StrictBuildMatch.Tooltip,"拒絕 BeaverBuddies 版本建置與你不完全相同（包括遊戲版本、附加模組和派系）的玩家，也不讓你加入不相同的主機。關閉後會顯示警告並可繼續遊戲，但遊戲可能失去同步。",""
-BeaverBuddies.Settings.KeepPlayingInBackground,"多人遊戲時在背景繼續執行",""
-BeaverBuddies.Settings.KeepPlayingInBackground.Tooltip,"當你主持或加入別人的遊戲時，無論遊戲本身的背景設定如何，即使其他應用程式在前景，遊戲也會繼續執行：主機的遊戲一停，所有人的遊戲都會停。多人遊戲以外使用遊戲本身的設定。在筆電上會更耗電。",""
-BeaverBuddies.Settings.PauseReduction,"什麼會讓所有人暫停（由主機決定）",""
-BeaverBuddies.Settings.PauseReduction.Tooltip,"在你主持的遊戲中，這裡的選擇適用於所有玩家：什麼會讓所有人的遊戲暫停。客人自己的選擇只在他主持的遊戲中生效。
+BeaverBuddies.Settings.StrictBuildMatch.Tooltip,"拒絕 BeaverBuddies 版本建置與你不完全相同（包括遊戲版本、附加模組和派系）的玩家，也不讓你加入版本建置不同的主機。關閉後會顯示警告並可繼續遊戲，但遊戲可能失去同步。只有主機和客人都關閉此選項時，不同版本建置的玩家才能一起遊戲。",""
+BeaverBuddies.Settings.KeepPlayingInBackground,"在背景繼續執行",""
+BeaverBuddies.Settings.KeepPlayingInBackground.Tooltip,"當你主持遊戲或在別人的遊戲中遊玩時，無論遊戲本身的「在背景執行」設定為何，即使其他應用程式在前景，你的遊戲也會繼續執行。主機的遊戲一停，所有人的遊戲都會停；客人的遊戲停下則會落後，之後再追上。在多人遊戲以外，使用遊戲本身的設定。在筆電上會更耗電。",""
+BeaverBuddies.Settings.PauseReduction,"什麼會讓所有人暫停",""
+BeaverBuddies.Settings.PauseReduction.Tooltip,"決定在你主持的遊戲中，什麼會讓所有玩家的遊戲暫停。
 
-選單和對話框 – 遊戲本身的行為：開啟選單會讓所有人暫停，主機的對話框（拆除、研究）也會
-僅選單 – 開啟選單會讓所有人暫停，對話框不會
-無 – 每位玩家的選單都是自己的，不會讓任何人暫停
+選單和對話框：遊戲本身的行為。開啟選單會讓所有人暫停，主機的對話框（拆除、研究）也會。
+僅選單：開啟選單會讓所有人暫停，對話框不會。
+無：每位玩家的選單都是自己的，不會讓任何人暫停。
 
-暫停按鈕和速度鍵一律會讓所有人暫停。存檔一律會等目前的刻結束，所以無論哪種都是一致的。",""
+暫停按鈕和速度鍵一律會讓所有人暫停。存檔一律會等待目前的遊戲刻結束，因此無論選擇哪種都能保持一致。",""
 BeaverBuddies.Settings.PauseReduction.Off,"選單和對話框",""
 BeaverBuddies.Settings.PauseReduction.LowRisk,"僅選單",""
-BeaverBuddies.Settings.PauseReduction.HighRisk,"無：每位玩家的選單都是自己的",""
-BeaverBuddies.Settings.PauseForHostSaves,"主機存檔時暫停遊戲",""
-BeaverBuddies.Settings.PauseForHostSaves.Tooltip,"在你主持的遊戲中，你自己進行的存檔會在遊戲暫停時寫入（與單人遊戲相同），之後遊戲以原本的速度繼續。無論如何，你存檔時客人都會在同一時刻等待。自動存檔不會暫停。",""
+BeaverBuddies.Settings.PauseReduction.HighRisk,"無",""
+BeaverBuddies.Settings.PauseForHostSaves,"存檔時暫停遊戲",""
+BeaverBuddies.Settings.PauseForHostSaves.Tooltip,"你自己進行的存檔會在遊戲暫停時寫入，與單人遊戲相同，之後遊戲以原本的速度繼續。自動存檔不會暫停。無論哪種情況，你存檔時客人都會在同一時刻等待。",""
 BeaverBuddies.Host.ConnectedClients,"等待客戶端連接…
 目前已連接客戶端：",""
 BeaverBuddies.Host.DirectConnectClient,"直接連接客戶端",""
@@ -83,10 +83,10 @@ BeaverBuddies.Host.RefusedSilent,"{0} 被拒絕：對方的遊戲始終沒有說
 BeaverBuddies.JoinCoopGame.Error.CouldNotConnect,"無法連線到主機。請檢查位址和埠號，並確保主機正在運行且在需要時已設定埠號轉送。錯誤詳細資訊：",""
 BeaverBuddies.KeyBindings.Group,"BeaverBuddies",""
 BeaverBuddies.KeyBindings.Ping,"標記位置",""
-BeaverBuddies.Settings.PingPlayerName,"標記顯示名稱",""
-BeaverBuddies.Settings.PingPlayerName.Tooltip,"在其他玩家螢幕上顯示在你的標記旁邊的名稱。",""
+BeaverBuddies.Settings.PingPlayerName,"顯示名稱",""
+BeaverBuddies.Settings.PingPlayerName.Tooltip,"你在多人遊戲中的名稱：顯示在主機的大廳、「開放對局」中，以及你的標記和游標旁邊。若保持為「Player」，則使用你的 Steam 名稱。",""
 BeaverBuddies.Settings.PreferredColor,"偏好顏色",""
-BeaverBuddies.Settings.PreferredColor.Tooltip,"你在對局中的顏色。如果其他玩家已在使用，你會得到一個空閒的顏色。",""
+BeaverBuddies.Settings.PreferredColor.Tooltip,"你在多人遊戲中的顏色，用於你的標記、游標和名稱。如果其他玩家已在使用，你會得到一個空閒的顏色。",""
 BeaverBuddies.Settings.PreferredColor.Yellow,"黃",""
 BeaverBuddies.Settings.PreferredColor.Red,"紅",""
 BeaverBuddies.Settings.PreferredColor.Blue,"藍",""
@@ -105,7 +105,7 @@ BeaverBuddies.Settings.MaxPlayers.Value,"{0}",""
 BeaverBuddies.DevTools.DisabledByHost,"主機已在本局遊戲中停用開發者工具。",""
 BeaverBuddies.DevTools.NotSynced,"此開發者工具無法同步，因此不能在合作模式中使用。",""
 BeaverBuddies.Settings.ShowPlayerCursors,"顯示玩家游標",""
-BeaverBuddies.Settings.ShowPlayerCursors.Tooltip,"顯示其他玩家指向的位置，並與他們分享你的游標。使用你的標記顏色。",""
+BeaverBuddies.Settings.ShowPlayerCursors.Tooltip,"顯示其他玩家指向的位置，並以你的顏色與他們分享你的游標。",""
 BeaverBuddies.Match.FindMatch,"快速對局","Quick match"
 BeaverBuddies.Match.LookingExact,"正在尋找選擇了 {0}、{1} 的對手。","Looking for an opponent who picked {0}, {1}."
 BeaverBuddies.Match.LookingSameMap,"正在尋找選擇了 {0} 的對手，難度不限。","Looking for an opponent who picked {0}, any difficulty."
