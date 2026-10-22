@@ -151,7 +151,19 @@ namespace BeaverBuddies
     [HarmonyPatch]
     public class Plugin : IModStarter
     {
-        public static readonly string Version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+        // The release, as the project and the manifest give it (1.1.0-1.8.3): the assembly's own version
+        // stops at the dash, the same 1.1.0.0 for every release, so players on different ones looked alike
+        public static readonly string Version = ReadVersion();
+
+        private static string ReadVersion()
+        {
+            Assembly assembly = Assembly.GetExecutingAssembly();
+            string version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+            if (string.IsNullOrEmpty(version)) return assembly.GetName().Version.ToString();
+            // Without the commit it was built from: the build ID tells builds apart (see Connect.BuildIdentity)
+            int commit = version.IndexOf('+');
+            return commit < 0 ? version : version.Substring(0, commit);
+        }
         public const string Name = "BeaverBuddies";
         public const string ID = "beaverbuddies";
 
