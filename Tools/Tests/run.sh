@@ -216,6 +216,16 @@ for f in $FILES; do
                 break
             fi
         fi
+        # A copy that crashed on an uncaught exception sits on its error screen taking no commands: nothing will come of it
+        crashed=$(grep -al "Creating an exception game save" "$(bb_log host)" "$(bb_log client)" 2>/dev/null | head -1)
+        if [ -n "$crashed" ]; then
+            pkill -9 -P $spid 2>/dev/null; kill -9 $spid 2>/dev/null; killed=1
+            why=$(grep -a -m1 -A2 "First uncaught exception" "$crashed" | sed -n '3p' | cut -c1-200)
+            BB_SCENARIO="$name" fail "no copy crashes" "$(basename "$crashed" .log) hit an uncaught exception: $why"
+            echo; echo "STOPPED: A COPY CRASHED ($(basename "$crashed")): $why"
+            osascript -e "display notification \"$name: a game copy crashed\" with title \"Tests\" sound name \"Basso\"" >/dev/null 2>&1 || true
+            break
+        fi
         # A copy that logs "[Test] FATAL: ..." (a beaver starved, say) can't pass: stopped there
         fatal=$(grep -ah "\[Test\] FATAL: " "$(bb_log host)" "$(bb_log client)" 2>/dev/null | head -1 | sed -E 's/.*\[Test\] FATAL: //')
         if [ -n "$fatal" ]; then
