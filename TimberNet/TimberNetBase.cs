@@ -48,6 +48,10 @@ namespace TimberNet
         // has closed, after everything it sent before has been taken
         public event Action? OnDisconnected;
         private volatile bool disconnected = false;
+        // When a message last came in, on any connection, as UTC ticks: a guest that hears nothing from its host for a
+        // while, though the host says it's there every few seconds, has lost it without being told
+        private long lastReceivedTicks = DateTime.UtcNow.Ticks;
+        public DateTime LastReceived => new DateTime(Interlocked.Read(ref lastReceivedTicks), DateTimeKind.Utc);
 
         // A received message, or the save a reload starts again from
         private readonly ConcurrentQueue<(ISocketStream source, string? message, byte[]? reloadMap)> receivedEventQueue =
@@ -265,6 +269,7 @@ namespace TimberNet
             while (client.Connected && !IsStopped)
             {
                 if (!TryReadLength(client, out int messageLength)) break;
+                Interlocked.Exchange(ref lastReceivedTicks, DateTime.UtcNow.Ticks);
 
                 // First message is always the file
                 if (messageCount == 0 && isClient)

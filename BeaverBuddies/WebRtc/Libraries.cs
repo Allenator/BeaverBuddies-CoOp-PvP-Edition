@@ -32,7 +32,20 @@ namespace BeaverBuddies.WebRtc
                 return;
             }
             AppDomain.CurrentDomain.AssemblyResolve += Resolve;
+            try
+            {
+                InstallLog();
+            }
+            catch (Exception e)
+            {
+                Plugin.LogWarning($"[WebRTC] Couldn't take in SIPSorcery's log: {e.Message}");
+            }
         }
+
+        // In a method of its own, compiled once they can be found: compiling one that names SipLog loads the libraries
+        // it's built on, and fails, here, if they can't be
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+        private static void InstallLog() => SipLog.Install();
 
         private static Assembly Resolve(object sender, ResolveEventArgs args)
         {

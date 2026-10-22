@@ -112,6 +112,8 @@ namespace BeaverBuddies.IO
                 NetBase.OnMapReceived += NetBase_OnClientConnected;
                 NetBase.AcceptTransientFrom = CheckBuild;
                 NetBase.AcceptEventsFrom = client => !refused.Contains(client) && (verified.Contains(client) || !Settings.StrictBuild);
+                NetBase.OnClientGone += client =>
+                    Plugin.Log($"{(names.TryGetValue(client, out string name) ? name : client.Name ?? "A player")}'s connection ended: they left, or it dropped");
                 // Starts listening, which throws if the port is taken
                 NetBase.Start();
                 return true;
@@ -262,14 +264,19 @@ namespace BeaverBuddies.IO
         // build from before it said, or one so slow its last hello came long after its map
         private readonly Dictionary<ISocketStream, float> firstSeen = new();
         private const float SayBuildWithin = 120;
+        // The name each guest's hello or presence gives, for saying whose connection ended, which a connection's
+        // listening thread does
+        private readonly System.Collections.Concurrent.ConcurrentDictionary<ISocketStream, string> names = new();
 
         // What a guest says of itself as it joins, and once it's in, says which build it plays
         private bool CheckBuild(ISocketStream client, JObject message)
         {
+            string type = message[TimberNetBase.TYPE_KEY]?.ToString();
+            bool saysWho = type == Connect.HostLobby.HelloType || type == Players.PlayerPresence.MessageType;
+            if (saysWho && message.Value<string>("name") is string said) names[client] = said;
             if (refused.Contains(client)) return false;
             if (verified.Contains(client)) return true;
-            string type = message[TimberNetBase.TYPE_KEY]?.ToString();
-            if (type != Connect.HostLobby.HelloType && type != Players.PlayerPresence.MessageType) return true;
+            if (!saysWho) return true;
             string theirs = message.Value<string>("compat");
             if (theirs == Connect.BuildIdentity.CompatValue)
             {

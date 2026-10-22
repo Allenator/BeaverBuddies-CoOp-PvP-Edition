@@ -84,7 +84,7 @@ namespace BeaverBuddies.WebRtc
 
         private async void Answer(string from, string sdp)
         {
-            RTCPeerConnection peer = WebRtcSocket.NewPeer();
+            RTCPeerConnection peer = WebRtcSocket.NewPeer($"player {from}");
             joining[from] = peer;
             peer.onicecandidate += candidate =>
             {
@@ -97,7 +97,7 @@ namespace BeaverBuddies.WebRtc
                 {
                     joining.TryRemove(from, out _);
                     Plugin.Log($"[WebRTC] Player {from} connected");
-                    joined.Enqueue(new WebRtcSocket(peer, channel));
+                    joined.Enqueue(new WebRtcSocket(peer, channel, from));
                 }
                 if (channel.readyState == RTCDataChannelState.open) Opened();
                 else channel.onopen += Opened;

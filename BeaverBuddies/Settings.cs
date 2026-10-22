@@ -214,6 +214,17 @@ namespace BeaverBuddies
             instance = this;
         }
 
+        // "Always trace" as last loaded, for what reads it as a scene loads, a WebRTC connection set up then, say: each
+        // scene's own settings hold only the defaults until they're loaded. Debug reads those then, and the desync
+        // traces count on that: traced from the load, a host's new game and its guest's load from its save differ
+        public static bool AlwaysTraceLoaded { get; private set; }
+
+        protected override void OnAfterLoad()
+        {
+            base.OnAfterLoad();
+            AlwaysTraceLoaded = AlwaysTrace.Value;
+        }
+
         protected override string ModId => Plugin.ID;
 
     }
