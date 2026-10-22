@@ -400,6 +400,17 @@ namespace BeaverBuddies.DevTools
                     _gameSceneLoader.StartSaveGame(new Timberborn.GameSaveRepositorySystem.SaveReference(names[1], settlement));
                     break;
                 }
+                case "hostsaveflow":
+                {
+                    // hostsaveflow Settlement|Save name: the Load game box's Host, at the main menu or in a game: the save is loaded
+                    // for the host to wait in, and again when it starts (see SavedGameHosting)
+                    string[] names = string.Join(" ", a.Skip(1)).Split('|');
+                    var saves = Get<Timberborn.GameSaveRepositorySystem.GameSaveRepository>();
+                    var settlement = new Timberborn.GameSaveRepositorySystem.SettlementReference(names[0], saves.DefaultSaveDirectory);
+                    ServerHostingUtils.LoadIfSaveValidAndHostLoaded(Get<Timberborn.GameSaveRepositorySystemUI.ValidatingGameLoader>(), Get<DialogBoxShower>(),
+                        new Timberborn.GameSaveRepositorySystem.SaveReference(names[1], settlement));
+                    break;
+                }
                 case "mapeditor":
                     // A new map in the map editor, this many tiles a side
                     Get<Timberborn.MapEditorSceneLoading.MapEditorSceneLoader>().StartNewMapInstantly(new Vector2Int(I(a[1]), I(a[1])));
