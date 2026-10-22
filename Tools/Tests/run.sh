@@ -73,7 +73,13 @@ while true; do
     fi
     first=$(ls "$QUEUE" | head -1)
     if [ "$first" == "$(basename "$TICKET")" ] && mkdir "$LOCK" 2>/dev/null; then break; fi
-    [ -n "${WAITED:-}" ] || { echo "Another test run is going or ahead of this one: waiting for it."; WAITED=1; }
+    [ -n "${WAITED:-}" ] || { echo "Another test run is going or ahead of this one: waiting for it."; WAITED=1; WAIT_START=$(date +%s); }
+    # Waiting this long, nothing is running of this one: said again every 2 minutes, with a notification
+    if [ -n "${WAIT_START:-}" ] && [ $(( $(date +%s) - WAIT_START )) -ge "${WAIT_NEXT:-120}" ]; then
+        echo "STILL WAITING for another test run ($(( $(date +%s) - WAIT_START )) s): no game of this run is up. Held by pid ${owner:-none}, queue: $(ls "$QUEUE" | tr '\n' ' ')"
+        osascript -e 'display notification "Test run still waiting for another run to finish" with title "Tests" sound name "Basso"' >/dev/null 2>&1 || true
+        WAIT_NEXT=$(( ${WAIT_NEXT:-120} + 120 ))
+    fi
     sleep 2
 done
 echo $$ > "$LOCK/pid"
@@ -140,7 +146,7 @@ if [ $BUILD -eq 1 ] && [ -n "${BB_BUILD:-}" ]; then
         echo "Nothing changed since the last build: not building."
     else
         echo "Building..."
-        ( export BB_HOLDS_LOCK=1; eval "$BB_BUILD" ) || { echo "The build failed."; exit 1; }
+        ( export BB_HOLDS_LOCK=1; set -o pipefail; eval "$BB_BUILD" ) || { echo "The build failed."; osascript -e 'display notification "The test run stopped: the build failed" with title "Tests" sound name "Basso"' >/dev/null 2>&1; exit 1; }
         [ -n "${BB_BUILD_SOURCES:-}" ] && echo "$BB_BUILD_SOURCES" > "$BB_TEST_DIR/.build-stamp"
     fi
 fi
@@ -163,6 +169,7 @@ stale_install() {
 if why=$(stale_install); then
     echo "The installed mod is older than its code ($why): this run would test old code."
     [ $BUILD -eq 0 ] && echo "Run without --no-build to build it first." || echo "The build didn't install it: is the test lock held by another run?"
+    osascript -e 'display notification "The test run stopped: the installed mod is older than its code" with title "Tests" sound name "Basso"' >/dev/null 2>&1
     exit 1
 fi
 prefs_save
@@ -201,9 +208,11 @@ for f in $FILES; do
         if [ -n "$(pgrep -x Timberborn)" ] && ps eww -p $(pgrep -x Timberborn | paste -sd, -) 2>/dev/null | grep -q "BB_INSTANCE="; then gone_since=
         else
             [ -n "$gone_since" ] || gone_since=$(date +%s)
-            if [ $(( $(date +%s) - gone_since )) -ge 60 ]; then
+            if [ $(( $(date +%s) - gone_since )) -ge "${BB_GONE_SECONDS:-30}" ]; then
                 pkill -9 -P $spid 2>/dev/null; kill -9 $spid 2>/dev/null; killed=1
-                BB_SCENARIO="$name" fail "the game stays open" "no test copy of Timberborn has been running for 60 s (closed, crashed or never started)"
+                BB_SCENARIO="$name" fail "the game stays open" "no test copy of Timberborn has been running for ${BB_GONE_SECONDS:-30} s (closed, crashed or never started)"
+                echo; echo "STOPPED: NO GAME IS RUNNING. $name was cut short: no test copy of Timberborn has been up for ${BB_GONE_SECONDS:-30} s."
+                osascript -e "display notification \"No game is running: $name was stopped\" with title \"Tests\" sound name \"Basso\"" >/dev/null 2>&1 || true
                 break
             fi
         fi
