@@ -80,6 +80,36 @@ namespace BeaverBuddies.DevTools
         // A desync is kept as it is, not resynced, to look at what differs
         internal static bool NoResync { get; private set; }
 
+        // The commands read and not yet run, in order, kept across scenes: a click waits at their head (see Waits)
+        private static readonly List<string> Commands = new List<string>();
+        private static float _waitingSince = -1;
+
+        // A click on a button a player couldn't click yet, one not there, shown or laid out, or under something else,
+        // waits for it, as the player would for the menu to come up, 5 s at most; then it's run and fails saying why
+        private bool Waits(string[] words)
+        {
+            if (words[0] != "click" || words.Length < 2) return false;
+            if (_waitingSince < 0) _waitingSince = Time.unscaledTime;
+            if (Time.unscaledTime - _waitingSince > 5) return false;
+            try
+            {
+                var button = FindButton(words);
+                return button == null || Unclickable(button) != null;
+            }
+            catch (Exception)
+            {
+                // No panel up yet
+                return true;
+            }
+        }
+
+        // click name [n]: the nth of the buttons by that name on the panel on top, the first by default
+        private UnityEngine.UIElements.Button FindButton(string[] a)
+        {
+            var panel = _panelStack._stack.Peek().PanelController.GetPanel();
+            return UnityEngine.UIElements.UQueryExtensions.Query<UnityEngine.UIElements.Button>(panel, a[1]).ToList().ElementAtOrDefault(a.Length > 2 ? I(a[2]) : 0);
+        }
+
         // The harness of the game being played, for what runs between games (chaos mode)
         internal static TestHarness Current { get; private set; }
 
@@ -95,12 +125,18 @@ namespace BeaverBuddies.DevTools
             if (Active) Chaos.Update();
             if (!Active || Time.unscaledTime < _nextPoll) return;
             _nextPoll = Time.unscaledTime + 0.05f;
-            if (!File.Exists(Flag)) return;
-            string[] lines = File.ReadAllLines(Flag);
-            File.Delete(Flag);
-            foreach (string line in lines)
+            if (File.Exists(Flag))
             {
+                Commands.AddRange(File.ReadAllLines(Flag));
+                File.Delete(Flag);
+            }
+            while (Commands.Count > 0)
+            {
+                string line = Commands[0];
                 string[] words = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                if (words.Length > 0 && Waits(words)) return;
+                Commands.RemoveAt(0);
+                _waitingSince = -1;
                 if (words.Length == 0) continue;
                 Plugin.Log($"[Test] {line}");
                 try
@@ -175,6 +211,23 @@ namespace BeaverBuddies.DevTools
         // A built-in map by name, or one of the player's own as user:Name
         private static MapFileReference Map(string name) =>
             name.StartsWith("user:") ? MapFileReference.FromUserFolder(name.Substring(5)) : MapFileReference.FromResource(name);
+
+        // Why a player couldn't click the element, or null if they could: it's hidden, not laid out yet, or something
+        // else is on top at its middle, where a click on it would land
+        private static string Unclickable(UnityEngine.UIElements.VisualElement element)
+        {
+            for (var e = element; e != null; e = e.parent)
+            {
+                if (e.resolvedStyle.display == UnityEngine.UIElements.DisplayStyle.None) return $"hidden (#{e.name} isn't displayed)";
+                if (e.resolvedStyle.visibility == UnityEngine.UIElements.Visibility.Hidden) return $"hidden (#{e.name} is invisible)";
+            }
+            var bounds = element.worldBound;
+            if (float.IsNaN(bounds.width) || bounds.width <= 0 || bounds.height <= 0) return "not laid out yet";
+            var top = element.panel?.Pick(bounds.center);
+            if (top == null) return "nothing takes a click at its middle";
+            if (top != element && !element.Contains(top)) return $"under #{top.name} .{string.Join(".", top.GetClasses())}";
+            return null;
+        }
 
 
         // The game's difficulty the next hostmatch plays on ("difficulty Hard"), the usual one otherwise
@@ -303,9 +356,10 @@ namespace BeaverBuddies.DevTools
                 case "click":
                 {
                     // A button by name on the panel on top, as a player's click would press it
-                    var panel = _panelStack._stack.Peek().PanelController.GetPanel();
-                    // click name [n]: the nth of the buttons by that name, the first by default
-                    var button = UnityEngine.UIElements.UQueryExtensions.Query<UnityEngine.UIElements.Button>(panel, a[1]).ToList().ElementAtOrDefault(a.Length > 2 ? I(a[2]) : 0) ?? throw new Exception($"no button {a[1]}");
+                    var button = FindButton(a) ?? throw new Exception($"no button {a[1]}");
+                    // Only one a player could click: found by name, it may be hidden or under something else
+                    string unclickable = Unclickable(button);
+                    if (unclickable != null) throw new Exception($"button {a[1]} can't be clicked: {unclickable}");
                     using var click = UnityEngine.UIElements.ClickEvent.GetPooled();
                     click.target = button;
                     // A player's click runs both: the button's clicked handlers, from its pointer going down and up,

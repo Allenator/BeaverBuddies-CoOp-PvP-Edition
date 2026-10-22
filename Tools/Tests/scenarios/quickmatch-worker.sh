@@ -21,7 +21,8 @@ sleep 1; send client "listmatches"; sleep 1
 expect_log "the waiting player is in Open matches" client "\[Test\] Open match .* platform=steam code= lobby=[0-9]+ hosted=False compatible=True"
 shot "open-matches" client
 send client "click CloseButton"; sleep 1
-new_game_page client match
+# Back on the Multiplayer page Open matches was opened from: on to Find a match from there
+for c in "click FindMatchMenuButton" "click NextButton" "click NextButton"; do send client "$c"; sleep 2; done
 send client "click FindMatchButton"
 if wait_for client "\[Match\] Matched with" 40 && wait_for host "\[Match\] .* joined [0-9]+" 20; then pass "the second finds and joins it"; else fail "the second finds and joins it" "no match"; unset BB_RTC_CODE; return; fi
 if wait_for host "\[Match\] Settled with" 30 && wait_for client "\[Match\] Settled with" 30; then pass "they settle the match"; else fail "they settle the match" "no result"; unset BB_RTC_CODE; return; fi
