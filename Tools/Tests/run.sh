@@ -191,6 +191,8 @@ for f in $FILES; do
     echo "== $name"
     t0=$(date +%s)
     started=$(date '+%H-%M-%S')
+    touch "$BB_TEST_DIR/.scenario-start"
+    # A log left from an earlier run isn't this scenario's: only one written since the start counts
     (
         export BB_SCENARIO="$name" BB_SCENARIO_DIR="$(cd "$(dirname "$f")" && pwd)"
         source "$f"
@@ -217,7 +219,10 @@ for f in $FILES; do
             fi
         fi
         # A copy that crashed on an uncaught exception sits on its error screen taking no commands: nothing will come of it
-        crashed=$(grep -al "Creating an exception game save" "$(bb_log host)" "$(bb_log client)" 2>/dev/null | head -1)
+        crashed=
+        for log in "$(bb_log host)" "$(bb_log client)"; do
+            [ "$log" -nt "$BB_TEST_DIR/.scenario-start" ] && grep -aq "Creating an exception game save" "$log" 2>/dev/null && { crashed=$log; break; }
+        done
         if [ -n "$crashed" ]; then
             pkill -9 -P $spid 2>/dev/null; kill -9 $spid 2>/dev/null; killed=1
             why=$(grep -a -m1 -A2 "First uncaught exception" "$crashed" | sed -n '3p' | cut -c1-200)
