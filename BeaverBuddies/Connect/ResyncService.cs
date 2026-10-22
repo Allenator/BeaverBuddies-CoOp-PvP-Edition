@@ -33,6 +33,9 @@ namespace BeaverBuddies.Connect
         // The game loading is a reload's
         private static bool _reloading;
 
+        /** The game loading is a reload's: every machine loads the same save, the host's (see DesyncDetecterService.Reset). */
+        public static bool Reloading => _reloading;
+
         // The host's resync, for ReplayService to start at the next update
         private bool _hostPending;
         private bool _loading;

@@ -21,6 +21,8 @@ A desync during a scenario stops it there and fails it ("stays in sync", with th
 
 - `desync-resync`: a desync reloads both copies from the host's save over the connection they already have, and they carry on in sync; the dialog after it turns logging on, or with logging on saves the desync's trace next to Player.log for a report on Discord.
 
+- `trace-new-game`: with detailed logging on for both players, for the session as the desync dialog turns it on and by "Always trace", a hosted new game is traced from its first tick, not its load (which the host's new game and the guest's load from its save do differently), and doesn't read as a desync at once.
+
 - `demolish-site`: placing and demolishing construction sites while builders work on them, 25 rounds, stays in sync.
 - `demolish-tool`: each player demolishes a finished building with the demolish tool, and it goes for both copies.
 - `reload-leak`: three reloads in a row (a desync each) leave the count of Unity objects flat; needs logging on, which the harness runs with. Load times and a profile of each singleton's load are in the copies' logs.

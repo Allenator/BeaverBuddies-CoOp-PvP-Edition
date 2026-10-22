@@ -30,9 +30,7 @@ namespace BeaverBuddies.WebRtc
 
         public IDisposable BeginScope<TState>(TState state) where TState : notnull => null;
 
-        // As loaded too: a host's connections are set up as its game loads (see Settings.AlwaysTraceLoaded)
-        public bool IsEnabled(LogLevel logLevel) =>
-            logLevel >= LogLevel.Warning || (logLevel >= LogLevel.Debug && (Settings.Debug || Settings.AlwaysTraceLoaded));
+        public bool IsEnabled(LogLevel logLevel) => logLevel >= LogLevel.Warning || (logLevel >= LogLevel.Debug && Settings.Debug);
 
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
         {
