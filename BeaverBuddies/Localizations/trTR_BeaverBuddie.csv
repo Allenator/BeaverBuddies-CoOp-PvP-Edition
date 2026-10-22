@@ -52,15 +52,19 @@ BeaverBuddies.Settings.StrictBuildMatch,"Yalnızca birebir aynı derlemeyle oyna
 BeaverBuddies.Settings.StrictBuildMatch.Tooltip,"BeaverBuddies'i seninkiyle birebir aynı derleme olmayan, aynı oyun sürümü, eklenti modları ve gruplara sahip olmayan oyuncuları reddeder ve böyle bir sunucuya katılmanı engeller. Kapalıyken uyarılırsın ve oynamaya devam edersin, ama oyun eşzamanlılığını kaybedebilir.",""
 BeaverBuddies.Settings.KeepPlayingInBackground,"Çok oyunculu oyunda arka planda oynamaya devam et",""
 BeaverBuddies.Settings.KeepPlayingInBackground.Tooltip,"Sunucu olduğunda ya da birinin oyununda oynadığında, oyunun kendi arka plan ayarı ne derse desin, önde başka bir uygulama varken de oyun çalışmaya devam eder: sunucunun oyunu durursa herkesinki durur. Çok oyunculu dışında oyunun kendi ayarı geçerlidir. Dizüstü bilgisayarda daha çok pil harcar.",""
-BeaverBuddies.Settings.PauseReduction,"Zorunlu duraklamaların sayısını azalt",""
-BeaverBuddies.Settings.PauseReduction.Tooltip,"En iyi deneyim için tüm oyuncuların aynı ayarı kullanması önerilir.
+BeaverBuddies.Settings.PauseReduction,"Herkesi duraklatan (sunucu seçer)",""
+BeaverBuddies.Settings.PauseReduction.Tooltip,"Sunduğun bir oyunda buradaki seçimin tüm oyunculara uygulanır: oyunu herkes için neyin duraklattığı. Bir konuğun kendi seçimi yalnızca onun sunduğu oyunlarda geçerlidir.
 
-Kapalı - Varsayılan davranış
-Yalnızca menü - Otomatik duraklatma yalnızca menü açılırken (yıkımlar sırasında değil)
-Otomatik duraklatma yok - Oyun, menü açılırken dahil hiçbir zaman otomatik duraklatmayacak. Kaydetmeden önce oyunu duraklatmazsanız kayıt bozulmalarına yol açabilir.",""
-BeaverBuddies.Settings.PauseReduction.Off,"Kapalı",""
+Menü ve iletişim kutuları – oyunun kendi davranışı: menüyü açmak herkesi duraklatır, sunucunun iletişim kutuları da (yıkım, araştırma)
+Yalnızca menü – menüyü açmak herkesi duraklatır, iletişim kutuları duraklatmaz
+Hiçbir şey – her oyuncunun menüsü kendisinindir ve kimseyi duraklatmaz
+
+Duraklat düğmesi ve hız tuşları her zaman herkesi duraklatır. Kaydetme her zaman geçerli tikin bitmesini bekler, bu yüzden her durumda tutarlıdır.",""
+BeaverBuddies.Settings.PauseReduction.Off,"Menü ve iletişim kutuları",""
 BeaverBuddies.Settings.PauseReduction.LowRisk,"Yalnızca menü",""
-BeaverBuddies.Settings.PauseReduction.HighRisk,"Otomatik duraklatma yok",""
+BeaverBuddies.Settings.PauseReduction.HighRisk,"Hiçbir şey: herkesin menüsü kendisinin",""
+BeaverBuddies.Settings.PauseForHostSaves,"Sunucu kaydederken oyunu duraklat",""
+BeaverBuddies.Settings.PauseForHostSaves.Tooltip,"Sunduğun bir oyunda kendi yaptığın kayıt, tek başına oynarken olduğu gibi oyun duraklatılmışken yazılır, sonra oyun kendi hızıyla devam eder. Sen kaydederken konuklar zaten aynı anda bekler. Otomatik kayıtlar duraklatılmaz.",""
 BeaverBuddies.Host.ConnectedClients,"Müşterilerin bağlanması bekleniyor…
 Şu anda bağlı müşteriler:",""
 BeaverBuddies.Host.DirectConnectClient,"Doğrudan Bağlantı İstemcisi",""

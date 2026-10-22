@@ -52,15 +52,19 @@ BeaverBuddies.Settings.StrictBuildMatch,"Jugar solo con exactamente la misma com
 BeaverBuddies.Settings.StrictBuildMatch.Tooltip,"Rechaza a los jugadores cuyo BeaverBuddies no sea exactamente la misma compilación que la tuya, con la misma versión del juego, los mismos mods complementarios y facciones, y te impide unirte a un anfitrión que no lo sea. Desactivado, se te avisa y sigues jugando, pero la partida puede desincronizarse.",""
 BeaverBuddies.Settings.KeepPlayingInBackground,"Seguir jugando en segundo plano en multijugador",""
 BeaverBuddies.Settings.KeepPlayingInBackground.Tooltip,"Mientras alojas o juegas en la partida de otro, sigue funcionando cuando otra aplicación está delante, diga lo que diga el ajuste de segundo plano del juego: si la partida del anfitrión se detiene, se detiene la de todos. Fuera del multijugador se aplica el ajuste del juego. Gasta más batería en un portátil.",""
-BeaverBuddies.Settings.PauseReduction,"Reducir el número de pausas forzadas",""
-BeaverBuddies.Settings.PauseReduction.Tooltip,"Para una experiencia óptima, todos los jugadores deberían usar el mismo ajuste.
+BeaverBuddies.Settings.PauseReduction,"Qué pausa a todos (decide el anfitrión)",""
+BeaverBuddies.Settings.PauseReduction.Tooltip,"En una partida que alojas, tu elección aquí se aplica a todos los jugadores: qué pausa la partida para todos. La elección propia de un invitado solo se aplica en las partidas que él aloja.
 
-Desactivado - Comportamiento predeterminado
-Solo menú - Pausa automática solo al abrir el menú (no durante las deconstrucciones)
-Nunca pausar automáticamente - El juego nunca se pausará automáticamente, incluso al abrir el menú. Esto puede causar corrupción de guardado si no pausas el juego antes de guardar.",""
-BeaverBuddies.Settings.PauseReduction.Off,"Desactivado",""
-BeaverBuddies.Settings.PauseReduction.LowRisk,"Solo menú",""
-BeaverBuddies.Settings.PauseReduction.HighRisk,"Nunca pausar automáticamente",""
+El menú y los diálogos – el comportamiento del juego: abrir el menú pausa a todos, y también los diálogos del anfitrión (demolición, investigación)
+Solo el menú – abrir el menú pausa a todos, los diálogos no
+Nada – el menú de cada jugador es suyo y no pausa a nadie
+
+El botón de pausa y las teclas de velocidad siempre pausan a todos. Guardar siempre espera al final del tick en curso, así que es coherente en cualquier caso.",""
+BeaverBuddies.Settings.PauseReduction.Off,"El menú y los diálogos",""
+BeaverBuddies.Settings.PauseReduction.LowRisk,"Solo el menú",""
+BeaverBuddies.Settings.PauseReduction.HighRisk,"Nada: el menú de cada jugador es suyo",""
+BeaverBuddies.Settings.PauseForHostSaves,"Pausar la partida mientras el anfitrión guarda",""
+BeaverBuddies.Settings.PauseForHostSaves.Tooltip,"En una partida que alojas, una partida que guardas tú se escribe con el juego en pausa, como cuando juegas solo, y luego el juego sigue a su velocidad. Los invitados esperan en el mismo momento mientras guardas de todos modos. Los autoguardados no se pausan.",""
 BeaverBuddies.Host.ConnectedClients,"Esperando clientes…
 Clientes actualmente conectados:",""
 BeaverBuddies.Host.DirectConnectClient,"Cliente de conexión directa",""

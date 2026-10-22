@@ -52,15 +52,19 @@ BeaverBuddies.Settings.StrictBuildMatch,"Jogar só com exatamente a mesma build"
 BeaverBuddies.Settings.StrictBuildMatch.Tooltip,"Recusa jogadores cujo BeaverBuddies não seja exatamente a mesma build que a sua, com a mesma versão do jogo, os mesmos mods complementares e facções, e impede você de entrar em um anfitrião que não seja. Desligado, você é avisado e continua jogando, mas o jogo pode perder a sincronia.",""
 BeaverBuddies.Settings.KeepPlayingInBackground,"Continuar jogando em segundo plano no multijogador",""
 BeaverBuddies.Settings.KeepPlayingInBackground.Tooltip,"Enquanto você hospeda ou joga no jogo de alguém, ele continua rodando quando outro app está na frente, seja qual for a configuração de segundo plano do jogo: se o jogo do anfitrião para, o de todos para. Fora do multijogador, vale a configuração do jogo. Gasta mais bateria em um notebook.",""
-BeaverBuddies.Settings.PauseReduction,"Reduzir o número de pausas forçadas",""
-BeaverBuddies.Settings.PauseReduction.Tooltip,"Para a melhor experiência, todos os jogadores devem usar a mesma configuração.
+BeaverBuddies.Settings.PauseReduction,"O que pausa todos (o anfitrião decide)",""
+BeaverBuddies.Settings.PauseReduction.Tooltip,"Em um jogo que você hospeda, sua escolha aqui vale para todos os jogadores: o que pausa o jogo para todos. A escolha de um convidado só vale nos jogos que ele hospeda.
 
-Desligado - Comportamento padrão
-Somente menu - Pausa automática apenas ao abrir o menu (não durante desconstruções)
-Nunca pausar automaticamente - O jogo nunca pausará automaticamente, inclusive ao abrir o menu. Isso pode levar à corrupção de salvamentos se você não pausar o jogo antes de salvar.",""
-BeaverBuddies.Settings.PauseReduction.Off,"Desligado",""
-BeaverBuddies.Settings.PauseReduction.LowRisk,"Somente menu",""
-BeaverBuddies.Settings.PauseReduction.HighRisk,"Nunca pausar automaticamente",""
+O menu e as caixas de diálogo – o comportamento do jogo: abrir o menu pausa todos, assim como as caixas de diálogo do anfitrião (demolição, pesquisa)
+Só o menu – abrir o menu pausa todos, as caixas de diálogo não
+Nada – o menu de cada jogador é só dele e não pausa ninguém
+
+O botão de pausa e as teclas de velocidade sempre pausam todos. Salvar sempre espera o fim do tick atual, então é consistente de qualquer forma.",""
+BeaverBuddies.Settings.PauseReduction.Off,"O menu e as caixas de diálogo",""
+BeaverBuddies.Settings.PauseReduction.LowRisk,"Só o menu",""
+BeaverBuddies.Settings.PauseReduction.HighRisk,"Nada: o menu de cada jogador é só dele",""
+BeaverBuddies.Settings.PauseForHostSaves,"Pausar o jogo enquanto o anfitrião salva",""
+BeaverBuddies.Settings.PauseForHostSaves.Tooltip,"Em um jogo que você hospeda, um salvamento feito por você é gravado com o jogo pausado, como quando se joga sozinho, e depois o jogo continua na sua velocidade. Os convidados esperam no mesmo momento enquanto você salva de qualquer forma. Salvamentos automáticos não são pausados.",""
 BeaverBuddies.Host.ConnectedClients,"Aguardando clientes…
 Clientes atualmente conectados:",""
 BeaverBuddies.Host.DirectConnectClient,"Cliente de conexão direta",""

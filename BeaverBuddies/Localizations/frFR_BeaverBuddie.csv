@@ -52,15 +52,19 @@ BeaverBuddies.Settings.StrictBuildMatch,"Jouer uniquement avec exactement la mê
 BeaverBuddies.Settings.StrictBuildMatch.Tooltip,"Refuse les joueurs dont BeaverBuddies n'est pas exactement la même version compilée que la tienne, avec la même version du jeu, les mêmes mods complémentaires et factions, et t'empêche de rejoindre un hôte qui ne l'est pas. Désactivé, tu es averti et tu continues à jouer, mais la partie peut se désynchroniser.",""
 BeaverBuddies.Settings.KeepPlayingInBackground,"Continuer à jouer en arrière-plan en multijoueur",""
 BeaverBuddies.Settings.KeepPlayingInBackground.Tooltip,"Quand tu héberges ou joues dans la partie de quelqu'un, elle continue de tourner quand une autre application est au premier plan, quel que soit le réglage d'arrière-plan du jeu : si la partie de l'hôte s'arrête, celle de tout le monde s'arrête. Hors multijoueur, le réglage du jeu s'applique. Consomme plus de batterie sur un portable.",""
-BeaverBuddies.Settings.PauseReduction,"Réduire le nombre de pauses forcées",""
-BeaverBuddies.Settings.PauseReduction.Tooltip,"Pour une expérience optimale, tous les joueurs devraient utiliser le même réglage.
+BeaverBuddies.Settings.PauseReduction,"Ce qui met tout le monde en pause (au choix de l'hôte)",""
+BeaverBuddies.Settings.PauseReduction.Tooltip,"Dans une partie que tu héberges, ton choix ici s'applique à tous les joueurs : ce qui met la partie en pause pour tout le monde. Le choix d'un invité ne s'applique qu'aux parties qu'il héberge.
 
-Désactivé - Comportement par défaut
-Menu uniquement - Pause automatique uniquement lors de l'ouverture du menu (pas lors des déconstructions)
-Jamais de pause automatique - Le jeu ne se mettra jamais automatiquement en pause, y compris lors de l'ouverture du menu. Cela peut entraîner une corruption de sauvegarde si vous ne mettez pas le jeu en pause avant de sauvegarder.",""
-BeaverBuddies.Settings.PauseReduction.Off,"Désactivé",""
-BeaverBuddies.Settings.PauseReduction.LowRisk,"Menu uniquement",""
-BeaverBuddies.Settings.PauseReduction.HighRisk,"Jamais de pause automatique",""
+Le menu et les dialogues – le comportement du jeu : ouvrir le menu met tout le monde en pause, tout comme les dialogues de l'hôte (démolition, recherche)
+Le menu seulement – ouvrir le menu met tout le monde en pause, pas les dialogues
+Rien – le menu de chaque joueur lui est propre et ne met personne en pause
+
+Le bouton pause et les touches de vitesse mettent toujours tout le monde en pause. Une sauvegarde attend toujours la fin du tick en cours, elle est donc cohérente dans tous les cas.",""
+BeaverBuddies.Settings.PauseReduction.Off,"Le menu et les dialogues",""
+BeaverBuddies.Settings.PauseReduction.LowRisk,"Le menu seulement",""
+BeaverBuddies.Settings.PauseReduction.HighRisk,"Rien : le menu de chaque joueur lui est propre",""
+BeaverBuddies.Settings.PauseForHostSaves,"Mettre en pause pendant que l'hôte sauvegarde",""
+BeaverBuddies.Settings.PauseForHostSaves.Tooltip,"Dans une partie que tu héberges, une sauvegarde que tu fais toi-même est écrite partie en pause, comme en solo, puis la partie reprend à sa vitesse. Les invités attendent de toute façon au même moment pendant que tu sauvegardes. Les sauvegardes automatiques ne sont pas mises en pause.",""
 BeaverBuddies.Host.ConnectedClients,"En attente des clients…
 Clients actuellement connectés :",""
 BeaverBuddies.Host.DirectConnectClient,"Client de connexion directe",""

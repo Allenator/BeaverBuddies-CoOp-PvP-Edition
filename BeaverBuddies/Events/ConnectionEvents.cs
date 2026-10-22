@@ -31,11 +31,14 @@ namespace BeaverBuddies.Events
         // don't send them. A player checks them before it loads the map (see ClientConnectionService)
         public string serverCompat;
         public string serverBuild;
+        // What pauses everyone, as the host chose it for every player (see Settings.PauseReductionSetting); null from hosts that don't send it
+        public int? pauses;
 
         public override void Replay(IReplayContext context)
         {
             //context.GetSingleton<ReplayService>().SetServerMapName(mapName);
             DevToolsPolicy.HostAllowsDevTools = allowDevTools;
+            if (pauses is int hostPauses && EventIO.Get() is ClientEventIO client) client.HostPauses = hostPauses;
             if (hostWaiting) Connect.GuestLobby.Open(hostMapName);
             Plugin.Log($"Host allows dev tools: {allowDevTools}");
             string warningMessage = null;
@@ -95,6 +98,7 @@ namespace BeaverBuddies.Events
                 hostMapName = Connect.HostLobby.MapName,
                 serverCompat = Connect.BuildIdentity.CompatValue,
                 serverBuild = Connect.BuildIdentity.Build,
+                pauses = (int)Settings.PauseReductionSetting,
             };
             return message;
         }
