@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using BeaverBuddies.IO;
 using Timberborn.CoreUI;
 using Timberborn.Localization;
@@ -17,21 +18,25 @@ namespace BeaverBuddies.Connect
     {
         private readonly DialogBoxShower _dialogBoxShower;
         private readonly ILoc _loc;
+        private readonly PanelStack _panelStack;
         private DialogBox _box;
         private HostLobby _lobby;
         // Heard the host's presence say it's waiting, so what it says next means something
         private bool _heardWaiting;
+        // The host started: the box goes once it's on top again (see TryClose)
+        private bool _closing;
 
-        public GuestLobby(DialogBoxShower dialogBoxShower, ILoc loc)
+        public GuestLobby(DialogBoxShower dialogBoxShower, ILoc loc, PanelStack panelStack)
         {
             _dialogBoxShower = dialogBoxShower;
             _loc = loc;
+            _panelStack = panelStack;
         }
 
         public static void Open(string mapName) => SingletonManager.GetSingleton<GuestLobby>()?.Show(mapName);
 
         /** Up on this guest's screen: the host hasn't started the game. */
-        public static bool IsOpen => SingletonManager.GetSingleton<GuestLobby>()?._box != null;
+        public static bool IsOpen => SingletonManager.GetSingleton<GuestLobby>() is { _box: not null, _closing: false };
 
         private void Show(string mapName)
         {
@@ -54,6 +59,17 @@ namespace BeaverBuddies.Connect
         public void UpdateSingleton()
         {
             if (_box == null) return;
+            // Closed from outside (a dialog's OK pressed on it, say): gone, as it would go by itself
+            if (!InStack(_box))
+            {
+                Forget();
+                return;
+            }
+            if (_closing)
+            {
+                TryClose();
+                return;
+            }
             _lobby.Update();
             bool? waiting = Players.PlayerPresence.HostWaiting;
             if (waiting == true) _heardWaiting = true;
@@ -64,13 +80,35 @@ namespace BeaverBuddies.Connect
         private void Close()
         {
             Plugin.Log("The host started the game: leaving its lobby");
-            // Cleared first: a box already closed from outside makes Close throw, and it would throw again every frame
-            var box = _box;
+            HostingCover.Hide();
+            _closing = true;
+            TryClose();
+        }
+
+        // The game only closes the dialog on top, and throws for any other, which stops the game: another
+        // over the lobby (the warning a host on another build brings, say) has it wait until that one's answered
+        private void TryClose()
+        {
+            if (!InStack(_box))
+            {
+                Forget();
+                return;
+            }
+            if (_panelStack._stack.Peek().PanelController != _box) return;
+            try { _box.Close(); }
+            catch (ArgumentException) { return; }
+            catch (InvalidOperationException) { }
+            Forget();
+        }
+
+        private bool InStack(DialogBox box) => _panelStack._stack.Any(entry => entry.PanelController == box);
+
+        private void Forget()
+        {
             _box = null;
             _lobby = null;
+            _closing = false;
             HostingCover.Hide();
-            try { box?.Close(); }
-            catch (System.InvalidOperationException) { }
         }
 
         // Out of the host's game, to the Multiplayer page
@@ -78,6 +116,7 @@ namespace BeaverBuddies.Connect
         {
             _box = null;
             _lobby = null;
+            _closing = false;
             EventIO.Get()?.Close();
             EventIO.Reset();
             HostingCover.Leave();
