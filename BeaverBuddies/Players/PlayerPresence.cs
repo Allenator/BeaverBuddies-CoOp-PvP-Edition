@@ -130,7 +130,7 @@ namespace BeaverBuddies.Players
                 ["name"] = PlayerIdentity.LocalName,
                 ["info"] = Info(),
                 ["host"] = io is ServerEventIO,
-                ["waiting"] = Connect.NewGameHosting.SettingUp,
+                ["waiting"] = Connect.NewGameHosting.SettingUp || io is ServerEventIO { Waiting: true },
             });
         }
 

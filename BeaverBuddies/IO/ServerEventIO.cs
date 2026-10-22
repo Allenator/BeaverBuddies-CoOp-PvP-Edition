@@ -53,6 +53,17 @@ namespace BeaverBuddies.IO
          */
         public bool JoinWaiting => joinWaiting;
 
+        // Where a saved game hosted by loading it twice is (see Connect.SavedGameHosting)
+        public enum HostingStage { Running, Waiting, Loading }
+
+        // Running, unless this hosts a saved game: Waiting from before it starts listening until the
+        // host presses Start, then Loading until the game it loads is in. Read on the joining threads
+        private volatile HostingStage stage = HostingStage.Running;
+        public HostingStage Stage { get => stage; set => stage = value; }
+
+        /** The host hasn't started the saved game it hosts: its guests wait in its lobby. */
+        public bool Waiting => stage != HostingStage.Running;
+
         // See note above
         // False if it couldn't start (e.g. the port is taken): nothing is left listening
         public bool Start(byte[] mapBytes)
@@ -124,6 +135,8 @@ namespace BeaverBuddies.IO
             {
                 var message = InitializeClientEvent.Create();
                 message.ticksSinceLoad = 0;
+                // A saved game's host waits too, though not in a new game's box
+                message.hostWaiting |= Waiting;
                 Plugin.Log($"Sending start state: {JsonSettings.Serialize(message)}");
                 return JObject.Parse(JsonSettings.Serialize(message));
             };
@@ -156,6 +169,13 @@ namespace BeaverBuddies.IO
 
         public void OnGameStarted()
         {
+            // The game behind a saved game's box is loaded again when the host starts: it never
+            // should tick, and if it does, those joining still get the save, not a reload
+            if (Waiting)
+            {
+                Plugin.LogWarning($"The game ticked while the host waits ({stage}): not started");
+                return;
+            }
             Plugin.Log("Game started: a player joining now has it reloaded for them");
             lock (mapLock)
             {
@@ -185,6 +205,18 @@ namespace BeaverBuddies.IO
             Plugin.Log($"Reloading the game for everyone from a map with length {mapBytes.Length}");
             NetBase.ReloadClients(mapBytes);
             waiting?.TrySetResult(mapBytes);
+        }
+
+        /**
+         * What the guests did while the host waited, sent for a game that hasn't started: dropped
+         * rather than played at its first tick. What has arrived is taken first.
+         */
+        public void DiscardPendingClientEvents()
+        {
+            if (NetBase == null) return;
+            Update();
+            int count = NetBase.DiscardReceivedEvents();
+            if (count > 0) Plugin.Log($"Discarded {count} events the guests sent before the game started");
         }
 
         /** The game couldn't be saved for the players waiting: they're turned away. */
