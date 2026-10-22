@@ -211,18 +211,15 @@ namespace BeaverBuddies
                         ModRepository modRepository) :
             base(settings, modSettingsOwnerRegistry, modRepository)
         {
-            instance = this;
         }
 
-        // "Always trace" as last loaded, for what reads it as a scene loads, a WebRTC connection set up then, say: each
-        // scene's own settings hold only the defaults until they're loaded. Debug reads those then, and the desync
-        // traces count on that: traced from the load, a host's new game and its guest's load from its save differ
-        public static bool AlwaysTraceLoaded { get; private set; }
-
+        // The one read from once its values are loaded: each scene makes its own, which holds only the defaults until
+        // then, so what's read as a scene loads (the desync traces, a WebRTC connection being set up) gets the player's
+        // choices, as the last scene's still has them
         protected override void OnAfterLoad()
         {
             base.OnAfterLoad();
-            AlwaysTraceLoaded = AlwaysTrace.Value;
+            instance = this;
         }
 
         protected override string ModId => Plugin.ID;

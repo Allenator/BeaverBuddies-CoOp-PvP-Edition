@@ -202,7 +202,10 @@ namespace BeaverBuddies.DesyncDetecter
             lastDesyncTrace = null;
             traces.Clear();
             traces.Add(new List<Trace>());
-            tracing = Settings.Debug;
+            // The load is traced only when every machine loads the same save, as they all do a reload's: a new game,
+            // which the host generates and its guests load from the host's save, loads differently on each and would
+            // read as a desync at once. Its traces start with its first tick instead (see StartTick)
+            tracing = Settings.Debug && Connect.ResyncService.Reloading;
             tickHashes.Clear();
             StateReflection.Reset();
             sentTraces.Clear();
@@ -214,7 +217,7 @@ namespace BeaverBuddies.DesyncDetecter
             splitStart = -1;
             splitTicks = 0;
             splitDumped = false;
-            if (Settings.Debug)
+            if (tracing)
             {
                 Trace("Start Preload");
             }
