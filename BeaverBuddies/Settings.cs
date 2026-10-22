@@ -61,6 +61,15 @@ namespace BeaverBuddies
             ).SetLocalizedTooltip("BeaverBuddies.Settings.StrictBuildMatch.Tooltip")
         );
 
+        // On, the game runs on behind other apps while hosted or joined, whatever the game's own
+        // "Run in background" says (see Connect.BackgroundPlay); off, the game's own setting applies
+        public ModSetting<bool> KeepPlayingInBackground { get; } =
+            new(true,
+            ModSettingDescriptor.CreateLocalized(
+                "BeaverBuddies.Settings.KeepPlayingInBackground"
+            ).SetLocalizedTooltip("BeaverBuddies.Settings.KeepPlayingInBackground.Tooltip")
+        );
+
         // ---- Quality of Life Settings ----
 
         // Menu only by default: pausing everyone whenever someone opens a
@@ -138,6 +147,7 @@ namespace BeaverBuddies
             DevTools.TestHarness.Active && System.Environment.GetEnvironmentVariable("BB_STRICT") is string strict && strict != ""
                 ? strict != "0"
                 : instance?.StrictBuildMatch.Value ?? true;
+        public static bool PlayInBackground => instance?.KeepPlayingInBackground.Value ?? true;
         public static bool ShouldShowFirstTimerMessage => instance?.ShowFirstTimerMessage.Value ?? true;
         // Saved with each game, picked when it's created (see DevTools.DevToolsRule)
         public static bool AllowDevTools => DevTools.DevToolsRule.Allowed;

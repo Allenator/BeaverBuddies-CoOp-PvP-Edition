@@ -480,15 +480,17 @@ namespace BeaverBuddies
                 .Show();
         }
 
-        // The host turned this player away for another build once it was in: it ends here too, saying why
-        private void ShowRefused(string hostBuild)
+        // The host turned this player away once it was in, for another build or for never saying it: it ends here too, saying why
+        private void ShowRefused(ClientEventIO refused)
         {
             Plugin.Log("Turned away by the host: back to the main menu");
+            string message = refused.RefusedSilently ? null : $"\n\"{Connect.BuildIdentity.Mismatch(refused.RefusedByHost)}\"";
             EventIO.Reset();
             SpeedChangePatcher.SetSpeedSilentlyNow(_speedManager, 0);
             var shower = GetSingleton<DialogBoxShower>();
             shower.Create()
-                .SetMessage(shower._loc.T("BeaverBuddies.JoinCoopGame.Error.Incompatible") + $"\n\"{Connect.BuildIdentity.Mismatch(hostBuild)}\"")
+                .SetMessage(message == null ? shower._loc.T("BeaverBuddies.JoinCoopGame.Error.Silent")
+                    : shower._loc.T("BeaverBuddies.JoinCoopGame.Error.Incompatible") + message)
                 .SetConfirmButton(() => GetSingleton<Timberborn.MainMenuSceneLoading.MainMenuSceneLoader>().OpenMainMenu())
                 .Show();
         }
@@ -616,9 +618,9 @@ namespace BeaverBuddies
         public void UpdateSingleton()
         {
             // Before the host leaving: it closes the connection of whoever it turned away
-            if (io is ClientEventIO { RefusedByHost: string hostBuild })
+            if (io is ClientEventIO { RefusedByHost: not null } refused)
             {
-                ShowRefused(hostBuild);
+                ShowRefused(refused);
                 return;
             }
             if (io is ClientEventIO { HostLeft: true })

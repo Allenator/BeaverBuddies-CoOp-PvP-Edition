@@ -19,12 +19,15 @@ namespace BeaverBuddies.Connect
             _loc = loc;
         }
 
+        // Their build, or null for a player whose game never said it
         public static void Show(string name, string theirs) => SingletonManager.GetSingleton<BuildNotice>()?.ShowNotice(name, theirs);
 
         private void ShowNotice(string name, string theirs)
         {
             _dialogBoxShower.Create()
-                .SetMessage(_loc.T("BeaverBuddies.Host.RefusedBuild", name, theirs, BuildIdentity.Describe))
+                .SetMessage(theirs == null
+                    ? _loc.T("BeaverBuddies.Host.RefusedSilent", name)
+                    : _loc.T("BeaverBuddies.Host.RefusedBuild", name, theirs, BuildIdentity.Describe))
                 .Show();
         }
     }

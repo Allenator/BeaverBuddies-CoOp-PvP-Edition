@@ -75,6 +75,8 @@ namespace BeaverBuddies.IO
                 Reset();
             }
             instance = io;
+            // Hosted or joined now, or not: whether the game keeps running behind other apps
+            Connect.BackgroundPlay.Apply();
         }
 
         public static void Reset()
@@ -86,6 +88,7 @@ namespace BeaverBuddies.IO
                 instance = null;
                 Plugin.Log("Success!");
             }
+            Connect.BackgroundPlay.Apply();
         }
 
         public static bool ShouldPauseTicking

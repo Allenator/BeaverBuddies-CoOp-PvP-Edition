@@ -50,6 +50,8 @@ BeaverBuddies.Settings.FriendsCanJoinSteamGame,"Freunde direkt über Steam beitr
 BeaverBuddies.Settings.FriendsCanJoinSteamGame.Tooltip,"Wenn aktiviert, können deine Freunde direkt über Steam deinem Spiel beitreten, ohne dass du sie einladen musst, und es steht für alle unter Offene Spiele.",""
 BeaverBuddies.Settings.StrictBuildMatch,"Nur mit genau demselben Build spielen",""
 BeaverBuddies.Settings.StrictBuildMatch.Tooltip,"Weist Spieler ab, deren BeaverBuddies nicht genau derselbe Build ist wie deiner, mit derselben Spielversion, denselben Zusatz-Mods und Fraktionen, und lässt dich keinem solchen Host beitreten. Aus: Du wirst gewarnt und spielst weiter, aber das Spiel kann asynchron werden.",""
+BeaverBuddies.Settings.KeepPlayingInBackground,"Im Mehrspielermodus im Hintergrund weiterspielen",""
+BeaverBuddies.Settings.KeepPlayingInBackground.Tooltip,"Während du hostest oder in einem fremden Spiel spielst, läuft es weiter, wenn eine andere App im Vordergrund ist, egal was die Hintergrund-Einstellung des Spiels sagt: Hält das Spiel des Hosts an, halten alle an. Außerhalb des Mehrspielermodus gilt die Einstellung des Spiels. Verbraucht auf Laptops mehr Akku.",""
 BeaverBuddies.Settings.PauseReduction,"Anzahl der erzwungenen Pausen reduzieren",""
 BeaverBuddies.Settings.PauseReduction.Tooltip,"Für ein optimales Erlebnis sollten alle Spieler die gleiche Einstellung verwenden.
 
@@ -72,6 +74,8 @@ Es wurde versucht, sie als Hostnamen aufzulösen, aber sie konnte keiner IP-Adre
 BeaverBuddies.JoinCoopGame.Error.Incompatible,"Der Host spielt mit anderen Mods oder einem anderen Build von BeaverBuddies. Installiere dieselben von derselben Quelle und tritt dann erneut bei.",""
 BeaverBuddies.JoinCoopGame.Error.Full,"Das Spiel ist voll.",""
 BeaverBuddies.Host.RefusedBuild,"{0} konnte nicht beitreten: BeaverBuddies {1} dort, {2} bei dir. Alle brauchen genau denselben Build.",""
+BeaverBuddies.JoinCoopGame.Error.Silent,"Der Host hat nicht rechtzeitig von deinem Spiel gehört. Tritt erneut bei.",""
+BeaverBuddies.Host.RefusedSilent,"{0} wurde abgewiesen: Das Spiel hat nie gesagt, welchen Build von BeaverBuddies es nutzt.",""
 BeaverBuddies.JoinCoopGame.Error.CouldNotConnect,"Verbindung zum Host konnte nicht hergestellt werden. Bitte überprüfen Sie die Adresse und den Port und stellen Sie sicher, dass der Host das Spiel hostet und die Portweiterleitung aktiviert ist, falls erforderlich. Fehlerinformationen:",""
 BeaverBuddies.KeyBindings.Group,"BeaverBuddies",""
 BeaverBuddies.KeyBindings.Ping,"Ort markieren",""

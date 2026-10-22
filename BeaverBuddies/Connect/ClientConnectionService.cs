@@ -293,13 +293,13 @@ namespace BeaverBuddies.Connect
         }
 
         // Out of a host's game before loading it, saying why
-        private void Leave(string details)
+        private void Leave(string details, string reasonKey = "BeaverBuddies.JoinCoopGame.Error.Incompatible")
         {
             _heldMap = null;
             client = null;
             CloseWaiting();
             EventIO.Reset();
-            ShowError("BeaverBuddies.JoinCoopGame.Error.Incompatible", details);
+            ShowError(reasonKey, details);
         }
 
         /**
@@ -342,7 +342,8 @@ namespace BeaverBuddies.Connect
             // Once in its game, the game says so (see ReplayService)
             if (client.RefusedByHost != null && EventIO.Get() == client)
             {
-                Leave(BuildIdentity.Mismatch(client.RefusedByHost));
+                if (client.RefusedSilently) Leave(null, "BeaverBuddies.JoinCoopGame.Error.Silent");
+                else Leave(BuildIdentity.Mismatch(client.RefusedByHost));
                 return;
             }
             if (_heldMap != null) LoadHeldMap();

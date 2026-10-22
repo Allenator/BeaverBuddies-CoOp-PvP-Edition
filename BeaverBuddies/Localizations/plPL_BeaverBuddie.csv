@@ -50,6 +50,8 @@ BeaverBuddies.Settings.FriendsCanJoinSteamGame,"Pozwól znajomym na dołączenie
 BeaverBuddies.Settings.FriendsCanJoinSteamGame.Tooltip,"Po włączeniu twoi znajomi mogą dołączyć do twojej gry bez zaproszenia, korzystając ze Steam, a gra jest widoczna dla wszystkich na liście Otwarte mecze.",""
 BeaverBuddies.Settings.StrictBuildMatch,"Graj tylko z dokładnie tą samą kompilacją",""
 BeaverBuddies.Settings.StrictBuildMatch.Tooltip,"Odrzuca graczy, których BeaverBuddies nie jest dokładnie tą samą kompilacją co twoja, z tą samą wersją gry, modami dodatkowymi i frakcjami, i nie pozwala ci dołączyć do takiego hosta. Wyłączone: dostajesz ostrzeżenie i grasz dalej, ale gra może się rozsynchronizować.",""
+BeaverBuddies.Settings.KeepPlayingInBackground,"Graj dalej w tle w trybie wieloosobowym",""
+BeaverBuddies.Settings.KeepPlayingInBackground.Tooltip,"Gdy hostujesz lub grasz w czyjejś grze, działa ona dalej, gdy na wierzchu jest inna aplikacja, niezależnie od ustawienia gry dotyczącego działania w tle: gdy gra hosta się zatrzymuje, zatrzymują się gry wszystkich. Poza trybem wieloosobowym obowiązuje ustawienie gry. Zużywa więcej baterii na laptopie.",""
 BeaverBuddies.Settings.PauseReduction,"Zmniejsz liczbę wymuszonych pauz",""
 BeaverBuddies.Settings.PauseReduction.Tooltip,"Dla najlepszego efektu wszyscy gracze powinni mieć to samo ustawienie.
 
@@ -72,6 +74,8 @@ Podjęto próbę rozwiązania go jako nazwy hosta, ale nie został przetłumaczo
 BeaverBuddies.JoinCoopGame.Error.Incompatible,"Host gra z innymi modami lub inną kompilacją BeaverBuddies. Zainstaluj te same z tego samego źródła i dołącz ponownie.",""
 BeaverBuddies.JoinCoopGame.Error.Full,"Gra jest pełna.",""
 BeaverBuddies.Host.RefusedBuild,"{0} nie może dołączyć: ma BeaverBuddies {1}, a ty hostujesz {2}. Wszyscy potrzebują dokładnie tej samej kompilacji.",""
+BeaverBuddies.JoinCoopGame.Error.Silent,"Host nie dostał na czas wiadomości od twojej gry. Dołącz ponownie.",""
+BeaverBuddies.Host.RefusedSilent,"{0} został odrzucony: jego gra nigdy nie podała, której kompilacji BeaverBuddies używa.",""
 BeaverBuddies.JoinCoopGame.Error.CouldNotConnect,"Nie udało się połączyć z hostem. Sprawdź adres i port oraz upewnij się, że host faktycznie hostuje i ma przekierowany port, jeśli to konieczne. Szczegóły błędu:",""
 BeaverBuddies.KeyBindings.Group,"BeaverBuddies",""
 BeaverBuddies.KeyBindings.Ping,"Oznacz lokalizację",""

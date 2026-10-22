@@ -38,6 +38,7 @@ namespace BeaverBuddies
             containerDefinition.Bind<HostingCover>().AsSingleton();
             containerDefinition.Bind<GuestLobby>().AsSingleton();
             containerDefinition.Bind<BuildNotice>().AsSingleton();
+            containerDefinition.Bind<BackgroundPlay>().AsSingleton();
             containerDefinition.Bind<PauseMenuInvite>().AsSingleton();
             if (Steam.SteamSupport.Installed)
             {
@@ -116,6 +117,7 @@ namespace BeaverBuddies
             containerDefinition.Bind<ClientConnectionUI>().AsSingleton();
             containerDefinition.Bind<MultiplayerMenu>().AsSingleton();
             containerDefinition.Bind<BuildNotice>().AsSingleton();
+            containerDefinition.Bind<BackgroundPlay>().AsSingleton();
             containerDefinition.Bind<Matchmaking.MatchOptionsPanel>().AsSingleton();
             containerDefinition.Bind<NewGame.GameSettingsSection>().AsSingleton();
             containerDefinition.Bind<NewGame.SaveRecordLabel>().AsSingleton();
