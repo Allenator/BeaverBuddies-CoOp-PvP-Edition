@@ -78,8 +78,8 @@ while true; do
 done
 echo $$ > "$LOCK/pid"
 rm -f "$TICKET"
-# The saves this run's games make go once it ends: the settlements made during it under the names the harness
-# gives them ("Test ...", "Harness ...", and "Co-op ..." as Host new game names them), and what the guests save in
+# The saves this run's games make go once it ends: the settlements made during it under the names the harness, Host
+# new game and Quick match give them ("Test ...", "Harness ...", "Co-op ...", "Match ..."), and what the guests save in
 # Multiplayer. A settlement of the player's own a test only saved into stays. A guest's save in Multiplayer replaces the
 # player's own of the same name, so theirs are kept aside first and put back; kept from a run that didn't finish, they
 # stay as they were
@@ -93,26 +93,28 @@ MULTIPLAYER_KEPT="$BB_TEST_DIR/multiplayer-kept"
 # sync after the file is gone, or puts it back the next time it syncs in full. Steam syncs a few seconds after the last
 # copy closes, usually after the saves went; if it synced before, one more copy started and closed has it sync again
 STEAM_CLOUD_LOG="$HOME/Library/Application Support/Steam/logs/cloud_log.txt"
-# steam_synced <line> <seconds>: Timberborn's Steam Cloud log has a sync after that line within the time (an offline
-# Steam's "Sync Disabled" isn't one)
+# steam_synced <since> <seconds>: Timberborn's Steam Cloud log has a sync started after that time ("YYYY-MM-DD
+# HH:MM:SS", local, as the log has it) within the time. By time, not line: Steam starts the log afresh now and then.
+# An offline Steam's "Sync Disabled" isn't one
 steam_synced() {
     local i
     for ((i = 0; i < $2 * 2; i++)); do
-        tail -n +"$(($1 + 1))" "$STEAM_CLOUD_LOG" 2>/dev/null | grep -q "AppID 1062090\] Starting sync (up,AC Exit" && return 0
+        awk -v since="[$1]" 'index($0, "[AppID 1062090] Starting sync (up,AC Exit") && substr($0, 1, 21) > since { found = 1 }
+            END { exit !found }' "$STEAM_CLOUD_LOG" 2>/dev/null && return 0
         sleep 0.5
     done
     return 1
 }
 steam_forget() {
-    local n
+    local since
     pgrep -x steam_osx > /dev/null || return 0
-    n=$(wc -l < "$STEAM_CLOUD_LOG" 2>/dev/null || echo 0)
-    steam_synced "$n" 10 && return 0
+    since=$(date '+%Y-%m-%d %H:%M:%S')
+    steam_synced "$since" 10 && return 0
     echo "Starting and closing one copy, so Steam Cloud drops this run's saves..."
     bb_launch host > /dev/null 2>&1
     bb_close
-    steam_synced "$n" 15 && return 0
-    echo "Steam didn't sync as the copy closed (offline?): this run's saves may come back from Steam Cloud."
+    steam_synced "$since" 30 && return 0
+    echo "Steam hasn't synced since this run's saves went (offline?): they may come back from Steam Cloud."
 }
 
 cleanup() {
@@ -121,7 +123,7 @@ cleanup() {
     [ -n "${spid:-}" ] && kill -9 $spid 2>/dev/null
     bb_close
     started=$(stat -f %m "$RUN_START")
-    for d in "$SAVES"/Test\ * "$SAVES"/Harness\ * "$SAVES"/Co-op\ *; do
+    for d in "$SAVES"/Test\ * "$SAVES"/Harness\ * "$SAVES"/Co-op\ * "$SAVES"/Match\ *; do
         [ -d "$d" ] && [ "$(stat -f %B "$d")" -ge "$started" ] && rm -rf "$d" && removed=1
     done
     if [ -d "$SAVES/Multiplayer" ]; then
