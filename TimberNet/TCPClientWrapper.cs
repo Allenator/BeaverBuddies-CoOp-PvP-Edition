@@ -19,7 +19,9 @@ namespace TimberNet
 
         public TCPClientWrapper(string address, int port) 
         {
-            client = new TcpClient();
+            // Small messages (a tick's events, presence) go at once, not held for the last one's acknowledgment,
+            // which a receiver may delay up to 200 ms; a map goes in full chunks either way
+            client = new TcpClient { NoDelay = true };
             this.address = address;
             this.port = port;
         }
@@ -27,6 +29,7 @@ namespace TimberNet
         public TCPClientWrapper(TcpClient client)
         {
             this.client = client;
+            client.NoDelay = true;
             address = null;
             port = 0;
         }
