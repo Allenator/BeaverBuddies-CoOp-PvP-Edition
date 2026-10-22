@@ -40,12 +40,17 @@ namespace BeaverBuddies.IO
         public bool HostLeft { get; private set; }
         // The host turned this player away for another build: the one it plays (see Connect.BuildIdentity)
         public string RefusedByHost { get; private set; }
+        // ...or because it never heard which build this one is, in time
+        public bool RefusedSilently { get; private set; }
 
         private void OnTransientMessage(Newtonsoft.Json.Linq.JObject message)
         {
             if (message[TYPE_KEY]?.ToString() != Connect.BuildIdentity.RefusedType) return;
+            RefusedSilently = message.Value<string>("reason") == Connect.BuildIdentity.RefusedSilent;
             RefusedByHost = message.Value<string>("host") ?? "?";
-            Plugin.LogWarning($"Turned away by the host, which plays {RefusedByHost}");
+            Plugin.LogWarning(RefusedSilently
+                ? "Turned away by the host, which didn't hear this player's build in time"
+                : $"Turned away by the host, which plays {RefusedByHost}");
         }
 
         private ClientEventIO(ISocketStream socket, MapReceived mapReceivedCallback,

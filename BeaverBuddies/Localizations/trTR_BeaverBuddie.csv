@@ -50,6 +50,8 @@ BeaverBuddies.Settings.FriendsCanJoinSteamGame,"Arkadaşların Steam Üzerinden 
 BeaverBuddies.Settings.FriendsCanJoinSteamGame.Tooltip,"Etkinleştirilirse, arkadaşlarınız Steam üzerinden sizi davet etmeden doğrudan katılabilir ve oyun herkes için Açık maçlar listesinde görünür.",""
 BeaverBuddies.Settings.StrictBuildMatch,"Yalnızca birebir aynı derlemeyle oyna",""
 BeaverBuddies.Settings.StrictBuildMatch.Tooltip,"BeaverBuddies'i seninkiyle birebir aynı derleme olmayan, aynı oyun sürümü, eklenti modları ve gruplara sahip olmayan oyuncuları reddeder ve böyle bir sunucuya katılmanı engeller. Kapalıyken uyarılırsın ve oynamaya devam edersin, ama oyun eşzamanlılığını kaybedebilir.",""
+BeaverBuddies.Settings.KeepPlayingInBackground,"Çok oyunculu oyunda arka planda oynamaya devam et",""
+BeaverBuddies.Settings.KeepPlayingInBackground.Tooltip,"Sunucu olduğunda ya da birinin oyununda oynadığında, oyunun kendi arka plan ayarı ne derse desin, önde başka bir uygulama varken de oyun çalışmaya devam eder: sunucunun oyunu durursa herkesinki durur. Çok oyunculu dışında oyunun kendi ayarı geçerlidir. Dizüstü bilgisayarda daha çok pil harcar.",""
 BeaverBuddies.Settings.PauseReduction,"Zorunlu duraklamaların sayısını azalt",""
 BeaverBuddies.Settings.PauseReduction.Tooltip,"En iyi deneyim için tüm oyuncuların aynı ayarı kullanması önerilir.
 
@@ -72,6 +74,8 @@ Ana bilgisayar adı olarak çözümlemeye çalışıldı, ancak bir IP adresine 
 BeaverBuddies.JoinCoopGame.Error.Incompatible,"Sunucu başka modlarla ya da BeaverBuddies'in başka bir derlemesiyle oynuyor. Aynılarını aynı yerden kur, sonra tekrar katıl.",""
 BeaverBuddies.JoinCoopGame.Error.Full,"Oyun dolu.",""
 BeaverBuddies.Host.RefusedBuild,"{0} katılamadı: BeaverBuddies {1} kullanıyor, sen ise {2} ile sunuyorsun. Herkesin birebir aynı derlemeye ihtiyacı var.",""
+BeaverBuddies.JoinCoopGame.Error.Silent,"Sunucu oyunundan zamanında haber alamadı. Tekrar katıl.",""
+BeaverBuddies.Host.RefusedSilent,"{0} reddedildi: oyunu hangi BeaverBuddies derlemesini kullandığını hiç söylemedi.",""
 BeaverBuddies.JoinCoopGame.Error.CouldNotConnect,"Ana bilgisayara bağlanılamadı. Adresi ve portu kontrol edin ve ana bilgisayarın gerçekten sunucuyu barındırdığından ve gerekiyorsa port yönlendirmesinin etkin olduğundan emin olun. Hata ayrıntıları:",""
 BeaverBuddies.KeyBindings.Group,"BeaverBuddies",""
 BeaverBuddies.KeyBindings.Ping,"Konum işaretle",""

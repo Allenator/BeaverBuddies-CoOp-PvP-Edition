@@ -50,6 +50,8 @@ BeaverBuddies.Settings.FriendsCanJoinSteamGame,"ให้เพื่อนเ�
 BeaverBuddies.Settings.FriendsCanJoinSteamGame.Tooltip,"หากเปิดใช้งาน เพื่อนของคุณสามารถเข้าร่วมเกมผ่าน Steam โดยไม่ต้องเชิญ และเกมจะแสดงในรายการ แมตช์ที่เปิดอยู่ให้ทุกคนเห็น",""
 BeaverBuddies.Settings.StrictBuildMatch,"เล่นกับบิลด์ที่ตรงกันทุกประการเท่านั้น",""
 BeaverBuddies.Settings.StrictBuildMatch.Tooltip,"ปฏิเสธผู้เล่นที่ BeaverBuddies ไม่ใช่บิลด์เดียวกับของคุณทุกประการ รวมถึงเวอร์ชันเกม ม็อดเสริม และฝ่าย และไม่ให้คุณเข้าร่วมโฮสต์ที่ไม่ตรงกัน หากปิด คุณจะได้รับคำเตือนและเล่นต่อได้ แต่เกมอาจไม่ซิงค์กัน",""
+BeaverBuddies.Settings.KeepPlayingInBackground,"เล่นต่อในเบื้องหลังระหว่างผู้เล่นหลายคน",""
+BeaverBuddies.Settings.KeepPlayingInBackground.Tooltip,"ระหว่างที่คุณโฮสต์หรือเล่นในเกมของคนอื่น เกมจะทำงานต่อแม้มีแอปอื่นอยู่ด้านหน้า ไม่ว่าการตั้งค่าเบื้องหลังของเกมจะเป็นอย่างไร เพราะถ้าเกมของโฮสต์หยุด เกมของทุกคนก็หยุด นอกโหมดผู้เล่นหลายคนจะใช้การตั้งค่าของเกม ใช้แบตเตอรี่มากขึ้นบนแล็ปท็อป",""
 BeaverBuddies.Settings.PauseReduction,"ลดจำนวนการหยุดชั่วคราวที่ถูกบังคับ",""
 BeaverBuddies.Settings.PauseReduction.Tooltip,"เพื่อประสบการณ์ที่ดีที่สุด ผู้เล่นทุกคนควรใช้การตั้งค่าเดียวกัน
 
@@ -72,6 +74,8 @@ BeaverBuddies.JoinCoopGame.Error.InvalidAddress,"ที่อยู่นั้�
 BeaverBuddies.JoinCoopGame.Error.Incompatible,"โฮสต์ใช้ม็อดอื่น หรือ BeaverBuddies คนละบิลด์ ติดตั้งตัวเดียวกันจากแหล่งเดียวกัน แล้วเข้าร่วมอีกครั้ง",""
 BeaverBuddies.JoinCoopGame.Error.Full,"เกมเต็มแล้ว",""
 BeaverBuddies.Host.RefusedBuild,"{0} เข้าร่วมไม่ได้: ผู้เล่นใช้ BeaverBuddies {1} แต่คุณโฮสต์ {2} ทุกคนต้องใช้บิลด์เดียวกันทุกประการ",""
+BeaverBuddies.JoinCoopGame.Error.Silent,"โฮสต์ไม่ได้รับการตอบกลับจากเกมของคุณทันเวลา โปรดเข้าร่วมอีกครั้ง",""
+BeaverBuddies.Host.RefusedSilent,"{0} ถูกปฏิเสธ: เกมของผู้เล่นไม่เคยบอกว่าใช้บิลด์ใดของ BeaverBuddies",""
 BeaverBuddies.JoinCoopGame.Error.CouldNotConnect,"ไม่สามารถเชื่อมต่อกับโฮสต์ได้ โปรดตรวจสอบที่อยู่และพอร์ต และตรวจสอบให้แน่ใจว่าโฮสต์กำลังโฮสต์อยู่และมีการส่งต่อพอร์ตหากจำเป็น รายละเอียดข้อผิดพลาด:",""
 BeaverBuddies.KeyBindings.Group,"BeaverBuddies",""
 BeaverBuddies.KeyBindings.Ping,"ปักหมุดตำแหน่ง",""

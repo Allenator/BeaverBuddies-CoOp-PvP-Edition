@@ -50,6 +50,8 @@ BeaverBuddies.Settings.FriendsCanJoinSteamGame,"Дозволити друзям 
 BeaverBuddies.Settings.FriendsCanJoinSteamGame.Tooltip,"Якщо ввімкнено, ваші друзі зможуть підключитись без запрошення через Steam, а гра буде видна всім у списку «Відкриті матчі».",""
 BeaverBuddies.Settings.StrictBuildMatch,"Грати лише з точно такою самою збіркою",""
 BeaverBuddies.Settings.StrictBuildMatch.Tooltip,"Не пускає гравців, у яких BeaverBuddies — не точно така сама збірка, як у вас, з тією ж версією гри, додатковими модами та фракціями, і не дає вам приєднатися до такого хоста. Якщо вимкнено, ви отримаєте попередження й гратимете далі, але гра може розсинхронізуватися.",""
+BeaverBuddies.Settings.KeepPlayingInBackground,"Продовжувати гру у фоні в мультиплеєрі",""
+BeaverBuddies.Settings.KeepPlayingInBackground.Tooltip,"Поки ви хостите або граєте в чужій грі, вона працює далі, коли попереду інша програма, незалежно від фонового налаштування самої гри: якщо гра хоста зупиняється, зупиняються всі. Поза мультиплеєром діє налаштування гри. На ноутбуці витрачає більше заряду.",""
 BeaverBuddies.Settings.PauseReduction,"Зменшити кількість примусових пауз",""
 BeaverBuddies.Settings.PauseReduction.Tooltip,"Для оптимального досвіду всі гравці мають встановити однакове налаштування.
 
@@ -72,6 +74,8 @@ BeaverBuddies.JoinCoopGame.Error.InvalidAddress,"Адреса не є дійсн
 BeaverBuddies.JoinCoopGame.Error.Incompatible,"Хост грає з іншими модами або іншою збіркою BeaverBuddies. Встановіть ті самі з того самого джерела й приєднайтеся знову.",""
 BeaverBuddies.JoinCoopGame.Error.Full,"Гра заповнена.",""
 BeaverBuddies.Host.RefusedBuild,"{0} не може приєднатися: у цього гравця BeaverBuddies {1}, а ви хостите {2}. Усім потрібна точно така сама збірка.",""
+BeaverBuddies.JoinCoopGame.Error.Silent,"Хост не отримав відповіді від вашої гри вчасно. Приєднайтеся знову.",""
+BeaverBuddies.Host.RefusedSilent,"{0} не пущено: його гра так і не повідомила, яка в неї збірка BeaverBuddies.",""
 BeaverBuddies.JoinCoopGame.Error.CouldNotConnect,"Не вдалося підключитися до хоста. Перевірте адресу та порт, а також переконайтеся, що хост дійсно запущений і, за потреби, налаштовано переадресацію порту. Деталі помилки:",""
 BeaverBuddies.KeyBindings.Group,"BeaverBuddies",""
 BeaverBuddies.KeyBindings.Ping,"Позначити місце",""

@@ -16,8 +16,9 @@ namespace BeaverBuddies.Connect
      */
     public static class BuildIdentity
     {
-        // What a host says to a player it turns away for another build, with its own
+        // What a host says to a player it turns away, with its own build and why: another build, or none said in time
         public const string RefusedType = "BuildRefused";
+        public const string RefusedOtherBuild = "build", RefusedSilent = "silent";
 
         // This exact build: two builds of one version can still play differently. A test copy can be told
         // it's another (BB_FAKE_BUILD), as two copies of one build on one Mac couldn't otherwise be

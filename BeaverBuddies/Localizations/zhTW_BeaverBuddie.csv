@@ -50,6 +50,8 @@ BeaverBuddies.Settings.FriendsCanJoinSteamGame,"允許好友透過 Steam 直接�
 BeaverBuddies.Settings.FriendsCanJoinSteamGame.Tooltip,"啟用後，好友可以透過 Steam 無需邀請直接加入遊戲，遊戲也會出現在「開放對局」列表中，任何人都看得到。",""
 BeaverBuddies.Settings.StrictBuildMatch,"僅與完全相同的版本建置一起遊戲",""
 BeaverBuddies.Settings.StrictBuildMatch.Tooltip,"拒絕 BeaverBuddies 版本建置與你不完全相同（包括遊戲版本、附加模組和派系）的玩家，也不讓你加入不相同的主機。關閉後會顯示警告並可繼續遊戲，但遊戲可能失去同步。",""
+BeaverBuddies.Settings.KeepPlayingInBackground,"多人遊戲時在背景繼續執行",""
+BeaverBuddies.Settings.KeepPlayingInBackground.Tooltip,"當你主持或加入別人的遊戲時，無論遊戲本身的背景設定如何，即使其他應用程式在前景，遊戲也會繼續執行：主機的遊戲一停，所有人的遊戲都會停。多人遊戲以外使用遊戲本身的設定。在筆電上會更耗電。",""
 BeaverBuddies.Settings.PauseReduction,"減少強制暫停的次數",""
 BeaverBuddies.Settings.PauseReduction.Tooltip,"為獲得最佳體驗，建議所有玩家使用相同設定。
 
@@ -72,6 +74,8 @@ BeaverBuddies.JoinCoopGame.Error.InvalidAddress,"該位址不是有效的 IP 位
 BeaverBuddies.JoinCoopGame.Error.Incompatible,"主機使用了其他模組，或其他版本建置的 BeaverBuddies。請從同一來源安裝相同的模組，然後重新加入。",""
 BeaverBuddies.JoinCoopGame.Error.Full,"遊戲已滿。",""
 BeaverBuddies.Host.RefusedBuild,"{0} 無法加入：對方使用 BeaverBuddies {1}，而你的主機是 {2}。所有人都需要完全相同的版本建置。",""
+BeaverBuddies.JoinCoopGame.Error.Silent,"主機沒有及時收到你的遊戲的回應。請重新加入。",""
+BeaverBuddies.Host.RefusedSilent,"{0} 被拒絕：對方的遊戲始終沒有說明它使用的是哪個 BeaverBuddies 版本建置。",""
 BeaverBuddies.JoinCoopGame.Error.CouldNotConnect,"無法連線到主機。請檢查位址和埠號，並確保主機正在運行且在需要時已設定埠號轉送。錯誤詳細資訊：",""
 BeaverBuddies.KeyBindings.Group,"BeaverBuddies",""
 BeaverBuddies.KeyBindings.Ping,"標記位置",""

@@ -288,14 +288,18 @@ namespace BeaverBuddies.IO
             return false;
         }
 
+        // Turned away for another build, or for never saying which (build null): each told apart, to the player and the host
         private void Refuse(ISocketStream client, string name, string build)
         {
-            Plugin.LogWarning($"Turning away {name}: they play BeaverBuddies {build}, this hosts {Connect.BuildIdentity.Describe}");
+            Plugin.LogWarning(build == null
+                ? $"Turning away {name}: their game never said its build in {SayBuildWithin} s"
+                : $"Turning away {name}: they play BeaverBuddies {build}, this hosts {Connect.BuildIdentity.Describe}");
             refused.Add(client);
             NetBase.Refuse(client, new JObject
             {
                 [TimberNetBase.TYPE_KEY] = Connect.BuildIdentity.RefusedType,
                 ["host"] = Connect.BuildIdentity.Describe,
+                ["reason"] = build == null ? Connect.BuildIdentity.RefusedSilent : Connect.BuildIdentity.RefusedOtherBuild,
             });
             Connect.BuildNotice.Show(name, build);
         }
@@ -308,7 +312,7 @@ namespace BeaverBuddies.IO
             {
                 if (verified.Contains(client) || refused.Contains(client)) continue;
                 if (!firstSeen.TryGetValue(client, out float since)) firstSeen[client] = now;
-                else if (now - since >= SayBuildWithin) Refuse(client, client.Name ?? "A player", "a build it never said");
+                else if (now - since >= SayBuildWithin) Refuse(client, client.Name ?? "A player", null);
             }
         }
 

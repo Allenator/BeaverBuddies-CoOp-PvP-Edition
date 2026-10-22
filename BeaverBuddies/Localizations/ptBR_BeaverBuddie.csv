@@ -50,6 +50,8 @@ BeaverBuddies.Settings.FriendsCanJoinSteamGame,"Permitir que amigos entrem diret
 BeaverBuddies.Settings.FriendsCanJoinSteamGame.Tooltip,"Quando ativado, seus amigos podem entrar diretamente no seu jogo via Steam sem convite, e ele aparece em Partidas abertas para qualquer um.",""
 BeaverBuddies.Settings.StrictBuildMatch,"Jogar só com exatamente a mesma build",""
 BeaverBuddies.Settings.StrictBuildMatch.Tooltip,"Recusa jogadores cujo BeaverBuddies não seja exatamente a mesma build que a sua, com a mesma versão do jogo, os mesmos mods complementares e facções, e impede você de entrar em um anfitrião que não seja. Desligado, você é avisado e continua jogando, mas o jogo pode perder a sincronia.",""
+BeaverBuddies.Settings.KeepPlayingInBackground,"Continuar jogando em segundo plano no multijogador",""
+BeaverBuddies.Settings.KeepPlayingInBackground.Tooltip,"Enquanto você hospeda ou joga no jogo de alguém, ele continua rodando quando outro app está na frente, seja qual for a configuração de segundo plano do jogo: se o jogo do anfitrião para, o de todos para. Fora do multijogador, vale a configuração do jogo. Gasta mais bateria em um notebook.",""
 BeaverBuddies.Settings.PauseReduction,"Reduzir o número de pausas forçadas",""
 BeaverBuddies.Settings.PauseReduction.Tooltip,"Para a melhor experiência, todos os jogadores devem usar a mesma configuração.
 
@@ -72,6 +74,8 @@ Tentou-se resolvê-lo como um nome de host, mas ele não foi convertido em um en
 BeaverBuddies.JoinCoopGame.Error.Incompatible,"O anfitrião joga com outros mods ou outra build do BeaverBuddies. Instale os mesmos do mesmo lugar e entre de novo.",""
 BeaverBuddies.JoinCoopGame.Error.Full,"A partida está cheia.",""
 BeaverBuddies.Host.RefusedBuild,"{0} não pôde entrar: tem BeaverBuddies {1}, e você hospeda {2}. Todos precisam exatamente da mesma build.",""
+BeaverBuddies.JoinCoopGame.Error.Silent,"O anfitrião não recebeu notícias do seu jogo a tempo. Entre de novo.",""
+BeaverBuddies.Host.RefusedSilent,"{0} foi recusado: o jogo dele nunca disse qual build do BeaverBuddies usa.",""
 BeaverBuddies.JoinCoopGame.Error.CouldNotConnect,"Não foi possível conectar ao host. Verifique o endereço e a porta, e certifique-se de que o host esteja hospedando e com o redirecionamento de porta configurado, se necessário. Detalhes do erro:",""
 BeaverBuddies.KeyBindings.Group,"BeaverBuddies",""
 BeaverBuddies.KeyBindings.Ping,"Marcar localização",""

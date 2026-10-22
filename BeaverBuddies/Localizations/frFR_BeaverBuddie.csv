@@ -50,6 +50,8 @@ BeaverBuddies.Settings.FriendsCanJoinSteamGame,"Autoriser les amis à rejoindre 
 BeaverBuddies.Settings.FriendsCanJoinSteamGame.Tooltip,"Si activé, tes amis peuvent rejoindre ta partie directement via Steam sans invitation, et elle apparaît dans Parties ouvertes pour tout le monde.",""
 BeaverBuddies.Settings.StrictBuildMatch,"Jouer uniquement avec exactement la même version compilée",""
 BeaverBuddies.Settings.StrictBuildMatch.Tooltip,"Refuse les joueurs dont BeaverBuddies n'est pas exactement la même version compilée que la tienne, avec la même version du jeu, les mêmes mods complémentaires et factions, et t'empêche de rejoindre un hôte qui ne l'est pas. Désactivé, tu es averti et tu continues à jouer, mais la partie peut se désynchroniser.",""
+BeaverBuddies.Settings.KeepPlayingInBackground,"Continuer à jouer en arrière-plan en multijoueur",""
+BeaverBuddies.Settings.KeepPlayingInBackground.Tooltip,"Quand tu héberges ou joues dans la partie de quelqu'un, elle continue de tourner quand une autre application est au premier plan, quel que soit le réglage d'arrière-plan du jeu : si la partie de l'hôte s'arrête, celle de tout le monde s'arrête. Hors multijoueur, le réglage du jeu s'applique. Consomme plus de batterie sur un portable.",""
 BeaverBuddies.Settings.PauseReduction,"Réduire le nombre de pauses forcées",""
 BeaverBuddies.Settings.PauseReduction.Tooltip,"Pour une expérience optimale, tous les joueurs devraient utiliser le même réglage.
 
@@ -72,6 +74,8 @@ Une tentative de résolution en nom d’hôte a été faite, mais elle n’a pas
 BeaverBuddies.JoinCoopGame.Error.Incompatible,"L'hôte joue avec d'autres mods ou une autre version compilée de BeaverBuddies. Installe les mêmes depuis la même source, puis rejoins à nouveau.",""
 BeaverBuddies.JoinCoopGame.Error.Full,"La partie est pleine.",""
 BeaverBuddies.Host.RefusedBuild,"{0} n'a pas pu rejoindre : BeaverBuddies {1} de son côté, {2} chez toi. Tout le monde doit avoir exactement la même version compilée.",""
+BeaverBuddies.JoinCoopGame.Error.Silent,"L'hôte n'a pas eu de nouvelles de ta partie à temps. Rejoins à nouveau.",""
+BeaverBuddies.Host.RefusedSilent,"{0} a été refusé : sa partie n'a jamais dit quelle version compilée de BeaverBuddies elle utilise.",""
 BeaverBuddies.JoinCoopGame.Error.CouldNotConnect,"Impossible de se connecter à l’hôte. Veuillez vérifier l’adresse et le port, et assurez-vous que l’hôte héberge bien la partie et a configuré la redirection de port si nécessaire. Détails de l’erreur :",""
 BeaverBuddies.KeyBindings.Group,"BeaverBuddies",""
 BeaverBuddies.KeyBindings.Ping,"Marquer un emplacement",""
