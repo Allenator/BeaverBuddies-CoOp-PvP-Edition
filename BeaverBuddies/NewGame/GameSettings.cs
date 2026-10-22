@@ -209,12 +209,16 @@ namespace BeaverBuddies.NewGame
         }
 
         /**
-         * A slider's value in words: its value text, or at its minimum the
-         * mod's own text for it where there's one (its value text's key with
-         * ".Min": "No raids").
+         * A slider's value in words: the mod's own text for that value where
+         * there's one (its value text's key with the value, ".1": "Fog"), or
+         * at its minimum the one for that (".Min": "No raids"), or its value
+         * text with the number.
          */
         public static string SliderText(ILoc loc, GameSetting setting, int value)
         {
+            string own = setting.ValueLocKey + "." + value;
+            string ownText = loc.T(own);
+            if (ownText != own) return ownText;
             if (value == setting.Min)
             {
                 string key = setting.ValueLocKey + ".Min";
