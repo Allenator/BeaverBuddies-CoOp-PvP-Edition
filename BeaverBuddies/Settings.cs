@@ -52,6 +52,15 @@ namespace BeaverBuddies
             ).SetLocalizedTooltip("BeaverBuddies.Settings.FriendsCanJoinSteamGame.Tooltip")
         );
 
+        // On, a player on another build (see Connect.BuildIdentity) can't join this player's game, nor
+        // this player theirs, however they join; off, they're warned and play on, maybe out of sync
+        public ModSetting<bool> StrictBuildMatch { get; } =
+            new(true,
+            ModSettingDescriptor.CreateLocalized(
+                "BeaverBuddies.Settings.StrictBuildMatch"
+            ).SetLocalizedTooltip("BeaverBuddies.Settings.StrictBuildMatch.Tooltip")
+        );
+
         // ---- Quality of Life Settings ----
 
         // Menu only by default: pausing everyone whenever someone opens a
@@ -124,6 +133,11 @@ namespace BeaverBuddies
         public static int Port => instance?.DefaultPort.Value ?? 25565;
         public static bool EnableSteam => instance?.EnableSteamConnection.Value ?? true;
         public static bool LobbyJoinable => instance?.FriendsCanJoinSteamGame.Value ?? true;
+        // Two test copies share these settings: each can be told otherwise (BB_STRICT, see DevTools.TestHarness)
+        public static bool StrictBuild =>
+            DevTools.TestHarness.Active && System.Environment.GetEnvironmentVariable("BB_STRICT") is string strict && strict != ""
+                ? strict != "0"
+                : instance?.StrictBuildMatch.Value ?? true;
         public static bool ShouldShowFirstTimerMessage => instance?.ShowFirstTimerMessage.Value ?? true;
         // Saved with each game, picked when it's created (see DevTools.DevToolsRule)
         public static bool AllowDevTools => DevTools.DevToolsRule.Allowed;

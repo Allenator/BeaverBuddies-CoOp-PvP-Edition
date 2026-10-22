@@ -48,6 +48,8 @@ BeaverBuddies.Settings.EnableSteamConnection.Tooltip,"อนุญาตให�
 นอกจากนี้ การเชื่อมต่อ P2P อาจช้ากว่าแบบตรง",""
 BeaverBuddies.Settings.FriendsCanJoinSteamGame,"ให้เพื่อนเข้าร่วมเกมผ่าน Steam ได้ตรงๆ",""
 BeaverBuddies.Settings.FriendsCanJoinSteamGame.Tooltip,"หากเปิดใช้งาน เพื่อนของคุณสามารถเข้าร่วมเกมผ่าน Steam โดยไม่ต้องเชิญ และเกมจะแสดงในรายการ แมตช์ที่เปิดอยู่ให้ทุกคนเห็น",""
+BeaverBuddies.Settings.StrictBuildMatch,"เล่นกับบิลด์ที่ตรงกันทุกประการเท่านั้น",""
+BeaverBuddies.Settings.StrictBuildMatch.Tooltip,"ปฏิเสธผู้เล่นที่ BeaverBuddies ไม่ใช่บิลด์เดียวกับของคุณทุกประการ รวมถึงเวอร์ชันเกม ม็อดเสริม และฝ่าย และไม่ให้คุณเข้าร่วมโฮสต์ที่ไม่ตรงกัน หากปิด คุณจะได้รับคำเตือนและเล่นต่อได้ แต่เกมอาจไม่ซิงค์กัน",""
 BeaverBuddies.Settings.PauseReduction,"ลดจำนวนการหยุดชั่วคราวที่ถูกบังคับ",""
 BeaverBuddies.Settings.PauseReduction.Tooltip,"เพื่อประสบการณ์ที่ดีที่สุด ผู้เล่นทุกคนควรใช้การตั้งค่าเดียวกัน
 
@@ -69,6 +71,7 @@ BeaverBuddies.JoinCoopGame.Error.InvalidAddress,"ที่อยู่นั้�
 พยายามแปลงเป็นชื่อโฮสต์แล้ว แต่ไม่สามารถแปลงเป็นที่อยู่ IP ได้",""
 BeaverBuddies.JoinCoopGame.Error.Incompatible,"โฮสต์ใช้ม็อดอื่น หรือ BeaverBuddies คนละบิลด์ ติดตั้งตัวเดียวกันจากแหล่งเดียวกัน แล้วเข้าร่วมอีกครั้ง",""
 BeaverBuddies.JoinCoopGame.Error.Full,"เกมเต็มแล้ว",""
+BeaverBuddies.Host.RefusedBuild,"{0} เข้าร่วมไม่ได้: ผู้เล่นใช้ BeaverBuddies {1} แต่คุณโฮสต์ {2} ทุกคนต้องใช้บิลด์เดียวกันทุกประการ",""
 BeaverBuddies.JoinCoopGame.Error.CouldNotConnect,"ไม่สามารถเชื่อมต่อกับโฮสต์ได้ โปรดตรวจสอบที่อยู่และพอร์ต และตรวจสอบให้แน่ใจว่าโฮสต์กำลังโฮสต์อยู่และมีการส่งต่อพอร์ตหากจำเป็น รายละเอียดข้อผิดพลาด:",""
 BeaverBuddies.KeyBindings.Group,"BeaverBuddies",""
 BeaverBuddies.KeyBindings.Ping,"ปักหมุดตำแหน่ง",""

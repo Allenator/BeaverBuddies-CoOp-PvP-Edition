@@ -27,6 +27,10 @@ namespace BeaverBuddies.Events
         // The host's game hasn't been started yet: the host is in the box, and the map is of this name
         public bool hostWaiting;
         public string hostMapName;
+        // What the host needs a player to have alike, and its build (see Connect.BuildIdentity); null from hosts that
+        // don't send them. A player checks them before it loads the map (see ClientConnectionService)
+        public string serverCompat;
+        public string serverBuild;
 
         public override void Replay(IReplayContext context)
         {
@@ -43,6 +47,10 @@ namespace BeaverBuddies.Events
             {
                 warningMessage = $"Warning! Server mod version ({serverModVersion}) does not match client mod version ({Plugin.Version}).\n" +
                     $"Please ensure that you are running the same version of the {Plugin.ID} mod.";
+            } else if (serverBuild != null && serverBuild != Connect.BuildIdentity.Build)
+            {
+                warningMessage = $"Warning! Server mod build ({serverModVersion}, build {serverBuild}) does not match client mod build ({Connect.BuildIdentity.Describe}).\n" +
+                    $"Please ensure that you are running the same build of the {Plugin.ID} mod, from the same download, or the game may fall out of sync.";
             } else if (serverAddOns != null && serverAddOns != ReplayHooks.AddOnList)
             {
                 warningMessage = $"Warning! The host plays with these add-on mods: {Describe(serverAddOns)}.\n" +
@@ -85,6 +93,8 @@ namespace BeaverBuddies.Events
                 serverFactions = ReplayHooks.FactionList,
                 hostWaiting = Connect.NewGameHosting.SettingUp,
                 hostMapName = Connect.HostLobby.MapName,
+                serverCompat = Connect.BuildIdentity.CompatValue,
+                serverBuild = Connect.BuildIdentity.Build,
             };
             return message;
         }

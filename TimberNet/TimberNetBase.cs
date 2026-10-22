@@ -433,7 +433,7 @@ namespace TimberNet
                     {
                         ReceiveTransientMessage(received.source, message);
                     }
-                    else
+                    else if (AcceptsEventFrom(received.source, message))
                     {
                         ReceiveEvent(message);
                     }
@@ -452,6 +452,12 @@ namespace TimberNet
         {
             InsertInScript(message, receivedEvents);
         }
+
+        /**
+         * Whether an event from this connection is taken at all: the server
+         * drops those of a client it doesn't let in (see TimberServer.AcceptEventsFrom).
+         */
+        protected virtual bool AcceptsEventFrom(ISocketStream source, JObject message) => true;
 
         public static bool IsTransient(JObject message)
         {

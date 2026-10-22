@@ -48,6 +48,8 @@ BeaverBuddies.Settings.EnableSteamConnection.Tooltip,"允许玩家通过 Steam �
 此外，P2P 连接可能比直接连接慢。",""
 BeaverBuddies.Settings.FriendsCanJoinSteamGame,"允许好友通过 Steam 直接加入",""
 BeaverBuddies.Settings.FriendsCanJoinSteamGame.Tooltip,"启用后，你的好友可以通过 Steam 直接加入游戏，无需邀请，游戏也会出现在“开放对局”列表中，任何人都能看到。",""
+BeaverBuddies.Settings.StrictBuildMatch,"仅与完全相同的版本构建一起游戏",""
+BeaverBuddies.Settings.StrictBuildMatch.Tooltip,"拒绝 BeaverBuddies 版本构建与你不完全相同（包括游戏版本、附加模组和派系）的玩家，也不让你加入不相同的主机。关闭后会给出警告并可继续游戏，但游戏可能失去同步。",""
 BeaverBuddies.Settings.PauseReduction,"减少强制暂停的次数",""
 BeaverBuddies.Settings.PauseReduction.Tooltip,"为获得最佳体验，建议所有玩家使用相同设置。
 
@@ -69,6 +71,7 @@ BeaverBuddies.JoinCoopGame.Error.InvalidAddress,"该地址不是有效的IP地�
 尝试将其解析为主机名，但未能解析为IP地址。",""
 BeaverBuddies.JoinCoopGame.Error.Incompatible,"主机使用了其他模组，或其他版本构建的 BeaverBuddies。请从同一来源安装相同的模组，然后重新加入。",""
 BeaverBuddies.JoinCoopGame.Error.Full,"游戏已满。",""
+BeaverBuddies.Host.RefusedBuild,"{0} 无法加入：对方使用 BeaverBuddies {1}，而你的主机是 {2}。所有人都需要完全相同的版本构建。",""
 BeaverBuddies.JoinCoopGame.Error.CouldNotConnect,"无法连接到主机。请检查地址和端口，并确保主机正在运行且在需要时已正确设置端口转发。错误详情：",""
 BeaverBuddies.KeyBindings.Group,"BeaverBuddies",""
 BeaverBuddies.KeyBindings.Ping,"标记位置",""

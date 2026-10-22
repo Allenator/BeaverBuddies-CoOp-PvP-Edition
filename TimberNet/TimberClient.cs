@@ -39,6 +39,9 @@ namespace TimberNet
             SendTransientMessage(client, message);
         }
 
+        /** The first event of this type received and not played yet, left where it is; null if none. */
+        public JObject? FindReceivedEvent(string type) => receivedEvents.FirstOrDefault(m => GetType(m) == type);
+
         protected override void ProcessReceivedEvent(JObject message)
         {
             base.ProcessReceivedEvent(message);

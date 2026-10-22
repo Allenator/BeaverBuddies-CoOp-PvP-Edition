@@ -31,6 +31,10 @@ namespace TimberNet
         public Func<int>? MaxClients;
         // The error a client turned away for it gets
         public const string GameFullError = "GameFull";
+        // Whether what a client says is taken, relayed and handled: false drops it. On the Update() thread
+        public Func<ISocketStream, JObject, bool>? AcceptTransientFrom;
+        // Whether a client's events are taken: false drops them. On the Update() thread
+        public Func<ISocketStream, bool>? AcceptEventsFrom;
 
         private Func<Task<byte[]>> mapProvider;
         private Func<JObject>? initEventProvider;
@@ -54,6 +58,15 @@ namespace TimberNet
             lock (queuedMessages)
             {
                 return clients.Where(c => c != null && c.Connected).Select(c => c.Name).ToList();
+            }
+        }
+
+        /** The connections of the clients in now, those still getting their map among them. */
+        public List<ISocketStream> ConnectedStreams()
+        {
+            lock (queuedMessages)
+            {
+                return clients.Where(c => c != null && c.Connected).ToList();
             }
         }
 
@@ -289,6 +302,29 @@ namespace TimberNet
             });
         }
 
+        /**
+         * Tells a client why it can't stay, then closes its connection once that's had time to arrive.
+         * It goes after the client's map, as everything sent to it does: the server only reads what a
+         * client says once its map is on its way, so nothing it says is answered sooner.
+         */
+        public void Refuse(ISocketStream client, JObject message)
+        {
+            message[TRANSIENT_KEY] = true;
+            try
+            {
+                SendTransientMessage(client, message);
+            }
+            catch (Exception e)
+            {
+                Log($"Couldn't tell the client why: {e.Message}");
+            }
+            Task.Run(async () =>
+            {
+                await Task.Delay(2000);
+                DropClient(client);
+            });
+        }
+
         private void DropClient(ISocketStream client)
         {
             lock (queuedMessages)
@@ -420,9 +456,17 @@ namespace TimberNet
 
         protected override void ReceiveTransientMessage(ISocketStream source, JObject message)
         {
+            if (AcceptTransientFrom != null && !AcceptTransientFrom(source, message)) return;
             // Relay to every other client, then handle it locally
             SendTransientMessageToClients(message, source);
             base.ReceiveTransientMessage(source, message);
+        }
+
+        protected override bool AcceptsEventFrom(ISocketStream source, JObject message)
+        {
+            if (AcceptEventsFrom == null || AcceptEventsFrom(source)) return true;
+            Log($"Dropping {GetType(message)} from a client that isn't let in");
+            return false;
         }
 
         private void SendTransientMessageToClients(JObject message, ISocketStream? except)

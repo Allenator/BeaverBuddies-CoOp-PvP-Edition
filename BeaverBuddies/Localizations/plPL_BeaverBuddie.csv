@@ -48,6 +48,8 @@ Uwaga: ta funkcja może nie działać, jeśli twoja sieć nie obsługuje P2P.
 Ponadto połączenia P2P mogą być wolniejsze niż bezpośrednie.",""
 BeaverBuddies.Settings.FriendsCanJoinSteamGame,"Pozwól znajomym na dołączenie przez Steam",""
 BeaverBuddies.Settings.FriendsCanJoinSteamGame.Tooltip,"Po włączeniu twoi znajomi mogą dołączyć do twojej gry bez zaproszenia, korzystając ze Steam, a gra jest widoczna dla wszystkich na liście Otwarte mecze.",""
+BeaverBuddies.Settings.StrictBuildMatch,"Graj tylko z dokładnie tą samą kompilacją",""
+BeaverBuddies.Settings.StrictBuildMatch.Tooltip,"Odrzuca graczy, których BeaverBuddies nie jest dokładnie tą samą kompilacją co twoja, z tą samą wersją gry, modami dodatkowymi i frakcjami, i nie pozwala ci dołączyć do takiego hosta. Wyłączone: dostajesz ostrzeżenie i grasz dalej, ale gra może się rozsynchronizować.",""
 BeaverBuddies.Settings.PauseReduction,"Zmniejsz liczbę wymuszonych pauz",""
 BeaverBuddies.Settings.PauseReduction.Tooltip,"Dla najlepszego efektu wszyscy gracze powinni mieć to samo ustawienie.
 
@@ -69,6 +71,7 @@ BeaverBuddies.JoinCoopGame.Error.InvalidAddress,"Adres nie był prawidłowym adr
 Podjęto próbę rozwiązania go jako nazwy hosta, ale nie został przetłumaczony na adres IP.",""
 BeaverBuddies.JoinCoopGame.Error.Incompatible,"Host gra z innymi modami lub inną kompilacją BeaverBuddies. Zainstaluj te same z tego samego źródła i dołącz ponownie.",""
 BeaverBuddies.JoinCoopGame.Error.Full,"Gra jest pełna.",""
+BeaverBuddies.Host.RefusedBuild,"{0} nie może dołączyć: ma BeaverBuddies {1}, a ty hostujesz {2}. Wszyscy potrzebują dokładnie tej samej kompilacji.",""
 BeaverBuddies.JoinCoopGame.Error.CouldNotConnect,"Nie udało się połączyć z hostem. Sprawdź adres i port oraz upewnij się, że host faktycznie hostuje i ma przekierowany port, jeśli to konieczne. Szczegóły błędu:",""
 BeaverBuddies.KeyBindings.Group,"BeaverBuddies",""
 BeaverBuddies.KeyBindings.Ping,"Oznacz lokalizację",""
