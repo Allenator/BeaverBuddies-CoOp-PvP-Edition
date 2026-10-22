@@ -29,42 +29,42 @@ BeaverBuddies.ClientDesynced.ReportOnDiscord,"รายงานใน Discord",
 BeaverBuddies.ClientDesynced.TraceSaved,"บันทึกเทรซไว้ข้าง Player.log แล้ว",""
 BeaverBuddies.ClientDesynced.EnableTracing,"เปิดบันทึกข้อมูล",""
 BeaverBuddies.ClientDesynced.NeedToEnableTracing,"เพื่อรายงานการเกิดการไม่ซิงค์นี้ *ผู้เล่นทุกคน* ต้องเปิดใช้งานการบันทึกข้อมูลที่มีรายละเอียดมากขึ้นโดยกด 'เปิดบันทึกข้อมูล' ด้านล่าง หากเกิดการไม่ซิงค์อีกครั้ง คุณจะสามารถรายงานใน Discord ของเราพร้อมบันทึกข้อมูลแบบละเอียดได้ โหมดบันทึกข้อมูลอาจทำให้เกิดความล่าช้า แต่จะเปิดใช้งานจนกว่าจะรีสตาร์ทเกมอีกครั้งเท่านั้น",""
-BeaverBuddies.Settings.ClientConnectionAddress,"ที่อยู่เชื่อมต่อไคลเอนต์",""
-BeaverBuddies.Settings.ClientConnectionAddress.Tooltip,"ที่อยู่ IP เริ่มต้นเมื่อเชื่อมต่อไปยังโฮสต์",""
+BeaverBuddies.Settings.Section.You,"ส่วนตัว",""
+BeaverBuddies.Settings.Section.Multiplayer,"ผู้เล่นหลายคน",""
+BeaverBuddies.Settings.Section.Hosting,"การโฮสต์",""
+BeaverBuddies.Settings.Section.Developer,"นักพัฒนา",""
+BeaverBuddies.Settings.Section.Hosting.Note,"การตั้งค่าเหล่านี้ใช้กับเกมที่คุณโฮสต์ เมื่อคุณเข้าร่วมเกมของคนอื่น จะใช้ตัวเลือกของโฮสต์แทน",""
+BeaverBuddies.Settings.ClientConnectionAddress,"ที่อยู่เข้าร่วมเริ่มต้น",""
+BeaverBuddies.Settings.ClientConnectionAddress.Tooltip,"ที่อยู่หรือรหัสเข้าร่วมที่กรอกไว้ล่วงหน้าในช่องเข้าร่วมเกม ซึ่งก็คือรายการล่าสุดที่คุณเข้าร่วม",""
 BeaverBuddies.Settings.Port,"พอร์ต",""
-BeaverBuddies.Settings.Port.Tooltip,"พอร์ตที่ใช้เมื่อโฮสต์หรือเข้าร่วมเกม ควรตรงกับพอร์ตที่โฮสต์เปิดไว้",""
+BeaverBuddies.Settings.Port.Tooltip,"พอร์ตที่เกมของคุณรอรับการเชื่อมต่อเมื่อคุณโฮสต์ และเป็นพอร์ตที่ใช้เมื่อคุณเข้าร่วมด้วยที่อยู่ที่ไม่ได้ระบุพอร์ต หากต้องการให้ผู้อื่นเข้าร่วมด้วยที่อยู่ผ่านอินเทอร์เน็ต โฮสต์ต้องส่งต่อพอร์ตนี้บนเราเตอร์",""
 BeaverBuddies.Settings.SilenceLogging,"ปิดการบันทึก log",""
-BeaverBuddies.Settings.SilenceLogging.Tooltip,"ป้องกันไม่ให้ม็อดนี้บันทึกลงไฟล์ log ของผู้เล่น (ยกเว้นคำเตือนและข้อผิดพลาด)
-การตั้งค่านี้สำหรับนักพัฒนา",""
-BeaverBuddies.Settings.ShowFirstTimerMessage,"แสดงข้อความผู้เล่นใหม่",""
+BeaverBuddies.Settings.SilenceLogging.Tooltip,"ไม่บันทึกข้อความของม็อดนี้ลงไฟล์ log ของเกม ยกเว้นคำเตือนและข้อผิดพลาด ตัวเลือกนี้มีไว้สำหรับนักพัฒนา",""
+BeaverBuddies.Settings.ShowFirstTimerMessage,"แสดงข้อความต้อนรับ",""
+BeaverBuddies.Settings.ShowFirstTimerMessage.Tooltip,"แสดงข้อความต้อนรับครั้งแรกพร้อมลิงก์ไปยังคู่มือการตั้งค่า เมื่อเปิดเมนูหลักครั้งถัดไป ตัวเลือกนี้จะปิดเองเมื่อคุณตอบข้อความแล้ว",""
 BeaverBuddies.Settings.AlwaysTrace,"ใช้ log รายละเอียดเสมอ",""
-BeaverBuddies.Settings.AlwaysTrace.Tooltip,"หากเปิดใช้งาน เกมจะใช้ log แบบละเอียดเสมอ ทำให้สามารถส่งรายงานการ desync ได้ตั้งแต่ครั้งแรกโดยไม่ต้องเปิดใช้งานเอง
-ผู้เล่นทุกคนต้องเปิดใช้งาน
-การตั้งค่านี้อาจทำให้เกมหน่วงและไม่แนะนำสำหรับผู้เล่นส่วนใหญ่",""
-BeaverBuddies.Settings.EnableSteamConnection,"เปิดใช้งานเครือข่าย Steam",""
-BeaverBuddies.Settings.EnableSteamConnection.Tooltip,"อนุญาตให้ผู้เล่นเข้าร่วมเกมของคุณผ่านเครือข่าย P2P ของ Steam
-ผู้เล่นยังสามารถเข้าร่วมผ่านการส่งต่อพอร์ต
-หมายเหตุ: ฟีเจอร์นี้อาจไม่ทำงานหากเครือข่ายของคุณไม่รองรับ P2P
-นอกจากนี้ การเชื่อมต่อ P2P อาจช้ากว่าแบบตรง",""
-BeaverBuddies.Settings.FriendsCanJoinSteamGame,"ให้เพื่อนเข้าร่วมเกมผ่าน Steam ได้ตรงๆ",""
-BeaverBuddies.Settings.FriendsCanJoinSteamGame.Tooltip,"หากเปิดใช้งาน เพื่อนของคุณสามารถเข้าร่วมเกมผ่าน Steam โดยไม่ต้องเชิญ และเกมจะแสดงในรายการ แมตช์ที่เปิดอยู่ให้ทุกคนเห็น",""
+BeaverBuddies.Settings.AlwaysTrace.Tooltip,"บันทึกทุกเกมอย่างละเอียดตั้งแต่ติกแรก เพื่อให้รายงานการไม่ซิงค์ได้ตั้งแต่ครั้งแรกที่เกิดขึ้น โดยไม่ต้องเปิดการบันทึกทีหลัง ผู้เล่นทุกคนต้องเปิดตัวเลือกนี้ ตัวเลือกนี้ทำให้เกมช้าลงเล็กน้อย จึงไม่แนะนำสำหรับผู้เล่นส่วนใหญ่",""
+BeaverBuddies.Settings.EnableSteamConnection,"ใช้เครือข่าย Steam",""
+BeaverBuddies.Settings.EnableSteamConnection.Tooltip,"ให้ผู้เล่นเข้าร่วมเกมของคุณผ่าน Steam และใช้ Steam ค้นหาเกมในแมตช์ด่วนและแมตช์ที่เปิดอยู่ หากปิด ผู้เล่นจะเข้าร่วมด้วยรหัสหรือที่อยู่ และจะค้นหาเกมโดยไม่ใช้ Steam ในบางเครือข่าย การเชื่อมต่อ P2P ของ Steam อาจใช้งานไม่ได้หรือช้ากว่าการเชื่อมต่อโดยตรง",""
+BeaverBuddies.Settings.FriendsCanJoinSteamGame,"ให้เพื่อน Steam เข้าร่วมได้โดยไม่ต้องเชิญ",""
+BeaverBuddies.Settings.FriendsCanJoinSteamGame.Tooltip,"เพื่อน Steam ของคุณเข้าร่วมเกมของคุณได้โดยไม่ต้องเชิญ และเกมจะแสดงในแมตช์ที่เปิดอยู่ให้ทุกคนเห็น เว้นแต่คุณจะติ๊ก ""เฉพาะผู้ได้รับเชิญ"" ตอนโฮสต์ หากปิด ผู้เล่นจะเข้าร่วมได้ผ่านคำเชิญ รหัส หรือที่อยู่เท่านั้น",""
 BeaverBuddies.Settings.StrictBuildMatch,"เล่นกับบิลด์ที่ตรงกันทุกประการเท่านั้น",""
-BeaverBuddies.Settings.StrictBuildMatch.Tooltip,"ปฏิเสธผู้เล่นที่ BeaverBuddies ไม่ใช่บิลด์เดียวกับของคุณทุกประการ รวมถึงเวอร์ชันเกม ม็อดเสริม และฝ่าย และไม่ให้คุณเข้าร่วมโฮสต์ที่ไม่ตรงกัน หากปิด คุณจะได้รับคำเตือนและเล่นต่อได้ แต่เกมอาจไม่ซิงค์กัน",""
-BeaverBuddies.Settings.KeepPlayingInBackground,"เล่นต่อในเบื้องหลังระหว่างผู้เล่นหลายคน",""
-BeaverBuddies.Settings.KeepPlayingInBackground.Tooltip,"ระหว่างที่คุณโฮสต์หรือเล่นในเกมของคนอื่น เกมจะทำงานต่อแม้มีแอปอื่นอยู่ด้านหน้า ไม่ว่าการตั้งค่าเบื้องหลังของเกมจะเป็นอย่างไร เพราะถ้าเกมของโฮสต์หยุด เกมของทุกคนก็หยุด นอกโหมดผู้เล่นหลายคนจะใช้การตั้งค่าของเกม ใช้แบตเตอรี่มากขึ้นบนแล็ปท็อป",""
-BeaverBuddies.Settings.PauseReduction,"สิ่งที่หยุดเกมของทุกคน (โฮสต์เป็นผู้เลือก)",""
-BeaverBuddies.Settings.PauseReduction.Tooltip,"ในเกมที่คุณโฮสต์ ตัวเลือกของคุณตรงนี้ใช้กับผู้เล่นทุกคน: สิ่งใดที่หยุดเกมของทุกคนชั่วคราว ตัวเลือกของแขกจะใช้เฉพาะในเกมที่แขกคนนั้นโฮสต์
+BeaverBuddies.Settings.StrictBuildMatch.Tooltip,"ปฏิเสธผู้เล่นที่ BeaverBuddies ไม่ใช่บิลด์เดียวกับของคุณทุกประการ รวมถึงเวอร์ชันเกม ม็อดเสริม และฝ่าย และไม่ให้คุณเข้าร่วมโฮสต์ที่บิลด์ไม่ตรงกัน หากปิด คุณจะได้รับคำเตือนและเล่นต่อได้ แต่เกมอาจไม่ซิงค์กัน ผู้เล่นที่ใช้บิลด์ต่างกันจะเล่นด้วยกันได้ก็ต่อเมื่อทั้งโฮสต์และแขกปิดตัวเลือกนี้",""
+BeaverBuddies.Settings.KeepPlayingInBackground,"เล่นต่อในเบื้องหลัง",""
+BeaverBuddies.Settings.KeepPlayingInBackground.Tooltip,"ระหว่างที่คุณโฮสต์หรือเล่นในเกมของคนอื่น เกมของคุณจะทำงานต่อแม้มีแอปอื่นอยู่ด้านหน้า ไม่ว่าการตั้งค่า ""ทำงานในพื้นหลัง"" ของเกมจะเป็นอย่างไร ถ้าเกมของโฮสต์หยุด เกมของทุกคนจะหยุดด้วย ส่วนถ้าเกมของแขกหยุด แขกจะตามหลังแล้วค่อยตามทัน นอกโหมดผู้เล่นหลายคนจะใช้การตั้งค่าของเกมเอง ใช้แบตเตอรี่มากขึ้นบนแล็ปท็อป",""
+BeaverBuddies.Settings.PauseReduction,"สิ่งที่หยุดเกมของทุกคน",""
+BeaverBuddies.Settings.PauseReduction.Tooltip,"สิ่งที่หยุดเกมชั่วคราวสำหรับผู้เล่นทุกคนในเกมที่คุณโฮสต์
 
-เมนูและหน้าต่างโต้ตอบ – พฤติกรรมของเกมเอง: การเปิดเมนูจะหยุดเกมของทุกคน รวมถึงหน้าต่างโต้ตอบของโฮสต์ (รื้อถอน วิจัย)
-เฉพาะเมนู – การเปิดเมนูจะหยุดเกมของทุกคน แต่หน้าต่างโต้ตอบไม่หยุด
-ไม่มี – เมนูของผู้เล่นแต่ละคนเป็นของตัวเองและไม่หยุดเกมของใคร
+ทั้งหมด: พฤติกรรมของเกมเอง การเปิดเมนูจะหยุดเกมของทุกคน และหน้าต่างโต้ตอบของโฮสต์ (รื้อถอน วิจัย) ก็เช่นกัน
+เฉพาะเมนู: การเปิดเมนูจะหยุดเกมของทุกคน แต่หน้าต่างโต้ตอบไม่หยุด
+ไม่มี: เมนูของผู้เล่นแต่ละคนเป็นของตัวเองและไม่หยุดเกมของใคร
 
-ปุ่มหยุดชั่วคราวและปุ่มความเร็วจะหยุดเกมของทุกคนเสมอ การบันทึกจะรอจนจบติกปัจจุบันเสมอ จึงสอดคล้องกันในทุกกรณี",""
-BeaverBuddies.Settings.PauseReduction.Off,"เมนูและหน้าต่างโต้ตอบ",""
+ปุ่มหยุดชั่วคราวและปุ่มความเร็วจะหยุดเกมของทุกคนเสมอ การบันทึกจะรอจนจบติกปัจจุบันเสมอ จึงสอดคล้องกันไม่ว่าจะเลือกแบบใด",""
+BeaverBuddies.Settings.PauseReduction.Off,"ทั้งหมด",""
 BeaverBuddies.Settings.PauseReduction.LowRisk,"เฉพาะเมนู",""
-BeaverBuddies.Settings.PauseReduction.HighRisk,"ไม่มี: เมนูของแต่ละคนเป็นของตัวเอง",""
-BeaverBuddies.Settings.PauseForHostSaves,"หยุดเกมชั่วคราวขณะโฮสต์บันทึก",""
-BeaverBuddies.Settings.PauseForHostSaves.Tooltip,"ในเกมที่คุณโฮสต์ การบันทึกที่คุณทำเองจะถูกเขียนขณะเกมหยุดชั่วคราว เหมือนตอนเล่นคนเดียว แล้วเกมจะเล่นต่อด้วยความเร็วเดิม ไม่ว่าอย่างไรแขกจะรออยู่ ณ จุดเดียวกันขณะที่คุณบันทึก การบันทึกอัตโนมัติจะไม่หยุดเกม",""
+BeaverBuddies.Settings.PauseReduction.HighRisk,"ไม่มี",""
+BeaverBuddies.Settings.PauseForHostSaves,"หยุดเกมชั่วคราวขณะคุณบันทึก",""
+BeaverBuddies.Settings.PauseForHostSaves.Tooltip,"การบันทึกที่คุณทำเองจะถูกเขียนขณะเกมหยุดชั่วคราว เหมือนในเกมผู้เล่นคนเดียว แล้วเกมจะเล่นต่อด้วยความเร็วเดิม การบันทึกอัตโนมัติจะไม่หยุดเกม ไม่ว่าแบบใด แขกจะรออยู่ ณ จุดเดียวกันขณะที่คุณบันทึก",""
 BeaverBuddies.Host.ConnectedClients,"กำลังรอลูกค้าเชื่อมต่อ…
 ลูกค้าที่เชื่อมต่อขณะนี้:",""
 BeaverBuddies.Host.DirectConnectClient,"ไคลเอนต์เชื่อมต่อโดยตรง",""
@@ -83,10 +83,10 @@ BeaverBuddies.Host.RefusedSilent,"{0} ถูกปฏิเสธ: เกมข�
 BeaverBuddies.JoinCoopGame.Error.CouldNotConnect,"ไม่สามารถเชื่อมต่อกับโฮสต์ได้ โปรดตรวจสอบที่อยู่และพอร์ต และตรวจสอบให้แน่ใจว่าโฮสต์กำลังโฮสต์อยู่และมีการส่งต่อพอร์ตหากจำเป็น รายละเอียดข้อผิดพลาด:",""
 BeaverBuddies.KeyBindings.Group,"BeaverBuddies",""
 BeaverBuddies.KeyBindings.Ping,"ปักหมุดตำแหน่ง",""
-BeaverBuddies.Settings.PingPlayerName,"ชื่อที่แสดงบนการปักหมุด",""
-BeaverBuddies.Settings.PingPlayerName.Tooltip,"ชื่อที่แสดงให้ผู้เล่นคนอื่นเห็นข้างๆ การปักหมุดของคุณ",""
+BeaverBuddies.Settings.PingPlayerName,"ชื่อที่แสดง",""
+BeaverBuddies.Settings.PingPlayerName.Tooltip,"ชื่อของคุณในโหมดผู้เล่นหลายคน แสดงในล็อบบี้ของโฮสต์ ในแมตช์ที่เปิดอยู่ และข้างการปักหมุดกับเคอร์เซอร์ของคุณ หากปล่อยไว้เป็น ""Player"" จะใช้ชื่อ Steam ของคุณ",""
 BeaverBuddies.Settings.PreferredColor,"สีที่ต้องการ",""
-BeaverBuddies.Settings.PreferredColor.Tooltip,"สีของคุณในเกม หากผู้เล่นคนอื่นใช้อยู่แล้ว คุณจะได้สีที่ว่าง",""
+BeaverBuddies.Settings.PreferredColor.Tooltip,"สีของคุณในโหมดผู้เล่นหลายคน ใช้กับการปักหมุด เคอร์เซอร์ และชื่อของคุณ หากผู้เล่นคนอื่นใช้สีนี้อยู่แล้ว คุณจะได้สีที่ว่าง",""
 BeaverBuddies.Settings.PreferredColor.Yellow,"เหลือง",""
 BeaverBuddies.Settings.PreferredColor.Red,"แดง",""
 BeaverBuddies.Settings.PreferredColor.Blue,"น้ำเงิน",""
@@ -105,7 +105,7 @@ BeaverBuddies.Settings.MaxPlayers.Value,"{0}",""
 BeaverBuddies.DevTools.DisabledByHost,"โฮสต์ได้ปิดเครื่องมือนักพัฒนาสำหรับเกมนี้",""
 BeaverBuddies.DevTools.NotSynced,"ไม่สามารถใช้เครื่องมือนักพัฒนานี้ในโหมดร่วมมือได้ เพราะไม่สามารถซิงค์ได้",""
 BeaverBuddies.Settings.ShowPlayerCursors,"แสดงเคอร์เซอร์ของผู้เล่น",""
-BeaverBuddies.Settings.ShowPlayerCursors.Tooltip,"แสดงตำแหน่งที่ผู้เล่นคนอื่นกำลังชี้ และแชร์เคอร์เซอร์ของคุณให้พวกเขาเห็น ใช้สีการปักหมุดของคุณ",""
+BeaverBuddies.Settings.ShowPlayerCursors.Tooltip,"แสดงตำแหน่งที่ผู้เล่นคนอื่นกำลังชี้ และแชร์เคอร์เซอร์ของคุณให้พวกเขาเห็นด้วยสีของคุณ",""
 BeaverBuddies.Match.FindMatch,"แมตช์ด่วน","Quick match"
 BeaverBuddies.Match.LookingExact,"กำลังหาคู่แข่งที่เลือก {0}, {1}","Looking for an opponent who picked {0}, {1}."
 BeaverBuddies.Match.LookingSameMap,"กำลังหาคู่แข่งที่เลือก {0} ความยากระดับใดก็ได้","Looking for an opponent who picked {0}, any difficulty."

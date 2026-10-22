@@ -29,42 +29,42 @@ BeaverBuddies.ClientDesynced.ReportOnDiscord,"Auf Discord melden",""
 BeaverBuddies.ClientDesynced.TraceSaved,"Trace neben Player.log gespeichert",""
 BeaverBuddies.ClientDesynced.EnableTracing,"Protokollierung aktivieren",""
 BeaverBuddies.ClientDesynced.NeedToEnableTracing,"Um diese Desynchronisation zu melden, müssen *alle Spieler* zunächst eine detailliertere Protokollierung aktivieren, indem sie unten auf 'Protokollierung aktivieren' klicken. Wenn dann eine weitere Desynchronisation auftritt, können Sie sie mit dem detaillierten Protokoll auf unserem Discord melden. Der Protokollierungsmodus kann zu etwas Verzögerung führen, ist jedoch nur bis zum Neustart des Spiels aktiv.",""
-BeaverBuddies.Settings.ClientConnectionAddress,"Client‑Verbindungsadresse",""
-BeaverBuddies.Settings.ClientConnectionAddress.Tooltip,"Standard‑IP‑Adresse, die beim Verbinden mit einem Host verwendet wird.",""
+BeaverBuddies.Settings.Section.You,"Du",""
+BeaverBuddies.Settings.Section.Multiplayer,"Mehrspieler",""
+BeaverBuddies.Settings.Section.Hosting,"Hosten",""
+BeaverBuddies.Settings.Section.Developer,"Entwickler",""
+BeaverBuddies.Settings.Section.Hosting.Note,"Diese Einstellungen gelten für Spiele, die du hostest. Wenn du dem Spiel eines anderen beitrittst, gilt die Wahl des Hosts.",""
+BeaverBuddies.Settings.ClientConnectionAddress,"Standard-Beitrittsadresse",""
+BeaverBuddies.Settings.ClientConnectionAddress.Tooltip,"Die Adresse oder der Beitrittscode, mit dem das Feld unter Spiel beitreten vorausgefüllt ist: der Eintrag, mit dem du zuletzt beigetreten bist.",""
 BeaverBuddies.Settings.Port,"Port",""
-BeaverBuddies.Settings.Port.Tooltip,"Port, der beim Hosten oder Beitreten eines Spiels verwendet wird. Dieser sollte beim Host weitergeleitet werden.",""
+BeaverBuddies.Settings.Port.Tooltip,"Der Port, auf dem dein Spiel lauscht, wenn du hostest, und der Port, der verwendet wird, wenn du über eine Adresse ohne Port beitrittst. Damit andere per Adresse über das Internet beitreten können, muss der Host diesen Port in seinem Router weiterleiten.",""
 BeaverBuddies.Settings.SilenceLogging,"Logging unterdrücken",""
-BeaverBuddies.Settings.SilenceLogging.Tooltip,"Verhindert, dass dieses Mod in die Spieler‑Logdatei schreibt (außer Warnungen und Fehlern).
-Diese Einstellung ist für Entwickler gedacht.",""
-BeaverBuddies.Settings.ShowFirstTimerMessage,"Zeige Erst‑Timer‑Meldung",""
+BeaverBuddies.Settings.SilenceLogging.Tooltip,"Hält die Meldungen dieses Mods aus der Logdatei des Spiels heraus, außer Warnungen und Fehlern. Für Entwickler gedacht.",""
+BeaverBuddies.Settings.ShowFirstTimerMessage,"Willkommensnachricht anzeigen",""
+BeaverBuddies.Settings.ShowFirstTimerMessage.Tooltip,"Zeigt beim nächsten Öffnen des Hauptmenüs die Willkommensnachricht für neue Spieler, mit einem Link zum Leitfaden für die Einrichtung. Nach deiner Antwort schaltet sich diese Einstellung von selbst aus.",""
 BeaverBuddies.Settings.AlwaysTrace,"Immer detailliertes Logging verwenden",""
-BeaverBuddies.Settings.AlwaysTrace.Tooltip,"Wenn aktiviert, wird das Spiel immer detailliertes Logging verwenden, sodass du Desync‑Berichte ab dem ersten Auftreten einreichen kannst, ohne Logging manuell zu aktivieren.
-Beachte, dass alle Spieler diese Einstellung aktiviert haben müssen.
-Diese Einstellung kann zu Verzögerungen führen und wird nicht für die meisten Spieler empfohlen.",""
-BeaverBuddies.Settings.EnableSteamConnection,"Steam‑Netzwerk aktivieren",""
-BeaverBuddies.Settings.EnableSteamConnection.Tooltip,"Ermöglicht Spielern, über Steams Peer‑to‑Peer‑Netzwerk deinem Spiel beizutreten.
-Spieler können weiterhin über Port‑Weiterleitung beitreten.
-Hinweis: Diese Funktion funktioniert möglicherweise nicht, wenn dein Netzwerk P2P nicht unterstützt.
-Außerdem können Peer‑to‑Peer‑Verbindungen langsamer sein als direkte Verbindungen.",""
-BeaverBuddies.Settings.FriendsCanJoinSteamGame,"Freunde direkt über Steam beitreten lassen",""
-BeaverBuddies.Settings.FriendsCanJoinSteamGame.Tooltip,"Wenn aktiviert, können deine Freunde direkt über Steam deinem Spiel beitreten, ohne dass du sie einladen musst, und es steht für alle unter Offene Spiele.",""
+BeaverBuddies.Settings.AlwaysTrace.Tooltip,"Protokolliert jedes Spiel ab dem ersten Tick im Detail, damit eine Desynchronisation schon beim ersten Auftreten gemeldet werden kann, ohne das Logging erst nachträglich einzuschalten. Alle Spieler müssen es eingeschaltet haben. Es verlangsamt das Spiel etwas und wird daher für die meisten Spieler nicht empfohlen.",""
+BeaverBuddies.Settings.EnableSteamConnection,"Steam-Netzwerk verwenden",""
+BeaverBuddies.Settings.EnableSteamConnection.Tooltip,"Lässt Spieler über Steam deinen Spielen beitreten und nutzt Steam, um Spiele unter Schnelles Spiel und Offene Spiele zu finden. Aus: Spieler treten mit Code oder Adresse bei, und Spiele werden ohne Steam gefunden. In manchen Netzwerken funktionieren die Peer-to-Peer-Verbindungen von Steam nicht oder sind langsamer als eine direkte Verbindung.",""
+BeaverBuddies.Settings.FriendsCanJoinSteamGame,"Steam-Freunde ohne Einladung beitreten lassen",""
+BeaverBuddies.Settings.FriendsCanJoinSteamGame.Tooltip,"Deine Steam-Freunde können deinem Spiel ohne Einladung beitreten, und es steht für alle unter Offene Spiele, es sei denn, du hakst beim Hosten ""Nur mit Einladung"" an. Aus: Spieler treten nur per Einladung, Code oder Adresse bei.",""
 BeaverBuddies.Settings.StrictBuildMatch,"Nur mit genau demselben Build spielen",""
-BeaverBuddies.Settings.StrictBuildMatch.Tooltip,"Weist Spieler ab, deren BeaverBuddies nicht genau derselbe Build ist wie deiner, mit derselben Spielversion, denselben Zusatz-Mods und Fraktionen, und lässt dich keinem solchen Host beitreten. Aus: Du wirst gewarnt und spielst weiter, aber das Spiel kann asynchron werden.",""
-BeaverBuddies.Settings.KeepPlayingInBackground,"Im Mehrspielermodus im Hintergrund weiterspielen",""
-BeaverBuddies.Settings.KeepPlayingInBackground.Tooltip,"Während du hostest oder in einem fremden Spiel spielst, läuft es weiter, wenn eine andere App im Vordergrund ist, egal was die Hintergrund-Einstellung des Spiels sagt: Hält das Spiel des Hosts an, halten alle an. Außerhalb des Mehrspielermodus gilt die Einstellung des Spiels. Verbraucht auf Laptops mehr Akku.",""
-BeaverBuddies.Settings.PauseReduction,"Was alle pausiert (der Host entscheidet)",""
-BeaverBuddies.Settings.PauseReduction.Tooltip,"In einem Spiel, das du hostest, gilt deine Wahl hier für alle Spieler: was das Spiel für alle pausiert. Die eigene Wahl eines Gasts gilt nur in Spielen, die er hostet.
+BeaverBuddies.Settings.StrictBuildMatch.Tooltip,"Weist Spieler ab, deren BeaverBuddies nicht genau derselbe Build ist wie deiner, mit derselben Spielversion, denselben Zusatz-Mods und Fraktionen, und lässt dich keinem Host beitreten, bei dem das nicht so ist. Aus: Du wirst gewarnt und spielst weiter, aber das Spiel kann die Synchronisation verlieren. Spieler mit unterschiedlichen Builds spielen nur zusammen, wenn sowohl der Host als auch der Gast dies ausgeschaltet haben.",""
+BeaverBuddies.Settings.KeepPlayingInBackground,"Im Hintergrund weiterspielen",""
+BeaverBuddies.Settings.KeepPlayingInBackground.Tooltip,"Während du hostest oder im Spiel eines anderen spielst, läuft dein Spiel weiter, wenn eine andere App im Vordergrund ist, unabhängig von der Einstellung ""Im Hintergrund fortlaufen lassen"" des Spiels. Hält das Spiel des Hosts an, halten alle an; hält das Spiel eines Gasts an, fällt er zurück und holt dann auf. Außerhalb des Mehrspielermodus gilt die Einstellung des Spiels. Verbraucht auf Laptops mehr Akku.",""
+BeaverBuddies.Settings.PauseReduction,"Was alle pausiert",""
+BeaverBuddies.Settings.PauseReduction.Tooltip,"Was in einem Spiel, das du hostest, für alle Spieler eine Pause auslöst.
 
-Menü und Dialoge – das Verhalten des Spiels: Das Menü zu öffnen pausiert alle, ebenso die Dialoge des Hosts (Abriss, Forschung)
-Nur das Menü – das Menü pausiert alle, Dialoge nicht
-Nichts – jedes Menü gehört dem jeweiligen Spieler und pausiert niemanden
+Menü und Dialoge: das Verhalten des Spiels selbst. Das Menü zu öffnen pausiert alle, ebenso die Dialoge des Hosts (Abriss, Forschung).
+Nur das Menü: Das Menü zu öffnen pausiert alle, Dialoge nicht.
+Nichts: Das Menü jedes Spielers gehört nur ihm und pausiert niemanden.
 
 Die Pausentaste und die Geschwindigkeitstasten pausieren immer alle. Speichern wartet immer auf das Ende des laufenden Ticks und ist so in jedem Fall stimmig.",""
 BeaverBuddies.Settings.PauseReduction.Off,"Menü und Dialoge",""
 BeaverBuddies.Settings.PauseReduction.LowRisk,"Nur das Menü",""
-BeaverBuddies.Settings.PauseReduction.HighRisk,"Nichts: jedes Menü gehört dem Spieler",""
-BeaverBuddies.Settings.PauseForHostSaves,"Spiel pausieren, während der Host speichert",""
-BeaverBuddies.Settings.PauseForHostSaves.Tooltip,"In einem Spiel, das du hostest, wird ein Spielstand, den du selbst speicherst, bei pausiertem Spiel geschrieben, wie allein auch, danach läuft das Spiel mit seiner Geschwindigkeit weiter. Die Gäste warten so oder so im selben Moment, während du speicherst. Automatische Speicherungen werden nicht pausiert.",""
+BeaverBuddies.Settings.PauseReduction.HighRisk,"Nichts",""
+BeaverBuddies.Settings.PauseForHostSaves,"Spiel pausieren, während du speicherst",""
+BeaverBuddies.Settings.PauseForHostSaves.Tooltip,"Ein Spielstand, den du selbst speicherst, wird bei pausiertem Spiel geschrieben, wie im Einzelspielermodus, und danach läuft das Spiel mit seiner Geschwindigkeit weiter. Automatische Speicherungen werden nicht pausiert. So oder so warten die Gäste im selben Moment, während du speicherst.",""
 BeaverBuddies.Host.ConnectedClients,"Warte auf Clients…
 Derzeit verbundene Clients:",""
 BeaverBuddies.Host.DirectConnectClient,"Direkt‑Connect‑Client",""
@@ -83,10 +83,10 @@ BeaverBuddies.Host.RefusedSilent,"{0} wurde abgewiesen: Das Spiel hat nie gesagt
 BeaverBuddies.JoinCoopGame.Error.CouldNotConnect,"Verbindung zum Host konnte nicht hergestellt werden. Bitte überprüfen Sie die Adresse und den Port und stellen Sie sicher, dass der Host das Spiel hostet und die Portweiterleitung aktiviert ist, falls erforderlich. Fehlerinformationen:",""
 BeaverBuddies.KeyBindings.Group,"BeaverBuddies",""
 BeaverBuddies.KeyBindings.Ping,"Ort markieren",""
-BeaverBuddies.Settings.PingPlayerName,"Anzeigename für Markierungen",""
-BeaverBuddies.Settings.PingPlayerName.Tooltip,"Der Name, der anderen Spielern neben deinen Markierungen angezeigt wird.",""
+BeaverBuddies.Settings.PingPlayerName,"Anzeigename",""
+BeaverBuddies.Settings.PingPlayerName.Tooltip,"Dein Name im Mehrspielermodus: in der Lobby des Hosts, unter Offene Spiele und neben deinen Markierungen und deinem Cursor. Lässt du ""Player"" stehen, wird dein Steam-Name verwendet.",""
 BeaverBuddies.Settings.PreferredColor,"Bevorzugte Farbe",""
-BeaverBuddies.Settings.PreferredColor.Tooltip,"Deine Farbe im Spiel. Hat ein anderer Spieler sie schon, bekommst du eine freie.",""
+BeaverBuddies.Settings.PreferredColor.Tooltip,"Deine Farbe im Mehrspielermodus, für deine Markierungen, deinen Cursor und deinen Namen. Hat ein anderer Spieler sie schon, bekommst du eine freie.",""
 BeaverBuddies.Settings.PreferredColor.Yellow,"Gelb",""
 BeaverBuddies.Settings.PreferredColor.Red,"Rot",""
 BeaverBuddies.Settings.PreferredColor.Blue,"Blau",""
@@ -105,7 +105,7 @@ BeaverBuddies.Settings.MaxPlayers.Value,"{0}",""
 BeaverBuddies.DevTools.DisabledByHost,"Der Host hat die Entwicklerwerkzeuge für dieses Spiel deaktiviert.",""
 BeaverBuddies.DevTools.NotSynced,"Dieses Entwicklerwerkzeug kann im Koop nicht verwendet werden, weil es nicht synchronisiert werden kann.",""
 BeaverBuddies.Settings.ShowPlayerCursors,"Spielercursor anzeigen",""
-BeaverBuddies.Settings.ShowPlayerCursors.Tooltip,"Zeigt, wohin die anderen Spieler zeigen, und teilt deinen eigenen Cursor mit ihnen. Verwendet deine Markierungsfarbe.",""
+BeaverBuddies.Settings.ShowPlayerCursors.Tooltip,"Blendet ein, wohin die anderen Spieler zeigen, und teilt deinen Cursor in deiner Farbe mit ihnen.",""
 BeaverBuddies.Match.FindMatch,"Schnelles Spiel","Quick match"
 BeaverBuddies.Match.LookingExact,"Suche einen Gegner, der {0}, {1} gewählt hat.","Looking for an opponent who picked {0}, {1}."
 BeaverBuddies.Match.LookingSameMap,"Suche einen Gegner, der {0} gewählt hat, beliebiger Schwierigkeitsgrad.","Looking for an opponent who picked {0}, any difficulty."
