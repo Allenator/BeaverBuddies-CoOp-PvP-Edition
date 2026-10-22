@@ -1,0 +1,4 @@
+ID,Text,Comment
+GameModes.GameMode,"Modo de juego","Game mode"
+GameModes.Classic,"Clásico","Classic"
+GameModes.Classic.Description,"Timberborn tal cual.","Timberborn as it comes."

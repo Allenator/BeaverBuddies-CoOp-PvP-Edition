@@ -285,17 +285,23 @@ namespace BeaverBuddies.Modding
         // A game mode for new multiplayer games: BeaverBuddies shows one Game
         // mode list with every mod's modes, and a match only pairs players
         // who picked the same. The first mode added is the default
-        public static void AddGameMode(string id, string labelLocKey) => MatchOptions.AddGameMode(id, labelLocKey);
+        public static void AddGameMode(string id, string labelLocKey) => GameModes.Modes.Add(id, labelLocKey);
 
         // A line about one of your game modes, shown under the modes when it's picked
-        public static void DescribeGameMode(string id, string descriptionLocKey) => MatchOptions.DescribeGameMode(id, descriptionLocKey);
+        public static void DescribeGameMode(string id, string descriptionLocKey) => GameModes.Modes.Describe(id, descriptionLocKey);
+
+        // The game mode's line in a game played alone, where it isn't the one it has with others
+        public static void DescribeGameModeAlone(string id, string descriptionLocKey) => GameModes.Modes.DescribeAlone(id, descriptionLocKey);
 
         // The game mode picked for the new game starting on this machine, while
         // it loads, or null for a game started without one
         public static string GetGameMode() => MatchOptions.GameValue(MatchOptions.GameModeId);
 
-        // The game mode picked on the New Game screens right now (what a new game with others would be)
-        public static string GetPickedGameMode() => MatchOptions.ValueOf(MatchOptions.GameModeId);
+        // Whether the new game starting on this machine was started alone (in a mode or not)
+        public static bool IsNewGameAlone() => GameModes.Modes.GameAlone;
+
+        // The game mode picked on the New Game screens right now, for the game they're making
+        public static string GetPickedGameMode() => GameModes.Modes.PickedMode(GameModes.Modes.PageAlone());
 
         // The pick for the new game starting on this machine, while it loads,
         // or null for a game started without one (alone, or a saved game)

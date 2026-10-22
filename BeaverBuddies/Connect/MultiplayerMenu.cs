@@ -68,6 +68,12 @@ namespace BeaverBuddies.Connect
         // Whether the Load Game box was opened to host a save, or to play one alone
         public static bool HostingSave { get; private set; }
 
+        static MultiplayerMenu()
+        {
+            // The game modes offered on the New Game screens: those for a game with others when hosting or matching
+            GameModes.Modes.PageAlone = () => Intent == NewGameIntent.Play;
+        }
+
         public MultiplayerMenu(ILoc loc, PanelStack panelStack, NewGameFactionPanel newGameFactionPanel, LoadGameBox loadGameBox,
             GameSceneLoader gameSceneLoader, ClientConnectionUI clientConnectionUI, UrlOpener urlOpener, ITooltipRegistrar tooltipRegistrar)
         {

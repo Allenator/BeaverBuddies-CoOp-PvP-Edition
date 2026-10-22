@@ -1,0 +1,4 @@
+ID,Text,Comment
+GameModes.GameMode,"Oyun modu","Game mode"
+GameModes.Classic,"Klasik","Classic"
+GameModes.Classic.Description,"Timberborn'un kendisi.","Timberborn as it comes."

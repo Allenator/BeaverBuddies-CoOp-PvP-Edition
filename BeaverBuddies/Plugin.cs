@@ -175,6 +175,9 @@ namespace BeaverBuddies
             // Windows once Steam has shut down for quitting
             UnityEngine.Application.quitting += EventIO.Reset;
 
+            // Co-op first among the game modes for a game with others, before the mods that depend on this one add theirs
+            Matchmaking.MatchOptions.AddCoOp();
+
             // apply all harmony patches automatically.
             Harmony harmony = new Harmony(ID);
             PatchAll(harmony);

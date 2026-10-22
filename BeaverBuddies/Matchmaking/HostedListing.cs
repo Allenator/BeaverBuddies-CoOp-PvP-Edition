@@ -66,14 +66,13 @@ namespace BeaverBuddies.Matchmaking
         private static MatchPicks FromSave(string settlement, byte[] saveFile)
         {
             var record = ReadRecord(saveFile) ?? new Dictionary<string, string>();
-            var optionIds = new HashSet<string>(MatchOptions.All.Select(o => o.Id));
             return new MatchPicks
             {
                 name = PlayerIdentity.LocalName,
                 faction = SingletonManager.GetSingleton<HostedGameInfo>()?.Faction,
                 mapTitle = SingletonManager.GetSingleton<ReplayService>()?.ServerMapName ?? settlement,
-                options = record.Where(p => optionIds.Contains(p.Key)).ToDictionary(p => p.Key, p => p.Value),
-                settings = record.Where(p => !optionIds.Contains(p.Key)).ToDictionary(p => p.Key, p => p.Value),
+                options = record.Where(p => MatchOptions.IsPick(p.Key)).ToDictionary(p => p.Key, p => p.Value),
+                settings = record.Where(p => !MatchOptions.IsPick(p.Key) && p.Key != GameModes.Modes.AloneKey).ToDictionary(p => p.Key, p => p.Value),
             };
         }
 

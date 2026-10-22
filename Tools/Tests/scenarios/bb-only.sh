@@ -7,8 +7,8 @@ bb_close
 bb_launch host || { fail "the game starts" "no main menu"; return; }
 new_game_page host
 expect_nonempty "the page is up: its difficulties are laid out" "$(layout_of host Modes)"
-l=$(layout_of host BeaverBuddiesMatchOptions)
-expect_eq "no Multiplayer mode column with only Co-op to pick" "$l" ""
+l=$(layout_of host GameModesColumn)
+expect_eq "no game mode column with only Classic and Co-op to pick" "$l" ""
 shot "new-game-page" host
 bb_close
 

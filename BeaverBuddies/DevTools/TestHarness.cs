@@ -38,7 +38,7 @@ namespace BeaverBuddies.DevTools
      * "build Template x y z [0|90|180|270]" places it through the game's own
      * placer, as the building tool does, so whatever hooks a click sees it;
      * "center" logs the tile in the middle of the screen;
-     * Alone too, for what doesn't need another player: "newgame Map Faction"
+     * Alone too, for what doesn't need another player: "newgame Map Faction [mode]"
      * at the main menu; in game "buildnow Template x y z [0|90|180|270]"
      * places it finished, "infect x y z" infects the workers of the
      * workplace there with badwater, "workers x y z" logs who works there,
@@ -123,8 +123,8 @@ namespace BeaverBuddies.DevTools
             Matchmaking.MatchMods.Entry Mod(string id, string name, string version) => new() { id = id, name = name, version = version };
             List<Matchmaking.MatchMods.Entry> Mods(Func<List<Matchmaking.MatchMods.Entry>, IEnumerable<Matchmaking.MatchMods.Entry>> change) =>
                 change(mine.Select(m => new Matchmaking.MatchMods.Entry { id = m.id, name = m.name, version = m.version, workshop = m.workshop }).ToList()).ToList();
-            var gameMode = Matchmaking.MatchOptions.All.FirstOrDefault(o => o.Id == Matchmaking.MatchOptions.GameModeId);
-            string Option(int index) => gameMode == null || gameMode.Values.Length == 0 ? null : gameMode.Values[Math.Min(index, gameMode.Values.Length - 1)];
+            var gameModes = GameModes.Modes.For(alone: false);
+            string Option(int index) => gameModes.Count == 0 ? null : gameModes[Math.Min(index, gameModes.Count - 1)].Id;
             var changed = NewGame.GameSettings.All.Where(g => g.Values?.Length > 1).Take(3)
                 .ToDictionary(g => g.Id, g => g.Values.First(v => v != g.Default));
             Matchmaking.MatchPicks Picks(string name, string map, int option, Dictionary<string, string> settings = null, int players = 0) => new()
@@ -405,6 +405,12 @@ namespace BeaverBuddies.DevTools
                     Get<Timberborn.MapEditorSceneLoading.MapEditorSceneLoader>().StartNewMapInstantly(new Vector2Int(I(a[1]), I(a[1])));
                     break;
                 case "newgame":
+                    // newgame Map Faction [game mode id]: alone in that mode, as the New Game screens' Start would start it
+                    if (a.Length > 3 && a[3] != "")
+                    {
+                        GameModes.Modes.Pick(a[3], alone: true);
+                        GameModes.Modes.StartWith(a[3], alone: true);
+                    }
                     _gameSceneLoader.StartNewGameInstantly(a[2], Map(a[1]), "Harness " + DateTime.Now.ToString("HH'h'mm", CultureInfo.InvariantCulture));
                     break;
                 case "buildnow":

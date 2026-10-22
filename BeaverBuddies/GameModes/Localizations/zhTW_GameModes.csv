@@ -1,0 +1,4 @@
+ID,Text,Comment
+GameModes.GameMode,"遊戲模式","Game mode"
+GameModes.Classic,"經典","Classic"
+GameModes.Classic.Description,"原汁原味的 Timberborn。","Timberborn as it comes."

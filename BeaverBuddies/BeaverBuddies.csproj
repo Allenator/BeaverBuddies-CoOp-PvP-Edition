@@ -106,6 +106,8 @@
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
     <None Update="Localizations\*" CopyToOutputDirectory="PreserveNewest" />
+    <!-- GameModes is a mod of its own to be: its text sits with it, and ships in Localizations with the rest -->
+    <None Update="GameModes\Localizations\*" Link="Localizations\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Update="KeyBindings\*" CopyToOutputDirectory="PreserveNewest" />
     <None Update="KeyBindingGroups\*" CopyToOutputDirectory="PreserveNewest" />
     <None Update="Buildings\**\*" CopyToOutputDirectory="PreserveNewest" />

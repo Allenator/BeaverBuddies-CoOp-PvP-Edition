@@ -1,0 +1,4 @@
+ID,Text,Comment
+GameModes.GameMode,"게임 모드","Game mode"
+GameModes.Classic,"클래식","Classic"
+GameModes.Classic.Description,"원래 그대로의 Timberborn.","Timberborn as it comes."

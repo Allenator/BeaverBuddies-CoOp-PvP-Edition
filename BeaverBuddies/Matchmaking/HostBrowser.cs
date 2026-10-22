@@ -244,8 +244,7 @@ namespace BeaverBuddies.Matchmaking
         }
 
         // The match's multiplayer options, by their values alone: Horde, PvP
-        private IEnumerable<string> OptionLabels(MatchPicks picks) =>
-            MatchOptions.All.Where(o => picks.options?.ContainsKey(o.Id) == true).Select(o => o.Label(_loc, picks.options[o.Id]));
+        private IEnumerable<string> OptionLabels(MatchPicks picks) => MatchOptions.Labels(_loc, picks.options);
 
         // Who's in: 2/4 players for a hosted game, 1v1 for a Quick match
         private string Seats(OpenMatch match)

@@ -78,6 +78,12 @@ namespace BeaverBuddies.NewGame
         // Any mode of a game with others
         public const string WithOthers = "bb.others";
 
+        // A mode as settings are offered for: its id with others, "bb.alone:" and its id alone
+        // (Alone itself is a game alone started without a mode)
+        public static string ModeKey(string mode, bool alone) => !alone ? mode : mode == null ? null : Alone + ":" + mode;
+
+        private static bool IsAloneKey(string mode) => mode == null || mode.StartsWith(Alone + ":");
+
         public static readonly List<GameSetting> All = new();
 
         private static readonly Dictionary<string, string> Picked = new();
@@ -187,7 +193,7 @@ namespace BeaverBuddies.NewGame
 
         // Whether a setting applies to a game with this mode (null: a game played alone)
         public static bool ShownFor(GameSetting setting, string mode) =>
-            setting.Modes == null || setting.Modes.Contains(mode ?? Alone) || mode != null && setting.Modes.Contains(WithOthers);
+            setting.Modes == null || setting.Modes.Contains(mode ?? Alone) || !IsAloneKey(mode) && setting.Modes.Contains(WithOthers);
 
         /** A setting's value in words, as the Customize list names it. */
         public static string Label(ILoc loc, GameSetting setting, string value)
@@ -332,6 +338,9 @@ namespace BeaverBuddies.NewGame
         // A choice of this many values or fewer puts them side by side
         private const int SideBySide = 3;
 
+        // The settings shown depend on the mode
+        static GameSettingsSection() => GameModes.Modes.Picked += () => SingletonManager.GetSingleton<GameSettingsSection>()?.Refresh();
+
         public GameSettingsSection(ILoc loc, ITooltipRegistrar tooltipRegistrar, DialogBoxShower dialogBoxShower, VisualElementLoader visualElementLoader)
         {
             _visualElementLoader = visualElementLoader;
@@ -340,8 +349,8 @@ namespace BeaverBuddies.NewGame
             _dialogBoxShower = dialogBoxShower;
         }
 
-        // The game's mode being made: null alone
-        private static string Mode => MultiplayerMenu.Intent == NewGameIntent.Play ? null : MatchOptions.ValueOf(MatchOptions.GameModeId);
+        // The game's mode being made (see GameSettings.ModeKey)
+        private static string Mode => GameSettings.ModeKey(GameModes.Modes.PickedMode(GameModes.Modes.PageAlone()), GameModes.Modes.PageAlone());
 
         private static List<GameSetting> Shown(string mode) => GameSettings.All.Where(s => GameSettings.ShownFor(s, mode)).ToList();
 

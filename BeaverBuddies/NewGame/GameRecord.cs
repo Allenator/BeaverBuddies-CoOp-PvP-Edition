@@ -72,9 +72,9 @@ namespace BeaverBuddies.NewGame
             return values;
         }
 
-        // The game's mode, or null for a game started alone
+        // The game's mode as GameSettings tells them apart (GameSettings.ModeKey), or null for a game started alone without one
         public static string ModeOf(Dictionary<string, string> values) =>
-            values != null && values.TryGetValue(MatchOptions.GameModeId, out string mode) ? mode : null;
+            GameModes.Modes.ModeOf(values) is { } mode ? GameSettings.ModeKey(mode, GameModes.Modes.IsAlone(values)) : null;
     }
 
     // Into the save's metadata too, for the Load Game box
