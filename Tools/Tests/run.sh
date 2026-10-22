@@ -78,16 +78,28 @@ while true; do
 done
 echo $$ > "$LOCK/pid"
 rm -f "$TICKET"
-# The saves this run's games make (the harness names them "Test ..." and "Harness ...") go once it ends
+# The saves this run's games make go once it ends: the settlements started during it under the names the harness
+# gives them ("Test ...", "Harness ...", and "Co-op ..." as Host new game names them, the player's own games too: so
+# nobody plays during a run), and what the guests save in Multiplayer. A guest's save there replaces the player's own of
+# the same name, so theirs are kept aside first and put back; kept from a run that didn't finish, they stay as they were
+SAVES="$HOME/Documents/Timberborn/Saves"
 RUN_START="$BB_TEST_DIR/.run-start"
 touch "$RUN_START"
+MULTIPLAYER_KEPT="$BB_TEST_DIR/multiplayer-kept"
+[ -d "$MULTIPLAYER_KEPT" ] || { [ -d "$SAVES/Multiplayer" ] && cp -Rp "$SAVES/Multiplayer" "$MULTIPLAYER_KEPT"; }
 
 cleanup() {
     [ -n "${WATCHDOG:-}" ] && kill $WATCHDOG 2>/dev/null
     [ -n "${spid:-}" ] && kill -9 $spid 2>/dev/null
     bb_close
-    find "$HOME/Documents/Timberborn/Saves/" -mindepth 1 -maxdepth 1 -type d \( -name 'Test *' -o -name 'Harness *' \) \
+    find "$SAVES/" -mindepth 1 -maxdepth 1 -type d \( -name 'Test *' -o -name 'Harness *' -o -name 'Co-op *' \) \
         -newer "$RUN_START" -exec rm -rf {} + 2>/dev/null
+    if [ -d "$SAVES/Multiplayer" ]; then
+        find "$SAVES/Multiplayer" -mindepth 1 -maxdepth 1 -type f -newer "$RUN_START" -exec rm -f {} + 2>/dev/null
+        # The player's own back where a guest replaced them, or no folder if the run made it
+        if [ -d "$MULTIPLAYER_KEPT" ]; then cp -Rpn "$MULTIPLAYER_KEPT/" "$SAVES/Multiplayer/"; else rmdir "$SAVES/Multiplayer" 2>/dev/null; fi
+    fi
+    rm -rf "$MULTIPLAYER_KEPT"
     mod_enable_all
     prefs_restore_overrides
     prefs_restore
