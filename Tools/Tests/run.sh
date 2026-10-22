@@ -228,6 +228,9 @@ RUN_NAMES=$(for f in $FILES; do basename "$f" .sh; done | paste -sd+ - | cut -c1
 export BB_RUN_DIR="$BB_TEST_DIR/runs/$(date '+%Y%m%d-%H%M%S')-$RUN_NAMES"
 mkdir -p "$BB_RUN_DIR/shots" "$BB_RUN_DIR/logs"
 
+# BeaverBuddies' on/off settings as the scenarios count on them (see the loop): the defaults, but no welcome dialog
+BB_PINNED_SETTINGS="${BB_PINNED_SETTINGS-FriendsCanJoinSteamGame=1 EnableSteamConnection=1 StrictBuildMatch=1 KeepPlayingInBackground=1 \
+PauseForHostSaves=1 ShowPlayerCursors=1 AlwaysTrace=0 SilenceLogging=0 ShowFirstTimerMessage=0}"
 START=$(date +%s)
 LAST_FILE=$(echo $FILES | awk '{print $NF}')
 for f in $FILES; do
@@ -237,6 +240,10 @@ for f in $FILES; do
     echo "== $name"
     t0=$(date +%s)
     started=$(date '+%H-%M-%S')
+    # The copies share the player's settings: those a scenario counts on are set as it expects, whatever the player
+    # chose (with their games kept off Open matches, say, a scenario waiting for a listing waits in vain), and put back
+    # when it ends with the rest. A scenario's own pref_set comes after these
+    for pin in $BB_PINNED_SETTINGS; do pref_set "ModSetting.beaverbuddies.Settings.${pin%%=*}" "${pin#*=}"; done
     touch "$BB_TEST_DIR/.scenario-start"
     # A log left from an earlier run isn't this scenario's: only one written since the start counts
     (
