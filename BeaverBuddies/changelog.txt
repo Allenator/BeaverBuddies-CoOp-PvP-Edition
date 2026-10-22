@@ -1,8 +1,13 @@
+v1.1.0-1.8.4-allenator.2
+1.1.0-1.8.4-allenator.2
+* The settings are grouped into sections (You, Multiplayer, Hosting, Developer), with clearer names and descriptions.
+* This build's versions now end in "allenator", after whose fork it is; 1.1.0-1.8.4-lobby.1 was the one before.
+
 v1.1.0-1.8.4-lobby.1
 1.1.0-1.8.4-lobby.1
 * Hosting a saved game gives guests the same lobby as a new game, however they join (Steam, code or address), and the host's lobby shows everyone by name.
 * Players on different builds of the mod don't play together: the host turns them away and both are told why ("Only play with the exact same build", on by default).
-* The game keeps running in the background during multiplayer, so one player switching apps doesn't hold everyone up ("Keep playing in the background during multiplayer", on by default).
+* The game keeps running in the background during multiplayer, so one player switching apps doesn't hold everyone up ("Keep playing in the background", on by default).
 * What pauses everyone is the host's choice: by default each player's menu is their own and the game plays on. The host's own saves are made with the game paused.
 * Fixed a resync at the start of a new game when both players had detailed logging on.
 * The log says why a connection ended, to help track down freezes when joining by code.
