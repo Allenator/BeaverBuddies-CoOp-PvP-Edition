@@ -64,14 +64,18 @@ namespace BeaverBuddies.Connect
         // the HostingSaveReference instead of ValidatingGameLoader
         private static void HostSelectedGame(LoadGameBox __instance)
         {
-            if (__instance._saveList.TryGetSelectedSave(out var selectedSave))
+            if (!__instance._saveList.TryGetSelectedSave(out var selectedSave))
             {
-                if (__instance._gameSaveRepository.SaveExists(selectedSave.SaveReference))
-                {
-                    ServerHostingUtils.LoadIfSaveValidAndHostLoaded(__instance._validatingGameLoader, __instance._dialogBoxShower, selectedSave.SaveReference);
-                }
-                // Debug.LogWarning("Save: " + selectedSave.DisplayName + " doesn't exist, failed to load.");
+                Plugin.LogWarning("Host saved game: no save selected");
+                return;
             }
+            if (!__instance._gameSaveRepository.SaveExists(selectedSave.SaveReference))
+            {
+                Plugin.LogWarning($"Host saved game: {selectedSave.DisplayName} doesn't exist, failed to host");
+                return;
+            }
+            Plugin.Log($"Host saved game: {selectedSave.SaveReference.SettlementReference.SettlementName}|{selectedSave.SaveReference.SaveName}");
+            ServerHostingUtils.LoadIfSaveValidAndHostLoaded(__instance._validatingGameLoader, __instance._dialogBoxShower, selectedSave.SaveReference);
         }
     }
 

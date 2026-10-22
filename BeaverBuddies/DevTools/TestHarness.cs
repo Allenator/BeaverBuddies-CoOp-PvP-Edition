@@ -308,7 +308,26 @@ namespace BeaverBuddies.DevTools
                     var button = UnityEngine.UIElements.UQueryExtensions.Query<UnityEngine.UIElements.Button>(panel, a[1]).ToList().ElementAtOrDefault(a.Length > 2 ? I(a[2]) : 0) ?? throw new Exception($"no button {a[1]}");
                     using var click = UnityEngine.UIElements.ClickEvent.GetPooled();
                     click.target = button;
+                    // A player's click runs both: the button's clicked handlers, from its pointer going down and up,
+                    // and then the ClickEvent's callbacks. The event alone never reaches clicked
+                    if (button.enabledInHierarchy) button.clickable?.SimulateSingleClick(click);
                     button.SendEvent(click);
+                    break;
+                }
+                case "selectsave":
+                {
+                    // selectsave Settlement|Save name: picks a saved game in the Load game box on top, as a player's clicks on the
+                    // settlement and then the save would, rather than the first save of the first settlement it opens on
+                    string[] names = string.Join(" ", a.Skip(1)).Split('|');
+                    var box = _panelStack._stack.Peek().PanelController as Timberborn.GameSaveRepositorySystemUI.LoadGameBox ?? throw new Exception("no Load game box on top");
+                    int settlement = box._settlementList._settlements.FindIndex(s => s.SettlementName == names[0]);
+                    if (settlement < 0) throw new Exception($"no settlement {names[0]}");
+                    box._settlementList._settlementListView.SetSelection(settlement);
+                    int save = box._saveList._saves.FindIndex(s => s.SaveReference.SaveName == names[1]);
+                    if (save < 0) throw new Exception($"no save {names[1]} in {names[0]}");
+                    box._saveList._saveListView.SetSelection(save);
+                    string selected = box._saveList.TryGetSelectedSave(out var item) ? $"{item.SaveReference.SettlementReference.SettlementName}|{item.SaveReference.SaveName}" : "none";
+                    Plugin.Log($"[Test] selectsave: {selected}");
                     break;
                 }
                 case "layout":
