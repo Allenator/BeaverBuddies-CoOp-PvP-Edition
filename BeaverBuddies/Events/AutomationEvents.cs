@@ -119,7 +119,8 @@ namespace BeaverBuddies.Events
                 (typeof(Lever), nameof(Lever.SetSpringReturn)),
                 // Note: This won't be a great UX, since we really have to make
                 // this an event, which will make the UI laggy, but I think that's
-                // unavoidable.
+                // unavoidable. The HTTP API's switch-on and switch-off come this way;
+                // the lever's own button is a LeverButtonEvent
                 (typeof(Lever), nameof(Lever.SwitchState)),
                 (typeof(Memory), nameof(Memory.SetMode)),
                 (typeof(Memory), nameof(Memory.SetInputA)),
@@ -337,6 +338,83 @@ namespace BeaverBuddies.Events
                 };
             });
         }
+    }
+
+    public class LeverButtonEvent : ReplayEvent
+    {
+        public string entityID;
+        public bool pressed;
+
+        public override void Replay(IReplayContext context)
+        {
+            Lever lever = GetComponent<Lever>(context, entityID);
+            if (lever == null) return;
+            if (pressed) lever.Press();
+            else lever.Release();
+        }
+
+        public override string ToActionString()
+        {
+            return $"{(pressed ? "Pressing" : "Letting go of")} Lever {entityID}";
+        }
+    }
+
+    /*
+     * A lever's button, pressed and let go of on every machine alike: a
+     * spring-return lever stays on while it's held, and the game knows it's
+     * held only on the machine it was pressed on, so the others switched it
+     * off. Each player lets go only of what they pressed: the pinned levers
+     * let go of a spring-return lever whenever the pointer leaves it, pressed
+     * or not, and it may be another player holding it.
+     */
+    [HarmonyPatch(typeof(Lever), nameof(Lever.Press))]
+    static class LeverPressPatch
+    {
+        // Weakly, so a lever of a game left behind doesn't keep it
+        internal static readonly System.Runtime.CompilerServices.ConditionalWeakTable<Lever, object> PressedHere = new();
+
+        static bool Prefix(Lever __instance)
+        {
+            return ReplayEvent.DoEntityPrefix(__instance, entityID =>
+            {
+                PressedHere.AddOrUpdate(__instance, null);
+                return new LeverButtonEvent
+                {
+                    entityID = entityID,
+                    pressed = true,
+                };
+            });
+        }
+    }
+
+    [HarmonyPatch(typeof(Lever), nameof(Lever.Release))]
+    static class LeverReleasePatch
+    {
+        static bool Prefix(Lever __instance)
+        {
+            if (ReplayEvent.Recording && !LeverPressPatch.PressedHere.Remove(__instance)) return false;
+            return ReplayEvent.DoEntityPrefix(__instance, entityID =>
+            {
+                return new LeverButtonEvent
+                {
+                    entityID = entityID,
+                    pressed = false,
+                };
+            });
+        }
+    }
+
+    /*
+     * A spring-return lever going back off is the game's tick, the same on
+     * every machine, not a player switching it: sent as one, it stayed on to
+     * the next tick, and every machine sent it.
+     */
+    [HarmonyPatch(typeof(SpringReturnService), nameof(SpringReturnService.CommitTick))]
+    static class SpringReturnServiceCommitTickPatch
+    {
+        static void Prefix(out IDisposable __state) => __state = ReplayEvent.Unrecorded();
+
+        static void Finalizer(IDisposable __state) => __state?.Dispose();
     }
 
     public enum TimerIntervalInput
