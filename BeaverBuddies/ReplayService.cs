@@ -476,7 +476,7 @@ namespace BeaverBuddies
         // more and would only stand still, so it's told and can leave
         private void WatchHostSilence()
         {
-            if (io is not ClientEventIO client || isReset || _resyncService.IsReloading)
+            if (io is not ClientEventIO client || isReset || _resyncService.IsReloading || GuestLobby.IsOpen)
             {
                 _hostSilence?.Close();
                 return;

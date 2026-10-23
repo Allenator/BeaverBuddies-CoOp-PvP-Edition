@@ -40,7 +40,8 @@ namespace BeaverBuddies.Connect
         public void Update(double secondsSinceHeard)
         {
             float now = Time.realtimeSinceStartup;
-            if (_lastUpdate >= 0 && now - _lastUpdate > StallSeconds) _graceUntil = now + StallGraceSeconds;
+            // The first update comes right after the map loaded, a long frame nobody saw
+            if (_lastUpdate < 0 || now - _lastUpdate > StallSeconds) _graceUntil = now + StallGraceSeconds;
             _lastUpdate = now;
             if (now < _graceUntil && _box == null) return;
             if (secondsSinceHeard < SilentSeconds)

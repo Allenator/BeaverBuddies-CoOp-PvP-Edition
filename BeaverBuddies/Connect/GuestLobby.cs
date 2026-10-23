@@ -28,6 +28,9 @@ namespace BeaverBuddies.Connect
             _loc = loc;
         }
 
+        // The host's lobby is up: it's quiet there on purpose, and its box is the one to keep on top
+        public static bool IsOpen => SingletonManager.GetSingleton<GuestLobby>()?._box != null;
+
         public static void Open(string mapName) => SingletonManager.GetSingleton<GuestLobby>()?.Show(mapName);
 
         private void Show(string mapName)
@@ -68,6 +71,8 @@ namespace BeaverBuddies.Connect
             HostingCover.Hide();
             try { box?.Close(); }
             catch (System.InvalidOperationException) { }
+            // Another box is on top of it
+            catch (System.ArgumentException) { box?._root?.RemoveFromHierarchy(); }
         }
 
         // Out of the host's game, to the Multiplayer page
