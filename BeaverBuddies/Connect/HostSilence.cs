@@ -1,5 +1,6 @@
 using System;
 using Timberborn.CoreUI;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace BeaverBuddies.Connect
@@ -23,6 +24,12 @@ namespace BeaverBuddies.Connect
         private int _shownSeconds = -1;
         // Waiting was picked: not again until the host has been heard from
         private bool _dismissed;
+        // The game's own thread polls the connection, so a long frame (a map
+        // loading) is silence that isn't the host's
+        private const float StallSeconds = 2;
+        private const float StallGraceSeconds = 4;
+        private float _lastUpdate = -1;
+        private float _graceUntil;
 
         public HostSilence(DialogBoxShower shower, Action leave)
         {
@@ -32,6 +39,10 @@ namespace BeaverBuddies.Connect
 
         public void Update(double secondsSinceHeard)
         {
+            float now = Time.realtimeSinceStartup;
+            if (_lastUpdate >= 0 && now - _lastUpdate > StallSeconds) _graceUntil = now + StallGraceSeconds;
+            _lastUpdate = now;
+            if (now < _graceUntil && _box == null) return;
             if (secondsSinceHeard < SilentSeconds)
             {
                 if (_box != null) Plugin.Log("Heard from the host again");
@@ -52,7 +63,12 @@ namespace BeaverBuddies.Connect
         public void Close()
         {
             if (_box == null) return;
-            if (_box._root?.panel != null) _box.Close();
+            if (_box._root?.panel != null)
+            {
+                // Another box went on top of it meanwhile; it can't be popped from under that
+                try { _box.Close(); }
+                catch (ArgumentException) { _box._root.RemoveFromHierarchy(); }
+            }
             _box = null;
             _message = null;
             _shownSeconds = -1;
