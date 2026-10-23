@@ -66,6 +66,7 @@ namespace BeaverBuddies.Steam
                     callbacks.Add(Callback<GameLobbyJoinRequested_t>.Create(OnLobbyJoinRequested));
                     callbacks.Add(Callback<LobbyEnter_t>.Create(OnLobbyEntered));
                     callbacks.Add(Callback<P2PSessionRequest_t>.Create(OnP2PSessionRequest));
+                    callbacks.Add(Callback<P2PSessionConnectFail_t>.Create(OnP2PSessionConnectFail));
 
                     //SteamMatchmaking.CreateLobby(ELobbyType.k_ELobbyTypeFriendsOnly, 4);
 
@@ -135,6 +136,14 @@ namespace BeaverBuddies.Steam
         {
             CSteamID clientId = callback.m_steamIDRemote;
             SteamNetworking.AcceptP2PSessionWithUser(clientId);
+        }
+
+        // Steam may set the session up again on the next packet, so it's
+        // only logged: a guest that stops hearing the host is told (see HostSilence)
+        private void OnP2PSessionConnectFail(P2PSessionConnectFail_t callback)
+        {
+            string name = SteamFriends.GetFriendPersonaName(callback.m_steamIDRemote);
+            Plugin.LogWarning($"The Steam session with {name} failed: {(EP2PSessionError)callback.m_eP2PSessionError}");
         }
 
         // This should only be called if the SteamOverlayInputBlocker is on top,

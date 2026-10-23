@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
@@ -48,6 +49,13 @@ namespace TimberNet
         // has closed, after everything it sent before has been taken
         public event Action? OnDisconnected;
         private volatile bool disconnected = false;
+        // When anything last came in, so a connection that went quiet without
+        // closing shows (Stopwatch ticks, written from the listening thread)
+        private long lastHeard = Stopwatch.GetTimestamp();
+
+        /** Seconds since anything last arrived, part of a message included. */
+        public double SecondsSinceHeard =>
+            (Stopwatch.GetTimestamp() - Interlocked.Read(ref lastHeard)) / (double)Stopwatch.Frequency;
 
         // A received message, or the save a reload starts again from
         private readonly ConcurrentQueue<(ISocketStream source, string? message, byte[]? reloadMap)> receivedEventQueue =
@@ -244,7 +252,7 @@ namespace TimberNet
             byte[] headerBuffer;
             try
             {
-                headerBuffer = stream.ReadUntilComplete(HEADER_SIZE);
+                headerBuffer = ReadHeard(stream, HEADER_SIZE);
             }
             catch
             {
@@ -283,7 +291,7 @@ namespace TimberNet
                 if (messageLength == RELOAD_MARKER && isClient)
                 {
                     if (!TryReadLength(client, out int mapLength) || mapLength <= 0) break;
-                    byte[] reloadMap = client.ReadUntilComplete(mapLength);
+                    byte[] reloadMap = ReadHeard(client, mapLength);
                     Log($"Received reload map with length {mapLength}");
                     receivedEventQueue.Enqueue((client, null, reloadMap));
                     messageCount++;
@@ -298,7 +306,7 @@ namespace TimberNet
 
                 //Log($"Starting to read {messageLength} bytes");
                 // TODO: How should this fail and not hang if map stops sending?
-                byte[] buffer = client.ReadUntilComplete(messageLength);
+                byte[] buffer = ReadHeard(client, messageLength);
 
                 string message = BufferToStringMessage(buffer);
                 //Log($"Queuing message of length {messageLength} bytes");
@@ -325,6 +333,22 @@ namespace TimberNet
             return CompressionUtils.Decompress(buffer);
         }
 
+        // All of a message's bytes, noting when each part arrives: a big save
+        // coming in slowly isn't a connection gone quiet
+        private byte[] ReadHeard(ISocketStream stream, int count)
+        {
+            byte[] bytes = new byte[count];
+            int read = 0;
+            while (read < count)
+            {
+                int bytesRead = stream.Read(bytes, read, count - read);
+                if (bytesRead == 0) throw new IOException("Unexpected end of stream.");
+                read += bytesRead;
+                Interlocked.Exchange(ref lastHeard, Stopwatch.GetTimestamp());
+            }
+            return bytes;
+        }
+
         // From any thread: raised as OnError on the Update() thread, which can show it
         protected void ReportError(string message) => errorQueue.Enqueue(message);
 
@@ -332,7 +356,7 @@ namespace TimberNet
         {
             if (TryReadLength(stream, out int length))
             {
-                byte[] bytes = stream.ReadUntilComplete(length);
+                byte[] bytes = ReadHeard(stream, length);
                 string message = BufferToStringMessage(bytes);
                 // Handed to OnError on the Update() thread, which can show it
                 errorQueue.Enqueue(message);
@@ -371,7 +395,7 @@ namespace TimberNet
 
         private void ReceiveFile(ISocketStream stream, int messageLength)
         {
-            byte[] mapBytes = stream.ReadUntilComplete(messageLength);
+            byte[] mapBytes = ReadHeard(stream, messageLength);
             AddFileToHash(mapBytes);
             Log($"Received map with length {mapBytes.Length} and Hash: {GetHashCode(mapBytes).ToString("X8")}");
             this.mapBytes = mapBytes;

@@ -39,6 +39,9 @@ namespace BeaverBuddies.IO
         // The host's end closed mid-game: the game can't go on without it
         public bool HostLeft { get; private set; }
 
+        /** Seconds since anything last came from the host. */
+        public double SecondsSinceHostHeard => NetBase?.SecondsSinceHeard ?? 0;
+
         private ClientEventIO(ISocketStream socket, MapReceived mapReceivedCallback,
             Action<string> onError)
         {
