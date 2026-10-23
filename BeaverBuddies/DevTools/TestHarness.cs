@@ -43,6 +43,8 @@ namespace BeaverBuddies.DevTools
      * places it finished, "infect x y z" infects the workers of the
      * workplace there with badwater, "workers x y z" logs who works there,
      * "speedsolo n" sets the speed, "detonate x y z" lights the dynamite there, "look x y z [zoom]" points the camera there,
+     * "lever x y z spring|press|release|hold n|http on" works the lever there as its panel or the HTTP API does,
+     * "leverwatch x y z ticks label" logs it tick by tick (see LeverWatch),
      * "send x y z tx ty tz" orders the troops of the building at x y z to the
      * tile tx ty tz (in a multiplayer game).
      * And anywhere, "dismiss" presses OK on the dialogs showing.
@@ -123,6 +125,7 @@ namespace BeaverBuddies.DevTools
         {
             Current = this;
             if (Active) Chaos.Update();
+            if (Active) LeverWatch.Update();
             if (!Active || Time.unscaledTime < _nextPoll) return;
             _nextPoll = Time.unscaledTime + 0.05f;
             if (File.Exists(Flag))
@@ -803,6 +806,29 @@ namespace BeaverBuddies.DevTools
                     Plugin.Log($"[Test] Detonating {dynamite.GameObject.name}");
                     break;
                 }
+                case "lever":
+                {
+                    // lever x y z spring [off] | press | release | hold n | http on|off: the lever there, as its panel's
+                    // spring-return toggle and button do (hold: pressed, and let go of n ticks later), or as the HTTP
+                    // API's switch-on and switch-off do, on the next frame after a request
+                    var lever = LeverAt(a);
+                    switch (a[4])
+                    {
+                        case "spring": lever.SetSpringReturn(a.Length < 6 || a[5] != "off"); break;
+                        case "press": lever.Press(); break;
+                        case "release": lever.Release(); break;
+                        case "hold": LeverWatch.Hold(lever, I(a[5])); break;
+                        case "http":
+                            (lever.GetComponent<Timberborn.HttpApiSystem.HttpLever>() ?? throw new Exception("not an HTTP lever")).SetState(a[5] == "on");
+                            break;
+                        default: throw new Exception("spring, press, release, hold or http?");
+                    }
+                    break;
+                }
+                case "leverwatch":
+                    // leverwatch x y z ticks label: logs the lever there each automation tick (see LeverWatch)
+                    LeverWatch.Watch(LeverAt(a), I(a[4]), a[5]);
+                    break;
                 case "materials":
                 {
                     // What a building draws with: each visible renderer's materials, gray or not
@@ -1043,6 +1069,10 @@ namespace BeaverBuddies.DevTools
         private Timberborn.TimeSystemUI.SpeedControlPanel SpeedPanel() =>
             Get<Timberborn.InputSystem.InputService>()._inputProcessors.OfType<Timberborn.TimeSystemUI.SpeedControlPanel>().FirstOrDefault()
             ?? throw new Exception("no speed panel");
+
+        private Timberborn.AutomationBuildings.Lever LeverAt(string[] a) =>
+            Get<IBlockService>().GetObjectsAt(new Vector3Int(I(a[1]), I(a[2]), I(a[3])))
+                .Select(o => o.GetComponent<Timberborn.AutomationBuildings.Lever>()).FirstOrDefault(l => l) ?? throw new Exception("no lever there");
 
         // Whether the player could place the building there now
         internal bool CanPlace(string prefab, Vector3Int at, Orientation orientation) =>

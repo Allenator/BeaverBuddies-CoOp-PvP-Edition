@@ -170,6 +170,10 @@ namespace BeaverBuddies.Events
         }
         
 
+        // Whether a player's action done now goes out as an event (see DoPrefix), rather than playing as it is
+        public static bool Recording =>
+            !ReplayService.IsReplayingEvents && _unrecorded == 0 && GetReplayServiceIfReady() != null;
+
         /// <summary>
         /// Helper method to make overriding recorded actions in game easier.
         /// </summary>
