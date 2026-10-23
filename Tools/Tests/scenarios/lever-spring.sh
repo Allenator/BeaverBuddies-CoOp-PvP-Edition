@@ -2,9 +2,11 @@
 # is on for one tick's automation and off by that tick's end, with only the switch-on sent as a player's
 # action (not the lever going back off, on any machine), and a lever's button held for 10 ticks keeps it
 # on for them, whoever holds it, sending only its press and let-go; the other player letting go of it
-# meanwhile, as the pinned levers do when the pointer leaves one, does nothing. Each copy logs the lever
-# tick by tick (DevTools/LeverWatch.cs), alone first for what the game does, then in the match. With
-# BeaverBuddies on its own.
+# meanwhile, as the pinned levers do when the pointer leaves one, does nothing. The button is one, shared:
+# held by the host and the guest, and then by the guest and a third player (Tools/FakePlayer), a lever
+# stays on until the last of them lets go, two clicks at once switch it once, and a lever a player holds
+# as they leave is let go of for them. Each copy logs the lever tick by tick (DevTools/LeverWatch.cs),
+# alone first for what the game does, then in the match. With BeaverBuddies on its own.
 if mod_installed TimberEmpires; then mod_disable TimberEmpires; fi
 # The copies open behind other windows, and a game alone stops when it isn't in front unless the
 # game's own "Run in background" is on: BeaverBuddies keeps it playing only in multiplayer
@@ -44,6 +46,21 @@ sent() {
 buttons() {
     sed -n "/\[Test\] leverwatch .* $2/,/\[Test\] Lever $2 watch done/p" "$(bb_log "$1")" \
         | grep -acE "\] (Pressing|Letting go of) Lever "
+}
+
+# watch_lever <lever> <ticks> <label>: both copies watch it, the guest first: it plays each tick after the host has
+watch_lever() { send client "leverwatch $1 $2 $3"; send host "leverwatch $1 $2 $3"; sleep 1; }
+watched_out() {
+    wait_for host "Lever $1 watch done" 120 && wait_for client "Lever $1 watch done" 60 || fail "the $1 is watched" "no end to the watch"
+}
+# switches <instance> <label>: how often the lever went on or off from one tick to the next
+switches() { watched "$1" "$2" | awk 'NR > 1 && $2 != last { n++ } { last = $2 } END { print n + 0 }'; }
+# last_state <instance> <label>: on or off, as the watch's last tick began
+last_state() { watched "$1" "$2" | tail -1 | awk '{ print $2 }'; }
+# agree <label>: both copies the same tick by tick, the ticks both watched
+agree() {
+    local same; same=$(join <(watched host "$1") <(watched client "$1"))
+    [ -n "$same" ] && echo "$same" | awk '$2 != $4 || $3 != $5' | wc -l | tr -d ' ' || echo "no ticks in common"
 }
 
 # Ten ticks held, give or take the frame it's let go of in and, in the match, the trip to the host and back
@@ -103,6 +120,32 @@ for holder in client host; do
     expect_eq "the $other sends nothing, letting go of what it didn't press" "$(buttons $other held-$holder) $(sent $other held-$holder)" "0 0"
 done
 
+# The host and the guest on one lever, each first in turn: held by both, on until the last of them lets go
+for first in host client; do
+    second=$([ $first == host ] && echo client || echo host)
+    # Held by the first for 30 ticks, and by the second for a few seconds in the middle: on for the 30
+    watch_lever "$HTTP_LEVER" 45 both-$first-long
+    send $first "lever $HTTP_LEVER hold 30"; sleep 1
+    send $second "lever $HTTP_LEVER press"; sleep 3
+    send $second "lever $HTTP_LEVER release"
+    watched_out both-$first-long
+    for copy in host client; do
+        expect_match "held by the $first for 30 ticks and the $second in the middle, on for the 30 ($copy)" "$(on_ticks $copy both-$first-long)" "^(2[89]|3[0-3])$"
+    done
+    expect_eq "both copies the same tick by tick (both-$first-long)" "$(agree both-$first-long)" 0
+    # Held by the first for 6 ticks and by the second for 8 s: on until the second lets go
+    watch_lever "$HTTP_LEVER" 40 both-$first-short
+    send $first "lever $HTTP_LEVER hold 6"; sleep 1
+    send $second "lever $HTTP_LEVER press"; sleep 8
+    send $second "lever $HTTP_LEVER release"
+    watched_out both-$first-short
+    for copy in host client; do
+        expect_match "held by the $first for 6 ticks and the $second longer, on until the $second lets go ($copy)" "$(on_ticks $copy both-$first-short)" "^(1[1-9]|2[0-9])$"
+        expect_eq "on once, then off ($copy)" "$(switches $copy both-$first-short) $(last_state $copy both-$first-short)" "2 off"
+    done
+    expect_eq "both copies the same tick by tick (both-$first-short)" "$(agree both-$first-short)" 0
+done
+
 # A third player (Tools/FakePlayer), on the host's build, joining as a guest does: everyone reloads
 fake=$BB_TEST_DIR/fakeplayer
 dotnet build "$BB_SCENARIO_DIR/../../FakePlayer" -c Release -nologo -v q -o "$fake" > /dev/null 2>&1 \
@@ -126,21 +169,6 @@ third=$(grep -aoE "as Third \([0-9a-f-]{36}\)" "$(bb_log fake)" | grep -oE "[0-9
 send host "check $HTTP_LEVER"; send host "check $LEVER"; sleep 1
 http_id=$(grep -aoE "\[Test\] HttpLever[^ ]* [0-9a-f-]{36} finished:" "$(bb_log host)" | tail -1 | grep -oE "[0-9a-f-]{36}")
 lever_id=$(grep -aoE "\[Test\] Lever[^ ]* [0-9a-f-]{36} finished:" "$(bb_log host)" | tail -1 | grep -oE "[0-9a-f-]{36}")
-
-# watch_lever <lever> <ticks> <label>: both copies watch it, the guest first: it plays each tick after the host has
-watch_lever() { send client "leverwatch $1 $2 $3"; send host "leverwatch $1 $2 $3"; sleep 1; }
-watched_out() {
-    wait_for host "Lever $1 watch done" 120 && wait_for client "Lever $1 watch done" 60 || fail "the $1 is watched" "no end to the watch"
-}
-# switches <instance> <label>: how often the lever went on or off from one tick to the next
-switches() { watched "$1" "$2" | awk 'NR > 1 && $2 != last { n++ } { last = $2 } END { print n + 0 }'; }
-# last_state <instance> <label>: on or off, as the watch's last tick began
-last_state() { watched "$1" "$2" | tail -1 | awk '{ print $2 }'; }
-# agree <label>: both copies the same tick by tick, the ticks both watched
-agree() {
-    local same; same=$(join <(watched host "$1") <(watched client "$1"))
-    [ -n "$same" ] && echo "$same" | awk '$2 != $4 || $3 != $5' | wc -l | tr -d ' ' || echo "no ticks in common"
-}
 
 # Held by the guest for 30 ticks, and by the third player for a few seconds in the middle: on for the 30
 watch_lever "$HTTP_LEVER" 45 share-a
@@ -177,6 +205,18 @@ for copy in host client; do
     expect_eq "two players' clicks at once switch it once ($copy)" "$(switches $copy toggle) $(last_state $copy toggle)" "1 on"
 done
 expect_eq "both copies the same tick by tick (toggle)" "$(agree toggle)" 0
+
+# The same by the host and the guest, the lever on from that: off again, once
+watch_lever "$LEVER" 30 toggle-both
+send host "lever $LEVER press"; sleep 1
+send client "lever $LEVER press"; sleep 1
+send host "lever $LEVER release"; sleep 1
+send client "lever $LEVER release"
+watched_out toggle-both
+for copy in host client; do
+    expect_eq "the host's and the guest's clicks at once switch it once ($copy)" "$(switches $copy toggle-both) $(last_state $copy toggle-both)" "1 off"
+done
+expect_eq "both copies the same tick by tick (toggle-both)" "$(agree toggle-both)" 0
 
 # The third player holds the HTTP lever and leaves: the host lets go of it for them
 watch_lever "$HTTP_LEVER" 40 leave
