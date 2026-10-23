@@ -1,3 +1,12 @@
+v1.1.0-1.9.0
+1.1.0-1.9.0
+* New Game has a Game Mode column, with Co-op for games with others. Needs the Game Modes mod (1.1.0-1.3.0 or newer).
+* A game hosted from the menu is named after its mode.
+* A guest who hears nothing from the host for 15 seconds is told so and can leave or keep waiting.
+* Other players' cursors fade when something hides what they point at.
+* The speed buttons no longer flicker while a guest catches up.
+* Error reports now say where the error came from.
+
 v1.1.0-1.8.4
 1.1.0-1.8.4
 * The open matches list only shows games you can join unless the incompatible checkbox is ticked.
