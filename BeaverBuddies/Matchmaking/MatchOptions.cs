@@ -23,6 +23,8 @@ namespace BeaverBuddies.Matchmaking
         {
             Modes.Add(CoOp, "BeaverBuddies.Match.GameMode.CoOp", alone: false);
             Modes.Describe(CoOp, "BeaverBuddies.Match.GameMode.CoOp.Description");
+            // The mode a game with others starts on, whichever mod adds its modes first
+            Modes.SetDefault(CoOp, alone: false);
         }
 
         // Whether an id is one of the picks

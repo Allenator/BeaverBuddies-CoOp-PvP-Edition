@@ -2,6 +2,8 @@
 # with no mode to pick, and a hosted game starts as Co-op and runs in sync, with the Trading Post,
 # Power Exchange and toll station in the toolbar and building.
 if mod_installed TimberEmpires; then mod_disable TimberEmpires; fi
+# and any other mod that adds a game mode (the Game Modes sample, say)
+if mod_installed HelloMode; then mod_disable HelloMode; fi
 
 bb_close
 bb_launch host || { fail "the game starts" "no main menu"; return; }
