@@ -367,6 +367,10 @@ namespace BeaverBuddies.DevTools
                     GameModes.GameSettings.Pick(a[1], a[2]);
                     break;
                 }
+                case "gamemode":
+                    // gamemode id: the game mode picked on the New Game page, for the game it's making (alone or with others)
+                    GameModes.Modes.Pick(a[1], GameModes.Modes.PageAlone());
+                    break;
                 case "matchoption":
                 {
                     // matchoption id value: a pick in a column next to the difficulties, like the game mode
