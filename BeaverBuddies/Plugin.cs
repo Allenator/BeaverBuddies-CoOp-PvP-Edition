@@ -67,9 +67,6 @@ namespace BeaverBuddies
             // played alone or not: a hosted game starts alone and is saved
             // before anyone joins
             containerDefinition.Bind<BeaverBuddies.DevTools.DevToolsRule>().AsSingleton();
-            containerDefinition.Bind<NewGame.GameRecord>().AsSingleton();
-            // The in-game Load Game box shows a save's settings too
-            containerDefinition.Bind<NewGame.SaveRecordLabel>().AsSingleton();
 
             // EventIO gets set before load, so if it's null, this is a regular
             // game, so don't initialize these services.
@@ -111,8 +108,6 @@ namespace BeaverBuddies
             containerDefinition.Bind<ClientConnectionUI>().AsSingleton();
             containerDefinition.Bind<MultiplayerMenu>().AsSingleton();
             containerDefinition.Bind<Matchmaking.MatchOptionsPanel>().AsSingleton();
-            containerDefinition.Bind<NewGame.GameSettingsSection>().AsSingleton();
-            containerDefinition.Bind<NewGame.SaveRecordLabel>().AsSingleton();
             if (DevTools.TestHarness.Active) containerDefinition.Bind<DevTools.TestHarness>().AsSingleton();
             containerDefinition.Bind<FirstTimerService>().AsSingleton();
             containerDefinition.Bind<ChangeLogService>().AsSingleton();
@@ -167,8 +162,7 @@ namespace BeaverBuddies
             _ = BeaverBuddies.Players.PlayerIdentity.LocalID;
 
             // BeaverBuddies' own setting for new games, next to the ones mods add
-            BeaverBuddies.DevTools.DevToolsRule.AddGameSetting();
-            BeaverBuddies.Connect.PlayerLimit.AddGameSetting();
+            NewGame.MultiplayerRules.Register();
 
             // Close the connection while the game is still whole: its
             // listening threads call into Steam, which crashes the game on

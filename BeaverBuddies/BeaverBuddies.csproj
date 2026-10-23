@@ -70,6 +70,8 @@
   <!-- Outside Project -->
   <ItemGroup>
     <ProjectReference Include="..\TimberNet\TimberNet.csproj" />
+    <!-- The mod it depends on (a mod of its own, github.com/FezVrasta/timberborn-game-modes, checked out beside this repo): its DLL stays in its own mod folder -->
+    <ProjectReference Include="..\..\GameModes\GameModes\GameModes.csproj" Private="false" />
   </ItemGroup>
 
   <!-- Reference DLL -->
@@ -106,8 +108,6 @@
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
     <None Update="Localizations\*" CopyToOutputDirectory="PreserveNewest" />
-    <!-- GameModes is a mod of its own to be: its text sits with it, and ships in Localizations with the rest -->
-    <None Update="GameModes\Localizations\*" Link="Localizations\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Update="KeyBindings\*" CopyToOutputDirectory="PreserveNewest" />
     <None Update="KeyBindingGroups\*" CopyToOutputDirectory="PreserveNewest" />
     <None Update="Buildings\**\*" CopyToOutputDirectory="PreserveNewest" />

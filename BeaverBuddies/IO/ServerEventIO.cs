@@ -94,7 +94,7 @@ namespace BeaverBuddies.IO
                 );
                 //netBase = new TimberServer(port, mapProvider, null);
                 // The host is one of them
-                NetBase.MaxClients = () => PlayerLimit.Current - 1;
+                NetBase.MaxClients = () => PlayerLimit.Setting.Current - 1;
                 NetBase.OnLog += Plugin.Log;
                 NetBase.OnTransientMessage += EventIO.RaiseTransientMessageReceived;
                 NetBase.OnTransientMessage += Connect.HostLobby.OnTransientMessage;

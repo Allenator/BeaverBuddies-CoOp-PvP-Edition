@@ -76,17 +76,12 @@ namespace BeaverBuddies.Matchmaking
             };
         }
 
-        // The game's mode and settings from the save's metadata (see GameRecord)
+        // The game's mode and settings from the save's metadata (see GameModes.GameRecord)
         private static Dictionary<string, string> ReadRecord(byte[] saveFile)
         {
             try
             {
-                using var zip = new ZipArchive(new MemoryStream(saveFile), ZipArchiveMode.Read);
-                ZipArchiveEntry entry = zip.GetEntry("save_metadata.json");
-                if (entry == null) return null;
-                using var reader = new StreamReader(entry.Open());
-                JToken lines = JObject.Parse(reader.ReadToEnd())[GameRecord.MetadataName];
-                return lines is JArray array ? GameRecord.Parse(array.Select(l => (string)l)) : null;
+                return GameModes.GameRecord.FromSave(new MemoryStream(saveFile));
             }
             catch (Exception e)
             {

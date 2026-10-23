@@ -129,16 +129,16 @@ namespace BeaverBuddies.Connect
         private VisualElement GameCard()
         {
             var card = Card();
-            Dictionary<string, string> record = GameRecord.Current;
+            Dictionary<string, string> record = GameModes.GameRecord.Current;
             AddFact(card, _loc.T("BeaverBuddies.Lobby.Map"), HostLobby.MapName ?? _fallbackMap);
-            string mode = MatchOptions.Describe(_loc, record);
+            string mode = string.Join("\n", GameModes.GameRecord.Describe(_loc, record));
             foreach (string line in (mode ?? "").Split('\n').Where(l => l.Length > 0))
             {
                 int split = line.IndexOf(": ", StringComparison.Ordinal);
                 if (split > 0) AddFact(card, line.Substring(0, split), line.Substring(split + 2));
                 else AddFact(card, _loc.T("BeaverBuddies.Lobby.Mode"), line);
             }
-            if (record != null) AddFact(card, _loc.T("BeaverBuddies.Lobby.Settings"), GameSettings.Summary(_loc, record, GameRecord.ModeOf(record)));
+            if (record != null) AddFact(card, _loc.T("BeaverBuddies.Lobby.Settings"), GameModes.GameSettings.Summary(_loc, record, GameModes.GameKind.Of(record)));
             return card;
         }
 
@@ -224,7 +224,7 @@ namespace BeaverBuddies.Connect
         private void Rebuild(List<Member> members)
         {
             _players.Clear();
-            int limit = Math.Max(members.Count, PlayerLimit.Current);
+            int limit = Math.Max(members.Count, PlayerLimit.Setting.Current);
             _playersTitle.text = _loc.T("BeaverBuddies.Lobby.Players", members.Count, limit);
             foreach (Member m in members) _players.Add(PlayerRow(m));
             for (int i = members.Count; i < limit; i++) _players.Add(EmptyRow());
@@ -438,7 +438,7 @@ namespace BeaverBuddies.Connect
         public void Update()
         {
             List<Member> members = Members();
-            string key = string.Join("|", members.Select(m => $"{m.Name}/{m.Faction}/{m.Here}/{(m.Color.HasValue ? ColorUtility.ToHtmlStringRGB(m.Color.Value) : "")}")) + PlayerLimit.Current;
+            string key = string.Join("|", members.Select(m => $"{m.Name}/{m.Faction}/{m.Here}/{(m.Color.HasValue ? ColorUtility.ToHtmlStringRGB(m.Color.Value) : "")}")) + PlayerLimit.Setting.Current;
             if (key != _layoutKey)
             {
                 _layoutKey = key;

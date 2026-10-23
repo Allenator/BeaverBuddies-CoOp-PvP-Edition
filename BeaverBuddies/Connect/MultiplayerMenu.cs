@@ -383,7 +383,6 @@ namespace BeaverBuddies.Connect
             Show(__instance, MultiplayerMenu.HostButtonName, intent == NewGameIntent.Host);
             Matchmaking.MatchOptionsPanel.Show(__instance, intent == NewGameIntent.Host || intent == NewGameIntent.Match);
             Matchmaking.MatchOptionsPanel.ShowFriendsOnly(__instance, intent == NewGameIntent.Host);
-            SingletonManager.GetSingleton<NewGame.GameSettingsSection>()?.Refresh();
             __instance._nextButton.ToggleDisplayStyle(intent == NewGameIntent.Play);
         }
 

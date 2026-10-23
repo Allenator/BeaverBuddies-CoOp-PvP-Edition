@@ -129,16 +129,8 @@ namespace BeaverBuddies.Matchmaking
         /** The pick for the game starting on this machine, or null if it wasn't started with one. */
         public static string GameValue(string id) => id == GameModeId ? Modes.Game : _forGame.TryGetValue(id, out string value) ? value : null;
 
-        // The picks for the new game starting on this machine, all of them, with its mode as GameModes records it
-        internal static Dictionary<string, string> ForGame
-        {
-            get
-            {
-                var picks = new Dictionary<string, string>(_forGame);
-                foreach (var pair in Modes.Record()) picks[pair.Key] = pair.Value;
-                return picks;
-            }
-        }
+        // The options the new game starting on this machine was started with, for its record
+        internal static IReadOnlyDictionary<string, string> ForGameOptions => _forGame;
 
         /** The picks by their values alone: Horde, PvP. */
         public static IEnumerable<string> Labels(ILoc loc, Dictionary<string, string> options)
@@ -148,15 +140,12 @@ namespace BeaverBuddies.Matchmaking
             foreach (MatchOption o in All.Where(o => options.ContainsKey(o.Id))) yield return o.Label(loc, options[o.Id]);
         }
 
-        /** The picks in words, one per line. */
-        public static string Describe(ILoc loc, Dictionary<string, string> options)
-        {
-            if (options == null) return "";
-            var lines = new List<string>();
-            if (Modes.ModeOf(options) is { } mode) lines.Add($"{loc.T("GameModes.GameMode")}: {Modes.Label(loc, mode)}");
-            lines.AddRange(All.Where(o => options.ContainsKey(o.Id)).Select(o => $"{loc.T(o.LabelLocKey)}: {o.Label(loc, options[o.Id])}"));
-            return string.Join("\n", lines);
-        }
+        /** The picks in words, one per line: the game mode's, then the options'. */
+        public static string Describe(ILoc loc, Dictionary<string, string> options) => string.Join("\n", GameRecord.Describe(loc, options));
+
+        /** The options' lines, "Label: value", for a record. */
+        internal static IEnumerable<string> Lines(ILoc loc, IReadOnlyDictionary<string, string> options) =>
+            All.Where(o => options.ContainsKey(o.Id)).Select(o => $"{loc.T(o.LabelLocKey)}: {o.Label(loc, options[o.Id])}");
     }
 
     [HarmonyLib.HarmonyPatch(typeof(GameSceneLoader), nameof(GameSceneLoader.StartNewGame))]

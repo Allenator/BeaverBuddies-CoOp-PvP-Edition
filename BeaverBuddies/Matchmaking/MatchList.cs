@@ -141,7 +141,7 @@ namespace BeaverBuddies.Matchmaking
         // A game's room: the players its multiplayer mode was made for (2 for a Quick match), up to its player limit
         internal static int MaxPlayers(MatchPicks picks)
         {
-            int limit = Connect.PlayerLimit.Of(picks.settings);
+            int limit = Connect.PlayerLimit.Setting.Of(picks.settings);
             return picks.mode != null && picks.mode.TryGetValue(nameof(MultiStart.MultiplayerNewGameModeSpec.Players), out float players)
                 ? System.Math.Min((int)players, limit) : limit;
         }

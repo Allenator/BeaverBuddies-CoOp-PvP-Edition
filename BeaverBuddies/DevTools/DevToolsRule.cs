@@ -1,4 +1,4 @@
-using BeaverBuddies.NewGame;
+using GameModes;
 using Timberborn.Persistence;
 using Timberborn.SingletonSystem;
 using Timberborn.WorldPersistence;
@@ -14,6 +14,7 @@ namespace BeaverBuddies.DevTools
     public class DevToolsRule : ILoadableSingleton, ISaveableSingleton
     {
         public const string SettingId = "bb.devtools";
+        public static ToggleSetting Setting { get; private set; }
         // Where Mod Settings kept it, for the first pick's default
         private const string OldSettingKey = "ModSetting.beaverbuddies.Settings.AllowDevToolsInCoop";
 
@@ -27,20 +28,13 @@ namespace BeaverBuddies.DevTools
         public DevToolsRule(ISingletonLoader singletonLoader) => _singletonLoader = singletonLoader;
 
         // On the main thread, for PlayerPrefs
-        public static void AddGameSetting() => GameSettings.Add(new GameSetting
-        {
-            Id = SettingId,
-            GroupLocKey = "BeaverBuddies.Menu.Multiplayer",
-            LabelLocKey = "BeaverBuddies.Settings.AllowDevTools",
-            TooltipLocKey = "BeaverBuddies.Settings.AllowDevTools.Tooltip",
-            Default = PlayerPrefs.GetInt(OldSettingKey, 1) == 1 ? GameSetting.On : GameSetting.Off,
-            Modes = new[] { GameSettings.WithOthers },
-        });
+        public static void AddGameSetting(SettingGroup group) =>
+            Setting = group.Toggle(SettingId, "BeaverBuddies.Settings.AllowDevTools", PlayerPrefs.GetInt(OldSettingKey, 1) == 1);
 
         public void Load()
         {
             if (_singletonLoader.TryGetSingleton(Key, out IObjectLoader loader) && loader.Has(AllowedKey)) Allowed = loader.Get(AllowedKey);
-            else Allowed = (GameSettings.GameValue(SettingId) ?? GameSettings.ValueOf(SettingId)) == GameSetting.On;
+            else Allowed = Setting.NewGameText != null ? Setting.Value : Setting.Picked;
             Plugin.Log($"Dev tools allowed in co-op: {Allowed}");
         }
 

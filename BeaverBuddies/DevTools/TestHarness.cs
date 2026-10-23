@@ -125,7 +125,7 @@ namespace BeaverBuddies.DevTools
                 change(mine.Select(m => new Matchmaking.MatchMods.Entry { id = m.id, name = m.name, version = m.version, workshop = m.workshop }).ToList()).ToList();
             var gameModes = GameModes.Modes.For(alone: false);
             string Option(int index) => gameModes.Count == 0 ? null : gameModes[Math.Min(index, gameModes.Count - 1)].Id;
-            var changed = NewGame.GameSettings.All.Where(g => g.Values?.Length > 1).Take(3)
+            var changed = GameModes.GameSettings.All.OfType<GameModes.ChoiceSetting>().Where(g => g.Values.Count > 1).Take(3)
                 .ToDictionary(g => g.Id, g => g.Values.First(v => v != g.Default));
             Matchmaking.MatchPicks Picks(string name, string map, int option, Dictionary<string, string> settings = null, int players = 0) => new()
             {
@@ -346,15 +346,13 @@ namespace BeaverBuddies.DevTools
                 case "gamesetting":
                 {
                     // gamesetting id value: this player's pick for new games, as the Customize list would set it
-                    NewGame.GameSettings.Pick(a[1], a[2]);
-                    SingletonManager.GetSingleton<NewGame.GameSettingsSection>()?.Refresh();
+                    GameModes.GameSettings.Pick(a[1], a[2]);
                     break;
                 }
                 case "matchoption":
                 {
                     // matchoption id value: a pick in a column next to the difficulties, like the game mode
                     Matchmaking.MatchOptions.Pick(a[1], a[2]);
-                    SingletonManager.GetSingleton<NewGame.GameSettingsSection>()?.Refresh();
                     break;
                 }
                 case "snap":

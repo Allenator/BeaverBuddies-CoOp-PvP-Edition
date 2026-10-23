@@ -295,7 +295,7 @@ namespace BeaverBuddies.Matchmaking
             if (picks.faction != null) text.Append(_loc.T("BeaverBuddies.Match.HostFaction", Faction(picks.faction))).Append("\n");
 
             // Only what differs from the defaults: a list of all of them buries the ones that matter
-            var settings = NewGame.GameSettings.Describe(_loc, picks.settings, NewGame.GameRecord.ModeOf(picks.options), onlyChanged: true);
+            var settings = GameModes.GameSettings.Describe(_loc, picks.settings, GameModes.GameKind.Of(picks.options), onlyChanged: true);
             text.Append($"\n<b>{_loc.T("BeaverBuddies.Match.Section.Settings")}</b>\n");
             text.Append(settings.Count == 0 ? _loc.T("BeaverBuddies.Match.SettingsDefault") : string.Join("\n", settings)).Append("\n");
 
