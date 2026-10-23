@@ -18,6 +18,9 @@ step() { # name command...
 
 echo "BeaverBuddies, fast checks"
 step "translations" python3 "$HERE/translations.py"
+# Game Modes, which it builds on, into the same scratch folder
+GM="${GAMEMODES_REPO:-$(cd "$REPO/../GameModes" 2>/dev/null && pwd)}"
+step "builds Game Modes" bash -c "cd '$GM/GameModes' && dotnet build -c Release -nologo -v q -p:DocumentsPath='$SCRATCH/' 2>&1 | tee /dev/stderr | grep -q '0 Error(s)'"
 step "builds (Steam)" bash -c "cd '$REPO/BeaverBuddies' && dotnet build -c Release -nologo -v q -p:DocumentsPath='$SCRATCH/' 2>&1 | tee /dev/stderr | grep -q '0 Error(s)'"
 step "builds without Steam networking and matchmaking" bash -c "cd '$REPO/BeaverBuddies' && dotnet build -c Release -nologo -v q -p:Steam=false -p:DocumentsPath='$SCRATCH/' 2>&1 | tee /dev/stderr | grep -q '0 Error(s)'"
 # The Steam build again, so what's left in bin and obj is the one that ships

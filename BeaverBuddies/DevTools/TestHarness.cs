@@ -343,6 +343,24 @@ namespace BeaverBuddies.DevTools
                     list.scrollOffset = new Vector2(0, float.MaxValue);
                     break;
                 }
+                case "compatsettings":
+                {
+                    // Settings added through the calls mods built before the Game Modes mod use, and which games they show for:
+                    // A a game alone in PvE, B a PvE game with others, C a Co-op game with others
+                    var kinds = new[] { new GameModes.GameKind("pve", true), new GameModes.GameKind("pve", false), new GameModes.GameKind("coop", false) };
+                    var cases = new (string Id, string[] Modes)[]
+                    {
+                        ("all", null), ("alone", new[] { "bb.alone" }), ("others", new[] { "bb.others" }),
+                        ("pve", new[] { "pve" }), ("alonepve", new[] { "bb.alone:pve" }),
+                    };
+                    foreach (var (id, modes) in cases)
+                    {
+                        Modding.ModBridge.AddGameToggle("test.compat." + id, "Test", "Test." + id, null, true, modes);
+                        var setting = GameModes.GameSettings.Find("test.compat." + id);
+                        Plugin.Log($"[Test] compat {id}: A={setting.AppliesTo(kinds[0])} B={setting.AppliesTo(kinds[1])} C={setting.AppliesTo(kinds[2])}");
+                    }
+                    break;
+                }
                 case "gamesetting":
                 {
                     // gamesetting id value: this player's pick for new games, as the Customize list would set it

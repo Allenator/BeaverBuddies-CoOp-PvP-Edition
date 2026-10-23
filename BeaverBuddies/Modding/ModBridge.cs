@@ -290,17 +290,16 @@ namespace BeaverBuddies.Modding
         public static void DescribeGameMode(string id, string descriptionLocKey) => GameModes.Modes.Describe(id, descriptionLocKey);
 
         // The game mode's line in a game played alone, where it isn't the one it has with others
-        public static void DescribeGameModeAlone(string id, string descriptionLocKey) => GameModes.Modes.DescribeAlone(id, descriptionLocKey);
 
         // The game mode picked for the new game starting on this machine, while
         // it loads, or null for a game started without one
-        public static string GetGameMode() => MatchOptions.GameValue(MatchOptions.GameModeId);
+        // (null for a game played alone, as before games alone had a mode: mods built then read it as "a game with others")
+        public static string GetGameMode() => GameModes.Modes.GameAlone ? null : GameModes.Modes.Game;
 
         // Whether the new game starting on this machine was started alone (in a mode or not)
-        public static bool IsNewGameAlone() => GameModes.Modes.GameAlone;
 
         // The game mode picked on the New Game screens right now, for the game they're making
-        public static string GetPickedGameMode() => GameModes.Modes.PickedMode(GameModes.Modes.PageAlone());
+        public static string GetPickedGameMode() => GameModes.Modes.PickedMode(alone: false);
 
         // The pick for the new game starting on this machine, while it loads,
         // or null for a game started without one (alone, or a saved game)

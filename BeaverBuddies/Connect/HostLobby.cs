@@ -129,7 +129,7 @@ namespace BeaverBuddies.Connect
         private VisualElement GameCard()
         {
             var card = Card();
-            Dictionary<string, string> record = GameModes.GameRecord.Current;
+            IReadOnlyDictionary<string, string> record = GameModes.GameRecord.Current;
             AddFact(card, _loc.T("BeaverBuddies.Lobby.Map"), HostLobby.MapName ?? _fallbackMap);
             string mode = string.Join("\n", GameModes.GameRecord.Describe(_loc, record));
             foreach (string line in (mode ?? "").Split('\n').Where(l => l.Length > 0))

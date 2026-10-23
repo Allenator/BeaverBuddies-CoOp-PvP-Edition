@@ -71,7 +71,8 @@ namespace BeaverBuddies.Matchmaking
                 name = PlayerIdentity.LocalName,
                 faction = SingletonManager.GetSingleton<HostedGameInfo>()?.Faction,
                 mapTitle = SingletonManager.GetSingleton<ReplayService>()?.ServerMapName ?? settlement,
-                options = record.Where(p => MatchOptions.IsPick(p.Key)).ToDictionary(p => p.Key, p => p.Value),
+                // A save of a game played alone has no mode among those a game with others is picked as
+                options = GameModes.Modes.IsAlone(record) ? new Dictionary<string, string>() : record.Where(p => MatchOptions.IsPick(p.Key)).ToDictionary(p => p.Key, p => p.Value),
                 settings = record.Where(p => !MatchOptions.IsPick(p.Key) && p.Key != GameModes.Modes.AloneKey).ToDictionary(p => p.Key, p => p.Value),
             };
         }

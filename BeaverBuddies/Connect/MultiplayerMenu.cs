@@ -110,7 +110,7 @@ namespace BeaverBuddies.Connect
                 {
                     b.text = _loc.T(locKey);
                     b.RegisterCallback((ClickEvent _) => click());
-                    if (tooltipLocKey != null) Util.WrappedTooltip.Register(_tooltipRegistrar, b, () => _loc.T(tooltipLocKey));
+                    if (tooltipLocKey != null) GameModes.WrappedTooltip.Register(_tooltipRegistrar, b, () => _loc.T(tooltipLocKey));
                 });
                 button.ToggleDisplayStyle(false);
                 _buttons.Add(button);
