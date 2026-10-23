@@ -1,3 +1,7 @@
+v1.1.0-1.9.2
+1.1.0-1.9.2
+* Fixed a crash when joining a game whose host is still in its lobby.
+
 v1.1.0-1.9.1
 1.1.0-1.9.1
 * Fixed a crash when joining a game whose map takes a long time to load.
