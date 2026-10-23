@@ -349,8 +349,8 @@ namespace BeaverBuddies.Events
         {
             Lever lever = GetComponent<Lever>(context, entityID);
             if (lever == null) return;
-            if (pressed) lever.Press();
-            else lever.Release();
+            if (pressed) LeverHolders.Press(lever, playerID);
+            else LeverHolders.LetGo(lever, playerID);
         }
 
         public override string ToActionString()
@@ -360,12 +360,62 @@ namespace BeaverBuddies.Events
     }
 
     /*
-     * A lever's button, pressed and let go of on every machine alike: a
-     * spring-return lever stays on while it's held, and the game knows it's
-     * held only on the machine it was pressed on, so the others switched it
-     * off. Each player lets go only of what they pressed: the pinned levers
-     * let go of a spring-return lever whenever the pointer leaves it, pressed
-     * or not, and it may be another player holding it.
+     * Who holds each lever's button down, the same on every machine: it
+     * changes only as presses and let-gos play. The button is one, shared:
+     * the first press presses it and the last let-go lets go of it, so a
+     * lever two players hold stays held until both have let go, and two
+     * players clicking one at once switch it once. A let-go from a player
+     * not holding it does nothing: their press was turned away, say. Not
+     * saved, as the game doesn't save its button held: a reload lets go of
+     * every lever, and the levers are new objects.
+     */
+    public static class LeverHolders
+    {
+        // Weakly, so a lever of a game left behind doesn't keep it
+        private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<Lever, HashSet<string>> Holders = new();
+
+        public static void Press(Lever lever, string playerID)
+        {
+            HashSet<string> holders = Holders.GetOrCreateValue(lever);
+            if (holders.Count == 0) lever.Press();
+            holders.Add(playerID);
+        }
+
+        public static void LetGo(Lever lever, string playerID)
+        {
+            if (!Holders.TryGetValue(lever, out HashSet<string> holders) || !holders.Remove(playerID)) return;
+            if (holders.Count == 0) lever.Release();
+        }
+
+        /**
+         * Lets go of what the player held, for them: they left, and their own
+         * let-go won't come. In the order of the levers' IDs, the same on
+         * every machine, as letting go of one can set off automation.
+         */
+        public static void LetGoAll(IReplayContext context, string playerID)
+        {
+            var held = context.GetSingleton<Timberborn.EntitySystem.EntityRegistry>().Entities
+                .Select(entity => entity ? entity.GetComponent<Lever>() : null)
+                .Where(lever => lever && Holders.TryGetValue(lever, out HashSet<string> holders) && holders.Contains(playerID))
+                .OrderBy(lever => lever.GetComponent<Timberborn.EntitySystem.EntityComponent>().EntityId)
+                .ToList();
+            foreach (Lever lever in held)
+            {
+                Plugin.Log($"Letting go of Lever {ReplayEvent.GetEntityID(lever)} for {playerID}, who left");
+                LetGo(lever, playerID);
+            }
+        }
+    }
+
+    /*
+     * A lever's button, pressed and let go of on every machine alike (see
+     * LeverHolders): a spring-return lever stays on while it's held, and the
+     * game knows it's held only on the machine it was pressed on, so the
+     * others switched it off. Each player sends a let-go only of what they
+     * pressed: the pinned levers let go of a spring-return lever whenever
+     * the pointer leaves it, pressed or not. This is what this player did,
+     * kept here: their let-go of a quick click goes before their press has
+     * come back from the host and been played.
      */
     [HarmonyPatch(typeof(Lever), nameof(Lever.Press))]
     static class LeverPressPatch
