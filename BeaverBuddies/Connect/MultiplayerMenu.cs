@@ -356,7 +356,7 @@ namespace BeaverBuddies.Connect
     {
         public static void Postfix(NewGameModePanel __instance)
         {
-            SingletonManager.GetSingleton<Matchmaking.MatchOptionsPanel>()?.AddTo(__instance);
+            SingletonManager.GetSingleton<Matchmaking.FriendsOnlyPanel>()?.AddTo(__instance);
             SingletonManager.GetSingleton<MultiplayerMenu>()?.AddHostButton(__instance);
 #if IS_STEAM
             SingletonManager.GetSingleton<Matchmaking.MatchmakingUI>()?.AddButton(__instance);
@@ -381,8 +381,7 @@ namespace BeaverBuddies.Connect
             if (intent == NewGameIntent.Match) intent = NewGameIntent.Play;
 #endif
             Show(__instance, MultiplayerMenu.HostButtonName, intent == NewGameIntent.Host);
-            Matchmaking.MatchOptionsPanel.Show(__instance, intent == NewGameIntent.Host || intent == NewGameIntent.Match);
-            Matchmaking.MatchOptionsPanel.ShowFriendsOnly(__instance, intent == NewGameIntent.Host);
+            Matchmaking.FriendsOnlyPanel.ShowFriendsOnly(__instance, intent == NewGameIntent.Host);
             __instance._nextButton.ToggleDisplayStyle(intent == NewGameIntent.Play);
         }
 

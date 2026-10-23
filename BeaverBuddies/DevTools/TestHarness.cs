@@ -294,10 +294,10 @@ namespace BeaverBuddies.DevTools
                 case "friendsbox":
                 {
                     // friendsbox [on|off]: whether the "Steam friends only" box shows on the New Game page, and with on or off, ticks or clears it as a click would
-                    var box = Matchmaking.MatchOptionsPanel.FriendsOnlyBox;
+                    var box = Matchmaking.FriendsOnlyPanel.FriendsOnlyBox;
                     if (box != null && a.Length > 1) UnityEngine.UIElements.UQueryExtensions.Q<UnityEngine.UIElements.Toggle>(box).value = a[1] == "on";
                     bool shown = box != null && box.resolvedStyle.display != UnityEngine.UIElements.DisplayStyle.None;
-                    Plugin.Log($"[Test] friendsbox shown {shown} ticked {Matchmaking.MatchOptionsPanel.FriendsOnly}");
+                    Plugin.Log($"[Test] friendsbox shown {shown} ticked {Matchmaking.FriendsOnlyPanel.FriendsOnly}");
                     break;
                 }
                 case "click":

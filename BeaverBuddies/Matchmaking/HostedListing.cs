@@ -50,7 +50,7 @@ namespace BeaverBuddies.Matchmaking
         {
             newGame = MatchPicks.Create(PlayerIdentity.LocalName, configuration, mapTitle, null, modeLocKey);
             newGameSettlement = configuration.SettlementName;
-            newGameFriendsOnly = MatchOptionsPanel.FriendsOnly;
+            newGameFriendsOnly = FriendsOnlyPanel.FriendsOnly;
         }
 
         // The save about to be hosted, read before its lobby exists
@@ -60,7 +60,7 @@ namespace BeaverBuddies.Matchmaking
             string settlement = save.SettlementReference.SettlementName;
             bool fromNewGame = newGame != null && newGameSettlement == settlement;
             hosting = fromNewGame ? newGame : FromSave(settlement, saveFile);
-            friendsOnly = fromNewGame ? newGameFriendsOnly : MatchOptionsPanel.FriendsOnly;
+            friendsOnly = fromNewGame ? newGameFriendsOnly : FriendsOnlyPanel.FriendsOnly;
         }
 
         private static MatchPicks FromSave(string settlement, byte[] saveFile)

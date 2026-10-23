@@ -276,11 +276,10 @@ namespace BeaverBuddies.Modding
         // called on the machine creating the game, before it's first saved
         public static void AddMapStarts(Action<Placement[]> hook) => MatchHooks.MapStarts += hook;
 
-        // A choice for new multiplayer games, like a game mode: a column of buttons
-        // when hosting a new game or finding a match, by loc keys, which a
-        // match needs both players to have picked the same
+        // Deprecated, does nothing: a choice for new multiplayer games is a game mode (AddGameMode)
+        // or a game setting (GameModes.GameSettings)
         public static void AddMatchOption(string id, string labelLocKey, string[] values, string[] valueLocKeys, string defaultValue) =>
-            MatchOptions.Add(new MatchOption { Id = id, LabelLocKey = labelLocKey, Values = values, ValueLocKeys = valueLocKeys, Default = defaultValue });
+            Plugin.LogWarning($"AddMatchOption({id}) does nothing any more: add a game mode (AddGameMode) or a game setting (the Game Modes mod's GameSettings) instead");
 
         // A game mode for new multiplayer games: BeaverBuddies shows one Game
         // mode list with every mod's modes, and a match only pairs players

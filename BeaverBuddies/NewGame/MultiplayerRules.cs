@@ -1,6 +1,5 @@
 using BeaverBuddies.Connect;
 using BeaverBuddies.DevTools;
-using BeaverBuddies.Matchmaking;
 using GameModes;
 using UnityEngine.UIElements;
 
@@ -9,8 +8,8 @@ namespace BeaverBuddies.NewGame
     /**
      * What BeaverBuddies adds to the New Game screens through the Game Modes
      * mod: its game settings under the Multiplayer heading (for a game with
-     * others), the starting locations row among them, and what it keeps and
-     * says about a game beyond its mode and settings.
+     * others), the starting locations row among them, and the hook that has a
+     * game hosted alone when a mod runs players on this machine.
      */
     public static class MultiplayerRules
     {
@@ -42,13 +41,6 @@ namespace BeaverBuddies.NewGame
 
             // A game made to host goes through events, even alone, when a mod runs players on this machine
             Modes.GameLoading += (record, _) => AloneHosting.Starting(record);
-
-            // What a new game was made with beyond its mode and settings, kept with it and shown with it
-            GameRecord.Building += record =>
-            {
-                foreach (var pair in MatchOptions.ForGameOptions) record[pair.Key] = pair.Value;
-            };
-            GameRecord.Describers.Add((loc, record) => MatchOptions.Lines(loc, record));
         }
     }
 }
