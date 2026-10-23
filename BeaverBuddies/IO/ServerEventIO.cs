@@ -113,7 +113,10 @@ namespace BeaverBuddies.IO
                 NetBase.AcceptTransientFrom = CheckBuild;
                 NetBase.AcceptEventsFrom = client => !refused.Contains(client) && (verified.Contains(client) || !Settings.StrictBuild);
                 NetBase.OnClientGone += client =>
+                {
                     Plugin.Log($"{(names.TryGetValue(client, out string name) ? name : client.Name ?? "A player")}'s connection ended: they left, or it dropped");
+                    if (playerIDs.TryRemove(client, out string id)) gone.Enqueue(id);
+                };
                 // Starts listening, which throws if the port is taken
                 NetBase.Start();
                 return true;
@@ -267,6 +270,9 @@ namespace BeaverBuddies.IO
         // The name each guest's hello or presence gives, for saying whose connection ended, which a connection's
         // listening thread does
         private readonly System.Collections.Concurrent.ConcurrentDictionary<ISocketStream, string> names = new();
+        // And their player IDs, for those whose connection ended, to be played as left on the Update() thread
+        private readonly System.Collections.Concurrent.ConcurrentDictionary<ISocketStream, string> playerIDs = new();
+        private readonly System.Collections.Concurrent.ConcurrentQueue<string> gone = new();
 
         // What a guest says of itself as it joins, and once it's in, says which build it plays
         private bool CheckBuild(ISocketStream client, JObject message)
@@ -274,6 +280,7 @@ namespace BeaverBuddies.IO
             string type = message[TimberNetBase.TYPE_KEY]?.ToString();
             bool saysWho = type == Connect.HostLobby.HelloType || type == Players.PlayerPresence.MessageType;
             if (saysWho && message.Value<string>("name") is string said) names[client] = said;
+            if (saysWho && message.Value<string>("playerID") is string id) playerIDs[client] = id;
             if (refused.Contains(client)) return false;
             if (verified.Contains(client)) return true;
             if (!saysWho) return true;
@@ -326,6 +333,7 @@ namespace BeaverBuddies.IO
         protected override void Updated()
         {
             TurnAwayUnsaid();
+            while (gone.TryDequeue(out string id)) ReplayEvent.GetReplayServiceIfReady()?.RecordEvent(new PlayerLeftEvent { leftID = id });
 #if IS_STEAM
             if (UnityEngine.Time.unscaledTime < _nextListingCheck) return;
             _nextListingCheck = UnityEngine.Time.unscaledTime + 2f;

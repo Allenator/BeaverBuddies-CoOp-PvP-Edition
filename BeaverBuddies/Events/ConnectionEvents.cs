@@ -220,4 +220,21 @@ namespace BeaverBuddies.Events
             infoButton = box.GetPanel().Q<Button>("InfoButton");
         }
     }
+
+    /*
+     * A player's connection ended, as the host saw it: what they held is let
+     * go of for them, on every machine at this event's tick, as their own
+     * let-go won't come. Played after whatever they sent before they went.
+     */
+    public class PlayerLeftEvent : ReplayEvent
+    {
+        public string leftID;
+
+        public override void Replay(IReplayContext context) => LeverHolders.LetGoAll(context, leftID);
+
+        public override string ToActionString()
+        {
+            return $"Player {leftID} left";
+        }
+    }
 }

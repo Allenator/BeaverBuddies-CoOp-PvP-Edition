@@ -825,6 +825,10 @@ namespace BeaverBuddies.DevTools
                     }
                     break;
                 }
+                case "compat":
+                    // What a guest's hello and presence say of its build, for a fake player (Tools/FakePlayer) to say the same
+                    Plugin.Log($"[Test] compat {BuildIdentity.CompatValue} {BuildIdentity.Describe}");
+                    break;
                 case "leverwatch":
                     // leverwatch x y z ticks label: logs the lever there each automation tick (see LeverWatch)
                     LeverWatch.Watch(LeverAt(a), I(a[4]), a[5]);
