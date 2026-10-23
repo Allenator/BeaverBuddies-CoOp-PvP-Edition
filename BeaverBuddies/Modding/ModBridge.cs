@@ -271,6 +271,12 @@ namespace BeaverBuddies.Modding
         // mod to found each player's settlement
         public static void AddMapStartsPerPlayer(Func<bool> hook) => MatchHooks.MapStartsPerPlayer.Add(hook);
 
+        // What a game mode says about its own new games, asked only for games in that mode (see MatchHooks.ModeHooks):
+        // whether a new game hosted from the menu on a map with several starting locations gives each player one,
+        // and whether it starts with every player placing their own start. Either can be left out
+        public static void AddMultiplayerMode(string modeId, Func<bool> mapStartsPerPlayer = null, Func<bool> newGamePlacesStart = null) =>
+            MatchHooks.ByMode[modeId] = new MatchHooks.ModeHooks { MapStartsPerPlayer = mapStartsPerPlayer, NewGamePlacesStart = newGamePlacesStart };
+
         // Where the map's starting locations were, in player order, when a new
         // game starting with no starting building loads on a map with several:
         // called on the machine creating the game, before it's first saved

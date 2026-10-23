@@ -37,11 +37,29 @@ namespace BeaverBuddies.Matchmaking
         // several of them
         public static event Action<Placement[]> MapStarts;
 
+        /**
+         * What a game mode says about its own new games, for mods that add a mode (see ModBridge.AddMultiplayerMode):
+         * asked only for the mode the new game is in, so a mode never answers for another's.
+         */
+        public class ModeHooks
+        {
+            public Func<bool> MapStartsPerPlayer;
+            public Func<bool> NewGamePlacesStart;
+        }
+
+        internal static readonly Dictionary<string, ModeHooks> ByMode = new();
+
+        private static bool InMode(Func<ModeHooks, Func<bool>> pick)
+        {
+            string mode = GameModes.Modes.Game;
+            return mode != null && ByMode.TryGetValue(mode, out ModeHooks hooks) && pick(hooks)?.Invoke() == true;
+        }
+
         public static string Preferred => PreferredFaction.Select(hook => hook()).FirstOrDefault(f => !string.IsNullOrEmpty(f));
         public static bool FactionsMix => CanMixFactions.Any(hook => hook());
         public static bool PlaceStart => PlayersPlaceStart.Any(hook => hook());
-        public static bool NewGamePlaces => NewGamePlacesStart.Any(hook => hook());
-        public static bool StartsPerPlayer => MapStartsPerPlayer.Any(hook => hook());
+        public static bool NewGamePlaces => NewGamePlacesStart.Any(hook => hook()) || InMode(h => h.NewGamePlacesStart);
+        public static bool StartsPerPlayer => MapStartsPerPlayer.Any(hook => hook()) || InMode(h => h.MapStartsPerPlayer);
 
         public static void RaiseMapStarts(Placement[] starts)
         {

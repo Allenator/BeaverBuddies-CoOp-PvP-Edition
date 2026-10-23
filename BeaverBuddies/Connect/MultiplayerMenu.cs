@@ -4,6 +4,7 @@ using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using Timberborn.CoreUI;
 using Timberborn.GameSaveRepositorySystemUI;
 using Timberborn.GameSceneLoading;
@@ -226,8 +227,11 @@ namespace BeaverBuddies.Connect
         private void HostNewGame(NewGameModePanel panel)
         {
             if (!panel.TryGetValidatedGameMode(out GameModeSpec mode)) return;
-            // As the game names autosaves: a settlement's name is its folder, which can't have dots or colons
-            string settlement = "Co-op " + DateTime.Now.ToString("yyyy-MM-dd HH'h'mm", CultureInfo.InvariantCulture);
+            // As the game names autosaves: a settlement's name is its folder, which can't have dots or colons.
+            // Named for the game mode picked, "Co-op 2026-10-23 13h09"
+            string modeName = new string(_loc.T(GameModes.Modes.Get(GameModes.Modes.PickedMode(alone: false))?.LabelLocKey ?? "BeaverBuddies.Match.GameMode.CoOp")
+                .Where(c => c != '.' && c != ':' && c != '/' && c != '\\' && !char.IsControl(c)).ToArray()).Trim();
+            string settlement = modeName + " " + DateTime.Now.ToString("yyyy-MM-dd HH'h'mm", CultureInfo.InvariantCulture);
             var configuration = new NewGameConfiguration(panel._factionSpec.Id, panel._map.MapFileReference, mode, settlement);
             HostLobby.NextMapName = panel._map.DisplayName;
 #if IS_STEAM
