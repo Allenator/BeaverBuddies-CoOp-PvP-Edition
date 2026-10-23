@@ -521,6 +521,19 @@ namespace BeaverBuddies.DevTools
                     if (a.Length > 4) camera.ZoomLevel = float.Parse(a[4], CultureInfo.InvariantCulture);
                     break;
                 }
+                case "fakecursor":
+                {
+                    // fakecursor id x y z [height]: another player's cursor held on that tile, height above the tile's floor
+                    float h = a.Length > 5 ? float.Parse(a[5], CultureInfo.InvariantCulture) : 0f;
+                    Vector3 world = CoordinateSystem.GridToWorld(new Vector3(I(a[2]) + 0.5f, I(a[3]) + 0.5f, I(a[4]) + h));
+                    Get<Cursors.PlayerCursorService>().AddTestCursor(a[1], world);
+                    Plugin.Log($"[Test] Fake cursor {a[1]} at {world}");
+                    break;
+                }
+                case "cursors":
+                    foreach (var c in Get<Cursors.PlayerCursorService>().Cursors)
+                        Plugin.Log($"[Test] Cursor {(a.Length > 1 ? a[1] : "")} alpha {c.Alpha:0.00}");
+                    break;
                 case "train":
                     // On every machine, through an event, so they stay in step
                     Record(new HarnessEvent() { command = string.Join(" ", a) });
