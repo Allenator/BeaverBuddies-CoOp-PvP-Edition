@@ -1,3 +1,12 @@
+v1.1.0-1.9.2-allenator.3
+1.1.0-1.9.2-allenator.3
+* Built on 1.1.0-1.9.2, below, which needs the Game Modes mod: install the Game Modes that comes with this build, not the Steam Workshop's.
+* Spring-return levers work in multiplayer as alone: a pulse lasts one tick, and a lever held by any player stays on until the last of them lets go, or leaves.
+* Banner and tail images, flipped or not, light colors and the Customize toggle, and an HTTP lever's color are the same for everyone.
+* Custom speaker sounds and banner and tail images keep their names for everyone: a player without the file hears or sees the default, and saving or loading no longer replaces the name.
+* A name typed with spaces around it is trimmed, as in a game alone, and each player's actions only ever count as theirs.
+* Joining by address, small messages go out at once, which can cut lag on some networks.
+
 v1.1.0-1.9.2
 1.1.0-1.9.2
 * Fixed a crash when joining a game whose host is still in its lobby.
