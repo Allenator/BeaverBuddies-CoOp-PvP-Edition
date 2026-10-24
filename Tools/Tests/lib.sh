@@ -250,15 +250,18 @@ bb_open() {
     bb_keep_log "$inst"
     prefs_windowed
     # One copy told it's another build, or strict about builds or not, or its own choice of what pauses everyone, where
-    # both share the player's settings: BB_FAKE_BUILD_HOST, BB_STRICT_CLIENT, BB_PAUSES_HOST and so on, by the copy's name
-    local upper fake strict pauses
+    # both share the player's settings: BB_FAKE_BUILD_HOST, BB_STRICT_CLIENT, BB_PAUSES_HOST and so on, by the copy's name.
+    # BB_HIDE_CUSTOM_CLIENT=1 has that copy see none of the custom sounds and images both share (DevTools/HideCustomFiles.cs)
+    local upper fake strict pauses hide
     upper=$(echo "$inst" | tr '[:lower:]' '[:upper:]')
     fake="BB_FAKE_BUILD_$upper"; fake=${!fake:-}
     strict="BB_STRICT_$upper"; strict=${!strict:-}
     pauses="BB_PAUSES_$upper"; pauses=${!pauses:-}
+    hide="BB_HIDE_CUSTOM_$upper"; hide=${!hide:-}
     open -g -n -a "$BB_GAME" --env SteamAppId=1062090 --env SteamGameId=1062090 --env BB_INSTANCE="$inst" \
         ${BB_RTC_CODE:+--env BB_RTC_CODE="$BB_RTC_CODE"} \
         ${fake:+--env BB_FAKE_BUILD="$fake"} ${strict:+--env BB_STRICT="$strict"} ${pauses:+--env BB_PAUSES="$pauses"} \
+        ${hide:+--env BB_HIDE_CUSTOM_FILES="$hide"} \
         ${BB_HITCH_MS:+--env BB_HITCH_MS="$BB_HITCH_MS"} \
         ${BB_LEAK_ROOTS:+--env BB_LEAK_ROOTS="$BB_LEAK_ROOTS"} ${BB_LEAK_SIZES:+--env BB_LEAK_SIZES=1} ${BB_LEAK_WALK:+--env BB_LEAK_WALK=1} \
         --args -skipModManager -logFile "$(bb_log "$inst")" -screen-fullscreen 0 -screen-width ${BB_RES_W:-1400} -screen-height ${BB_RES_H:-880}
