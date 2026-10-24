@@ -107,6 +107,12 @@ namespace BeaverBuddies.Connect
                     ShowError("BeaverBuddies.JoinCoopGame.Error.Full");
                     return;
                 }
+                // Gone from its lobby before the game started
+                if (error == TimberNet.TimberNetBase.HostLeftError)
+                {
+                    ShowError("BeaverBuddies.Client.HostLeft");
+                    return;
+                }
                 // A code has no address or port to check
                 ShowError(socket is WebRtc.WebRtcSocket ? "BeaverBuddies.JoinCoopGame.Error.CodeCouldNotConnect"
                     : "BeaverBuddies.JoinCoopGame.Error.CouldNotConnect", error);

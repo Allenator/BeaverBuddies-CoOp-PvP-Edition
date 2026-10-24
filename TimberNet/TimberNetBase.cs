@@ -34,6 +34,15 @@ namespace TimberNet
         // reloads it (for a resync, or a player joining it). Its save
         // follows, as the map does on joining, and everyone starts again from it
         public const int RELOAD_MARKER = -1;
+        // In place of a message's length: the host, or a guest, is leaving
+        // the game. A connection that closes on its own says so, but a Steam
+        // session ends without the other side hearing of it, and a dropped
+        // connection looks the same as one closed
+        public const int CLOSE_MARKER = -2;
+        // The error a guest gets for a host that left before sending its game
+        public const string HostLeftError = "HostLeft";
+        // How long closing waits for what's queued to go out, the host's goodbye among it
+        private const int CloseWaitMs = 1000;
         // Which game a client's event was sent in: one sent before the
         // client got the last reload's save is for the game it replaced.
         // The host sends its own with the state.
@@ -152,9 +161,25 @@ namespace TimberNet
         public virtual void Close()
         {
             IsStopped = true;
+            var stopping = new List<(ISocketStream stream, StreamSender sender)>();
             foreach (ISocketStream stream in senders.Keys)
             {
-                StopSending(stream);
+                if (senders.TryRemove(stream, out StreamSender sender))
+                {
+                    sender.Stop();
+                    stopping.Add((stream, sender));
+                }
+            }
+            // What's queued goes out before the connections close, for a while at most
+            var until = Stopwatch.StartNew();
+            int left() => Math.Max(0, CloseWaitMs - (int)until.ElapsedMilliseconds);
+            foreach (var (_, sender) in stopping)
+            {
+                sender.WaitStopped(left());
+            }
+            foreach (var (stream, _) in stopping)
+            {
+                stream.Flush(left());
             }
         }
 
@@ -322,13 +347,22 @@ namespace TimberNet
             return true;
         }
 
-        protected void StartListening(ISocketStream client, bool isClient)
+        // Returns whether the other end said it was leaving (CLOSE_MARKER)
+        protected bool StartListening(ISocketStream client, bool isClient)
         {
             //Log("Client connected");
             int messageCount = 0;
+            bool saidGoodbye = false;
             while (client.Connected && !IsStopped)
             {
                 if (!TryReadLength(client, out int messageLength)) break;
+
+                if (messageLength == CLOSE_MARKER)
+                {
+                    if (isClient) Log("The host is leaving the game");
+                    saidGoodbye = true;
+                    break;
+                }
 
                 // First message is always the file
                 if (messageCount == 0 && isClient)
@@ -336,7 +370,7 @@ namespace TimberNet
                     if (messageLength == 0)
                     {
                         ReadErrorMessage(client);
-                        return;
+                        return false;
                     }
 
                     ReceiveFile(client, messageLength);
@@ -371,8 +405,14 @@ namespace TimberNet
                 receivedEventQueue.Enqueue((client, message, null));
                 messageCount++;
             }
-            // The host closed the connection, or it dropped: nothing more is coming
-            if (isClient && !IsStopped && messageCount > 0) disconnected = true;
+            // The host closed the connection, or it dropped: nothing more is coming. Before
+            // its game came there's none to leave, and joining failed if the host said so
+            if (isClient && !IsStopped)
+            {
+                if (messageCount > 0) disconnected = true;
+                else if (saidGoodbye) ReportError(HostLeftError);
+            }
+            return saidGoodbye;
         }
 
         protected byte[] MessageToBuffer(JObject message)

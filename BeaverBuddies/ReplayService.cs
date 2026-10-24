@@ -512,6 +512,7 @@ namespace BeaverBuddies
         }
 
         // The host turned this player away once it was in, for another build or for never saying it: it ends here too, saying why
+            SaveBeforeLeaving();
         private void ShowRefused(ClientEventIO refused)
         {
             Plugin.Log("Turned away by the host: back to the main menu");
@@ -551,9 +552,20 @@ namespace BeaverBuddies
          * This machine's state differs from the host's: it tells the host, which reloads everyone from its save.
          * Why, when known, goes in the report and in the host's log.
          */
+            SaveBeforeLeaving();
         public void HandleDesync(string why = null)
         {
             if (IsDesynced) return;
+        // The save the game makes on leaving for the main menu, which these ways out skip: this player's copy
+        // of the game as far as it got, as when they leave it themselves. Made after the game's IO is gone, it
+        // still keeps as many autosaves as the settings say, which the autosaver took as the game began (see Autosaves)
+        private void SaveBeforeLeaving()
+        {
+            Plugin.Log("Saving this copy of the game before leaving it");
+            try { GetSingleton<Autosaver>()?.CreateExitSave(); }
+            catch (Exception e) { Plugin.LogError($"Couldn't save before leaving: {e.Message}"); }
+        }
+
             // The test harness can keep a desynced game as it is, to look at what differs
             if (DevTools.TestHarness.Active && DevTools.TestHarness.NoResync)
             {

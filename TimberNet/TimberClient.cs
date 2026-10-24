@@ -72,13 +72,22 @@ namespace TimberNet
                     return;
                 }
                 // On a thread of its own: this one may be the connection's, which delivers what's read
-                _ = Task.Run(() => StartListening(client, true));
+                _ = Task.Run(() =>
+                {
+                    StartListening(client, true);
+                    hostGone = true;
+                });
             });
         }
 
 
+        // Nothing more comes from the host: it left, or the connection ended
+        private volatile bool hostGone = false;
+
         public override void Close()
         {
+            // The host told this player is leaving, before what's queued goes out and the connection closes
+            if (client.Connected && !hostGone) QueueLength(client, CLOSE_MARKER);
             base.Close();
             client.Close();
         }

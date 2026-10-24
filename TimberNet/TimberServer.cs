@@ -38,9 +38,9 @@ namespace TimberNet
         // A client's event once taken, before it's played and sent on: what it says can be changed here. On the
         // Update() thread
         public Action<ISocketStream, JObject>? PrepareEventFrom;
-        // A client's connection has ended, they left or it dropped: nothing more comes from them. On that connection's
-        // listening thread
-        public event Action<ISocketStream>? OnClientGone;
+        // A client's connection has ended: nothing more comes from them. True when they said they were leaving
+        // (CLOSE_MARKER), false when it closed without a word, as a dropped one does. On that connection's listening thread
+        public event Action<ISocketStream, bool>? OnClientGone;
 
         private Func<Task<byte[]>> mapProvider;
         private Func<JObject>? initEventProvider;
@@ -170,8 +170,8 @@ namespace TimberNet
 
                         // This must come last - it is an infinite loop
                         // until the client disconnects
-                        StartListening(client, false);
-                        if (!IsStopped) OnClientGone?.Invoke(client);
+                        bool left = StartListening(client, false);
+                        if (!IsStopped) OnClientGone?.Invoke(client, left);
                     });
                 }
             });
@@ -496,6 +496,11 @@ namespace TimberNet
 
         public override void Close()
         {
+            // Each player told the host is leaving, before what's queued for them goes out and their connection closes
+            foreach (ISocketStream client in clients.Where(c => c != null && c.Connected).ToList())
+            {
+                QueueLength(client, CLOSE_MARKER);
+            }
             base.Close();
             try
             {

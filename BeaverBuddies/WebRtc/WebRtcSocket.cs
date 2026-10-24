@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Threading.Tasks;
 using TimberNet;
 
@@ -62,6 +63,44 @@ namespace BeaverBuddies.WebRtc
             other = $"player {from}";
             Attach(peer, channel);
             Connected = true;
+            // The channel is open, so its association has the sender it keeps
+            CapRetries();
+        }
+
+        // SIPSorcery resends a lost packet as RFC 4960 has it, for any network: after 3 s at first, the wait doubling
+        // with each loss up to a minute, and when its window is full it looks again once a second. The data channel
+        // delivers in order, so all that follows a lost packet waits for it: a player on a lossy link heard nothing
+        // from the host for half a minute at a time. A game's own traffic, small and steady, needs a few seconds at most
+        private const int RetryMinimumMs = 200, RetryFirstMs = 1000, RetryMaximumMs = 3000;
+
+        private void CapRetries()
+        {
+            try
+            {
+                object association = peer?.sctp?.RTCSctpAssociation;
+                object sender = association == null ? null
+                    : typeof(SctpAssociation).GetField("_dataSender", BindingFlags.Instance | BindingFlags.NonPublic)?.GetValue(association);
+                if (sender == null)
+                {
+                    Plugin.LogWarning($"[WebRTC] {other}: no SCTP sender to cap the retries of");
+                    return;
+                }
+                void Set(string field, object value) =>
+                    (sender.GetType().GetField(field, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
+                        ?? throw new MissingFieldException(sender.GetType().Name, field)).SetValue(sender, value);
+                Set("_rtoMinimumMilliseconds", RetryMinimumMs);
+                Set("_rtoInitialMilliseconds", RetryFirstMs);
+                Set("_rtoMaximumMilliseconds", RetryMaximumMs);
+                // One already backed off comes down at once
+                var rto = sender.GetType().GetField("_rto", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+                if (rto != null) rto.SetValue(sender, Math.Min((double)rto.GetValue(sender), RetryMaximumMs));
+                Plugin.Log($"[WebRTC] {other}: SCTP resends capped at {RetryMaximumMs} ms (first {RetryFirstMs} ms, at least {RetryMinimumMs} ms)");
+            }
+            catch (Exception e)
+            {
+                // Another SIPSorcery: it plays on with its own
+                Plugin.LogWarning($"[WebRTC] {other}: couldn't cap SCTP resends: {e.Message}");
+            }
         }
 
         // Every step the connection to the other end takes is logged, and the way it settles on, for a log that shows
@@ -179,7 +218,12 @@ namespace BeaverBuddies.WebRtc
 
             RTCDataChannel dataChannel = await peer.createDataChannel("bb", new RTCDataChannelInit { ordered = true });
             Attach(peer, dataChannel);
-            dataChannel.onopen += () => opened.TrySetResult(true);
+            dataChannel.onopen += () =>
+            {
+                // The association has the sender it keeps by now
+                CapRetries();
+                opened.TrySetResult(true);
+            };
             RTCSessionDescriptionInit offer = peer.createOffer();
             await peer.setLocalDescription(offer);
             await signaling.Send(new JObject { ["type"] = "offer", ["sdp"] = offer.sdp });
@@ -251,6 +295,16 @@ namespace BeaverBuddies.WebRtc
             Array.Copy(buffer, offset, data, 0, count);
             // SIPSorcery's send isn't safe to call from two threads at once
             lock (channel) channel.send(data);
+        }
+
+        // Closing the channel drops what SCTP hasn't sent yet, the goodbye last of all
+        public void Flush(int milliseconds)
+        {
+            var waited = System.Diagnostics.Stopwatch.StartNew();
+            while (Connected && waited.ElapsedMilliseconds < milliseconds && channel?.bufferedAmount > 0)
+            {
+                System.Threading.Thread.Sleep(10);
+            }
         }
 
         public void Close()

@@ -23,6 +23,10 @@ namespace TimberNet
         void Close();
         Task ConnectAsync();
 
+        // Waits, for a while at most, for what's written to go out, before closing on purpose (see TimberNetBase.Close):
+        // a connection that keeps what's written and drops it as it closes (a Steam session) has its goodbye go first
+        void Flush(int milliseconds) { }
+
         public byte[] ReadUntilComplete(int count)
         {
             byte[] bytes = new byte[count];

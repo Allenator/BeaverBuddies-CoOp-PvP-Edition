@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -15,10 +16,16 @@ namespace BeaverBuddies.Steam
 {
     public class SteamSocket : ISocketStream, ISteamPacketReceiver
     {
-        // Steam can only buffer 1MB at a time, so we need to
-        // leave time for that to clear out. Hopefully this is enough.
-        // 1 MB per 8 seconds
-        const int BYTES_PER_SECOND = 1024 * 1024 / 8;
+        // Steam keeps what's sent until it's gone out, and takes no more
+        // once too much is waiting, so a write waits while more than this
+        // is (see Write): a save goes as fast as the connection takes it,
+        // up to the rate below. At 1/8 of it, as it was, the saves of
+        // October 24, 2026 (0.5 to 0.8 MB) took 4 to 6 s to reach each
+        // player, and a late game's few MB would take half a minute
+        const int BYTES_PER_SECOND = 1024 * 1024;
+        const int MAX_QUEUED_BYTES = 256 * 1024;
+        // Nothing taken for this long: the connection is gone
+        const int SEND_TIMEOUT_MS = 30000;
         // Note this doesn't affect the theoretical issue of multiple
         // events being sent in a single packet - this could split them up
         // but that's fine. So we just choose a moderate size.
@@ -127,8 +134,35 @@ namespace BeaverBuddies.Steam
                 buffer = newBuffer;
             }
             // Not logged: every message is, together, once a minute (see TimberNetBase.LogTraffic)
-            SteamNetworking.SendP2PPacket(friendID, buffer, (uint)count, EP2PSend.k_EP2PSendReliable);
+            var waited = Stopwatch.StartNew();
+            // Sent once Steam has room for it: a send it refuses was lost before
+            while (QueuedBytes() > MAX_QUEUED_BYTES
+                || !SteamNetworking.SendP2PPacket(friendID, buffer, (uint)count, EP2PSend.k_EP2PSendReliable))
+            {
+                if (!Connected) return;
+                if (waited.ElapsedMilliseconds > SEND_TIMEOUT_MS)
+                {
+                    throw new IOException($"Steam took nothing for {Name} in {SEND_TIMEOUT_MS / 1000} s");
+                }
+                Thread.Sleep(5);
+            }
         }
+
+        // A session closed drops what it hasn't sent, the goodbye last of all. Not
+        // on every close: one for a player gone already would wait on what can't go
+        public void Flush(int milliseconds)
+        {
+            var waited = Stopwatch.StartNew();
+            while (Connected && waited.ElapsedMilliseconds < milliseconds
+                && SteamNetworking.GetP2PSessionState(friendID, out P2PSessionState_t state)
+                && state.m_bConnectionActive != 0 && state.m_nBytesQueuedForSend > 0)
+            {
+                Thread.Sleep(10);
+            }
+        }
+
+        private int QueuedBytes() =>
+            SteamNetworking.GetP2PSessionState(friendID, out P2PSessionState_t state) ? state.m_nBytesQueuedForSend : 0;
 
         public void ReceiveData(byte[] data)
         {

@@ -113,9 +113,10 @@ namespace BeaverBuddies.IO
                 NetBase.AcceptTransientFrom = CheckBuild;
                 NetBase.AcceptEventsFrom = client => !refused.Contains(client) && (verified.Contains(client) || !Settings.StrictBuild);
                 NetBase.PrepareEventFrom = StampPlayer;
-                NetBase.OnClientGone += client =>
+                NetBase.OnClientGone += (client, left) =>
                 {
-                    Plugin.Log($"{(names.TryGetValue(client, out string name) ? name : client.Name ?? "A player")}'s connection ended: they left, or it dropped");
+                    Plugin.Log($"{(names.TryGetValue(client, out string name) ? name : client.Name ?? "A player")}'s connection ended: "
+                        + (left ? "they left the game" : "they left, or it dropped"));
                     if (playerIDs.TryRemove(client, out string id)) gone.Enqueue(id);
                 };
                 // Starts listening, which throws if the port is taken

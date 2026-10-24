@@ -20,12 +20,13 @@ namespace TimberNet
         }
         private readonly ConcurrentQueueWithWait<Item?> queue = new ConcurrentQueueWithWait<Item?>();
         private volatile bool stopped = false;
+        private readonly Thread thread;
 
         public StreamSender(ISocketStream stream, Action<string> log)
         {
             this.stream = stream;
             this.log = log;
-            Thread thread = new Thread(Run)
+            thread = new Thread(Run)
             {
                 IsBackground = true,
                 Name = $"TimberNet sender ({stream.Name ?? "TCP"})",
@@ -60,6 +61,11 @@ namespace TimberNet
             stopped = true;
             queue.Enqueue(null);
         }
+
+        /**
+         * Waits, for a while at most, for what was queued before Stop to go out.
+         */
+        public bool WaitStopped(int milliseconds) => thread.Join(milliseconds);
 
         private void Run()
         {
@@ -100,24 +106,31 @@ namespace TimberNet
 
         /**
          * Writes the length and then the data in chunks, pausing between
-         * them to keep under the stream's rate limit. Blocks until done.
+         * them to keep under the stream's rate limit. Blocks until done. The
+         * length goes in one write with the first chunk: written alone, it
+         * was a packet of its own for every message, and on a data channel
+         * one more to lose and wait for. The other end reads a stream either way.
          */
         public static void WriteWithLength(ISocketStream stream, byte[] data)
         {
-            WriteLength(stream, data.Length);
             int chunkSize = stream.MaxChunkSize;
             // How long to sleep between chunks (may be 0)
             int sleepMS = stream.MaxChunkSize * 1000 / stream.MaxBytesPerSecond;
-            for (int i = 0; i < data.Length; i += chunkSize)
+            byte[] length = BitConverter.GetBytes(data.Length);
+            if (BitConverter.IsLittleEndian)
+                Array.Reverse(length);
+            int first = Math.Min(data.Length, chunkSize - length.Length);
+            byte[] head = new byte[length.Length + first];
+            Array.Copy(length, head, length.Length);
+            Array.Copy(data, 0, head, length.Length, first);
+            stream.Write(head, 0, head.Length);
+            for (int i = first; i < data.Length; i += chunkSize)
             {
-                if (i != 0)
-                {
-                    Thread.Sleep(sleepMS);
-                }
+                Thread.Sleep(sleepMS);
                 // Gone halfway through: the rest of a map would only take time
                 if (!stream.Connected) return;
-                int length = Math.Min(chunkSize, data.Length - i);
-                stream.Write(data, i, length);
+                int count = Math.Min(chunkSize, data.Length - i);
+                stream.Write(data, i, count);
             }
         }
     }
