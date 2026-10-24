@@ -55,4 +55,7 @@ for ((r = 0; r < rounds; r++)); do
         if [ -n "$d" ]; then echo "  entities that differ (< host, > client), $(diff "$dump_dir/host.txt" "$dump_dir/client.txt" | grep -c '^[<>]') lines:"; echo "$d" | sed 's/^/    /'; fi
     fi
     expect_in_sync "both copies in sync after the shaking$round"
+    # Only buildings hide ground, the same on both: a placement check, the chaos's tries among them, used to leave its
+    # preview's hole (an Agora's middle) on the machine that made it
+    expect_eq "the same ground hidden on both copies$round" "$(said client cutouts)" "$(said host cutouts)"
 done
