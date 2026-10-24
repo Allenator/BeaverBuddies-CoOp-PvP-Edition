@@ -112,6 +112,7 @@ namespace BeaverBuddies.IO
                 NetBase.OnMapReceived += NetBase_OnClientConnected;
                 NetBase.AcceptTransientFrom = CheckBuild;
                 NetBase.AcceptEventsFrom = client => !refused.Contains(client) && (verified.Contains(client) || !Settings.StrictBuild);
+                NetBase.PrepareEventFrom = StampPlayer;
                 NetBase.OnClientGone += client =>
                 {
                     Plugin.Log($"{(names.TryGetValue(client, out string name) ? name : client.Name ?? "A player")}'s connection ended: they left, or it dropped");
@@ -274,13 +275,67 @@ namespace BeaverBuddies.IO
         private readonly System.Collections.Concurrent.ConcurrentDictionary<ISocketStream, string> playerIDs = new();
         private readonly System.Collections.Concurrent.ConcurrentQueue<string> gone = new();
 
+        // ---- Whose events they are (D7): one connection is one player, whatever its events say
+
+        // The first player ID each connection gave, which its events are played and sent on as (see StampPlayer).
+        // Kept once it ends, since its last events can still be on their way to the Update() thread
+        private readonly System.Collections.Concurrent.ConcurrentDictionary<ISocketStream, string> playingAs = new();
+        // What's been said once about each connection, so it isn't said every event
+        private readonly HashSet<(ISocketStream, string)> toldOnce = new();
+
+        private string Who(ISocketStream client) => names.TryGetValue(client, out string name) ? name : client.Name ?? "A player";
+
+        private void SayOnce(ISocketStream client, string what, string message)
+        {
+            if (toldOnce.Add((client, what))) Plugin.LogWarning(message);
+        }
+
+        // The first ID a connection gives is the one it plays as, and the one let go of when it ends
+        private void SaysPlayer(ISocketStream client, string id)
+        {
+            string first = playingAs.GetOrAdd(client, id);
+            playerIDs[client] = first;
+            if (first != id) SayOnce(client, "second ID", $"{Who(client)} now says they're {id}, after {first}: still played as {first}");
+        }
+
+        // A guest's event, before it's played and sent on: as the player its connection said it is, whatever the event
+        // itself says. One from before the connection said (only with "same build only" off, which otherwise drops
+        // them) is played as sent, as before
+        private void StampPlayer(ISocketStream client, JObject message)
+        {
+            if (!playingAs.TryGetValue(client, out string id))
+            {
+                SayOnce(client, "unsaid", $"{Who(client)}'s events came before they said who they are: played as sent");
+                return;
+            }
+            Stamp(client, message, id);
+        }
+
+        private void Stamp(ISocketStream client, JObject message, string id)
+        {
+            string sentAs = message.Value<string>("playerID");
+            if (sentAs != id)
+            {
+                if (sentAs != null) SayOnce(client, "other ID", $"{Who(client)} sent {message[TimberNetBase.TYPE_KEY]} as {sentAs}: played as {id}, who they said they are");
+                message["playerID"] = id;
+            }
+            // A tick's events can come grouped
+            if (message["events"] is JArray grouped)
+            {
+                foreach (JToken inner in grouped)
+                {
+                    if (inner is JObject innerEvent) Stamp(client, innerEvent, id);
+                }
+            }
+        }
+
         // What a guest says of itself as it joins, and once it's in, says which build it plays
         private bool CheckBuild(ISocketStream client, JObject message)
         {
             string type = message[TimberNetBase.TYPE_KEY]?.ToString();
             bool saysWho = type == Connect.HostLobby.HelloType || type == Players.PlayerPresence.MessageType;
             if (saysWho && message.Value<string>("name") is string said) names[client] = said;
-            if (saysWho && message.Value<string>("playerID") is string id) playerIDs[client] = id;
+            if (saysWho && message.Value<string>("playerID") is string id) SaysPlayer(client, id);
             if (refused.Contains(client)) return false;
             if (verified.Contains(client)) return true;
             if (!saysWho) return true;

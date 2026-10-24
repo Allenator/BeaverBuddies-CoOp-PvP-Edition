@@ -35,6 +35,9 @@ namespace TimberNet
         public Func<ISocketStream, JObject, bool>? AcceptTransientFrom;
         // Whether a client's events are taken: false drops them. On the Update() thread
         public Func<ISocketStream, bool>? AcceptEventsFrom;
+        // A client's event once taken, before it's played and sent on: what it says can be changed here. On the
+        // Update() thread
+        public Action<ISocketStream, JObject>? PrepareEventFrom;
         // A client's connection has ended, they left or it dropped: nothing more comes from them. On that connection's
         // listening thread
         public event Action<ISocketStream>? OnClientGone;
@@ -468,7 +471,11 @@ namespace TimberNet
 
         protected override bool AcceptsEventFrom(ISocketStream source, JObject message)
         {
-            if (AcceptEventsFrom == null || AcceptEventsFrom(source)) return true;
+            if (AcceptEventsFrom == null || AcceptEventsFrom(source))
+            {
+                PrepareEventFrom?.Invoke(source, message);
+                return true;
+            }
             Log($"Dropping {GetType(message)} from a client that isn't let in");
             return false;
         }

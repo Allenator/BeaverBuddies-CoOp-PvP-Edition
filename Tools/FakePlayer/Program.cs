@@ -14,7 +14,9 @@ using TimberNet;
 // ~/Library/Caches/BeaverBuddies-test-<instance> as the harness does, one a
 // line, and doesn't announce itself with Timber Empires' event. "press <id>"
 // and "release <id>" press and let go of the button of the lever of that
-// entity ID; "quit" leaves.
+// entity ID; "releaseas <instance> <id>" lets go of it as that test copy's
+// player, as a modified game could, which the host should play as this
+// player's; "quit" leaves.
 
 int seconds = args.Length > 0 ? int.Parse(args[0]) : 3600;
 string name = args.Length > 1 ? args[1] : "Rival";
@@ -39,16 +41,19 @@ client.OnMapReceived += bytes => Console.WriteLine($"Map received ({bytes.Length
 client.OnReload += bytes => { Console.WriteLine($"Reload save received ({bytes.Length / 1024} KB)"); client.EndReload(); };
 
 // A lever's button, as a player's click on it sends it (BeaverBuddies.Events.LeverButtonEvent)
-void LeverButton(string entityID, bool pressed) => client.DoUserInitiatedEvent(new JObject
+void LeverButton(string entityID, bool pressed, string? asPlayer = null) => client.DoUserInitiatedEvent(new JObject
 {
     ["$type"] = "BeaverBuddies.Events.LeverButtonEvent, BeaverBuddies",
     ["entityID"] = entityID,
     ["pressed"] = pressed,
     ["ticksSinceLoad"] = client.TickCount,
     ["randomS0Before"] = null,
-    ["playerID"] = playerID,
+    ["playerID"] = asPlayer ?? playerID,
     ["type"] = "LeverButtonEvent",
 });
+
+// A test copy's player ID, as the harness gives it (BeaverBuddies.Players.PlayerIdentity)
+string HarnessPlayerID(string testInstance) => new Guid(MD5.HashData(Encoding.UTF8.GetBytes(testInstance))).ToString();
 
 Console.WriteLine($"Connecting to {host}:{port} as {name} ({playerID})...");
 client.Start();
@@ -109,6 +114,7 @@ while (!failed && !quit && !client.IsStopped && (DateTime.UtcNow - started).Tota
             {
                 case "press" when words.Length > 1: LeverButton(words[1], true); break;
                 case "release" when words.Length > 1: LeverButton(words[1], false); break;
+                case "releaseas" when words.Length > 2: LeverButton(words[2], false, HarnessPlayerID(words[1])); break;
                 case "quit": quit = true; break;
                 default: Console.WriteLine($"[Test] {line} failed: unknown command"); break;
             }
