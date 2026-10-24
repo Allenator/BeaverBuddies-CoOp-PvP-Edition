@@ -8,9 +8,6 @@
 # as they leave is let go of for them. Each copy logs the lever tick by tick (DevTools/LeverWatch.cs),
 # alone first for what the game does, then in the match. With BeaverBuddies on its own.
 if mod_installed TimberEmpires; then mod_disable TimberEmpires; fi
-# The copies open behind other windows, and a game alone stops when it isn't in front unless the
-# game's own "Run in background" is on: BeaverBuddies keeps it playing only in multiplayer
-pref_set RunInBackground 1
 
 LEVER="74 47 5"
 HTTP_LEVER="78 47 5"
