@@ -185,6 +185,9 @@ namespace BeaverBuddies.Events
                 (typeof(WaterInputPipeCoordinates), nameof(WaterInputPipeCoordinates.DisableDepthLimit)),
                 (typeof(Clutch), nameof(Clutch.SetMode)),
 
+                // A banner's or tail painter's image flipped: only its panel, Load and copying settings call it. Its
+                // picks and lights' colors, which game logic also sets, go through their controls (see CosmeticEvents)
+                (typeof(Timberborn.DecalSystem.FlippableDecal), nameof(Timberborn.DecalSystem.FlippableDecal.SetFlip)),
             ];
             var methodsToPatch = methodsToPatchInfo.Select(
                 info => info.Item1.GetMethod(

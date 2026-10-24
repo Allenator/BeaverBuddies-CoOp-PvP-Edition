@@ -862,18 +862,122 @@ namespace BeaverBuddies.DevTools
                             (lever.GetComponent<Timberborn.HttpApiSystem.HttpLever>() ?? throw new Exception("not an HTTP lever")).SetState(a[5] == "on");
                             break;
                         case "tickpin": LeverWatch.PinInTick(lever); break;
-                        default: throw new Exception("spring, press, release, hold, http or tickpin?");
+                        case "httpcolor":
+                            // httpcolor RRGGBB: an HTTP lever's color, as the HTTP API's color command sets it
+                            (lever.GetComponent<Timberborn.HttpApiSystem.HttpLever>() ?? throw new Exception("not an HTTP lever")).SetColor(HexColor(a[5]));
+                            break;
+                        default: throw new Exception("spring, press, release, hold, http, tickpin or httpcolor?");
                     }
                     break;
                 }
                 case "rename":
                     // rename x y z text: what's there renamed as its name box does on OK, "_" for a space, so a name
                     // can start or end with one
-                    Timberborn.EntityNamingUI.EntityNameDialog.SetEntityName(a[4].Replace('_', ' '), NamedAt(a));
+                    Timberborn.EntityNamingUI.EntityNameDialog.SetEntityName(a[4].Replace('_', ' '), ComponentAt<Timberborn.EntityNaming.NamedEntity>(a));
                     break;
                 case "name":
                     // name x y z: what's there is called, quoted so spaces show
-                    Plugin.Log($"[Test] Name at {a[1]} {a[2]} {a[3]}: '{NamedAt(a).EntityName}'");
+                    Plugin.Log($"[Test] Name at {a[1]} {a[2]} {a[3]}: '{ComponentAt<Timberborn.EntityNaming.NamedEntity>(a).EntityName}'");
+                    break;
+                case "decaltools":
+                    // The toolbar's buildings with an image to pick, its category, and whether beavers going in take it as
+                    // their tail
+                    foreach (var tool in Get<Timberborn.ToolButtonSystem.ToolButtonService>().ToolButtons.Select(b => b.Tool)
+                        .OfType<Timberborn.BlockObjectTools.BlockObjectTool>())
+                    {
+                        var decals = tool.Template.GetSpec<Timberborn.DecalSystem.DecalSupplierSpec>();
+                        if (decals == null) continue;
+                        bool tails = tool.Template.HasSpec<Timberborn.TailDecalSystem.EnterableTailDecalApplierSpec>();
+                        Plugin.Log($"[Test] Decal tool {tool.Template.GetSpec<Timberborn.TemplateSystem.TemplateSpec>().TemplateName} category {decals.Category} tails {tails}");
+                    }
+                    break;
+                case "decalpick":
+                {
+                    // decalpick x y z category id: that image picked for what's there, through the picker's own image
+                    // button's click, as a player's click does (see Events.CosmeticEvents)
+                    var button = (Timberborn.DecalSystemUI.DecalButton)System.Runtime.Serialization.FormatterServices
+                        .GetUninitializedObject(typeof(Timberborn.DecalSystemUI.DecalButton));
+                    button._decalSupplier = ComponentAt<Timberborn.DecalSystem.DecalSupplier>(a);
+                    // Read-only, given in its constructor
+                    typeof(Timberborn.DecalSystemUI.DecalButton).GetField("_decal", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                        .SetValue(button, new Timberborn.DecalSystem.Decal(a[5], a[4]));
+                    (Events.DecalButtonClickPatcher.Handler ?? throw new Exception("no image button click")).Invoke(button, new object[] { null });
+                    break;
+                }
+                case "decal":
+                {
+                    // decal x y z: the image what's there has, as its name (the same on every machine), whether it's
+                    // flipped, and the image this machine shows for it (the default, without its file)
+                    var supplier = ComponentAt<Timberborn.DecalSystem.DecalSupplier>(a);
+                    var decal = supplier.ActiveDecal;
+                    var shown = Get<Timberborn.DecalSystem.IDecalService>().GetDecalTexture(decal);
+                    bool flipped = supplier.GetComponent<Timberborn.DecalSystem.FlippableDecal>()?.IsFlipped ?? false;
+                    Plugin.Log($"[Test] Decal at {a[1]} {a[2]} {a[3]}: {decal.Category}/{decal.Id}, flipped {flipped}, shows {(shown ? shown.name : "nothing")}");
+                    break;
+                }
+                case "flip":
+                    // flip x y z on|off: its image flipped or not, as its panel's toggle does
+                    ComponentAt<Timberborn.DecalSystem.FlippableDecal>(a).SetFlip(a[4] == "on");
+                    break;
+                case "decalrefresh":
+                    // decalrefresh category: that category's custom images read again, as the picker's Refresh does
+                    Get<Timberborn.DecalSystem.IDecalService>().ReloadCustomDecals(a[1]);
+                    break;
+                case "decals":
+                    // decals category: the images this machine has to pick from in it, the default first
+                    Plugin.Log($"[Test] Decals {a[1]}: {string.Join("|", Get<Timberborn.DecalSystem.IDecalService>().GetDecals(a[1]).Select(d => d.Id))}");
+                    break;
+                case "sounds":
+                {
+                    // The sounds this machine has for speakers, the default first
+                    var sounds = Get<Timberborn.AutomationBuildings.SpeakerSoundService>();
+                    Plugin.Log($"[Test] Sounds: built-in {string.Join("|", sounds.BuiltInSounds)}; custom {string.Join("|", sounds.CustomSounds)}");
+                    break;
+                }
+                case "lightcolor":
+                case "lightpreset":
+                {
+                    // lightcolor x y z RRGGBB: typed into the color field of its light's panel; lightpreset: one of the
+                    // panel's preset colors picked, as a player does (see Events.CosmeticEvents)
+                    var fragment = Get<Timberborn.IlluminationUI.CustomizableIlluminatorFragment>();
+                    fragment.ShowFragment(ComponentAt<Timberborn.Illumination.CustomizableIlluminator>(a));
+                    if (a[0] == "lightpreset") fragment.SetCustomColorToPreset(HexColor(a[4]));
+                    else
+                    {
+                        using var typed = UnityEngine.UIElements.ChangeEvent<string>.GetPooled("", a[4]);
+                        fragment.OnRgbValueChanged(typed);
+                    }
+                    fragment.ClearFragment();
+                    break;
+                }
+                case "lightcustomize":
+                {
+                    // lightcustomize x y z: its light's Customize toggle clicked
+                    var fragment = Get<Timberborn.IlluminationUI.CustomizeIlluminationFragment>();
+                    fragment.ShowFragment(ComponentAt<Timberborn.Illumination.CustomizableIlluminator>(a));
+                    fragment.OnClicked(null);
+                    fragment.ClearFragment();
+                    break;
+                }
+                case "light":
+                {
+                    // light x y z: whether its light is customized, and its custom color
+                    var light = ComponentAt<Timberborn.Illumination.CustomizableIlluminator>(a);
+                    Plugin.Log($"[Test] Light at {a[1]} {a[2]} {a[3]}: customized {light.IsCustomized}, color {(light._customColor is Color c ? ColorUtility.ToHtmlStringRGB(c) : "none")}");
+                    break;
+                }
+                case "speaker":
+                {
+                    // speaker x y z [sound]: its sound picked as its panel's list does ("_" for a space), or logged: the
+                    // name it keeps (the same on every machine) and the sound this machine plays for it
+                    var speaker = ComponentAt<Timberborn.AutomationBuildings.Speaker>(a);
+                    if (a.Length > 4) speaker.SetSoundId(a[4].Replace('_', ' '));
+                    else Plugin.Log($"[Test] Speaker at {a[1]} {a[2]} {a[3]}: '{speaker.SoundId}', plays '{Cosmetics.CustomFileNames.Playable(speaker._speakerSoundService, speaker.SoundId)}'");
+                    break;
+                }
+                case "soundrefresh":
+                    // The custom sounds read again, as a speaker's Refresh does
+                    Get<Timberborn.AutomationBuildings.SpeakerSoundService>().ReloadCustomSounds();
                     break;
                 case "compat":
                     // What a guest's hello and presence say of its build, for a fake player (Tools/FakePlayer) to say the same
@@ -1128,9 +1232,13 @@ namespace BeaverBuddies.DevTools
             Get<IBlockService>().GetObjectsAt(new Vector3Int(I(a[1]), I(a[2]), I(a[3])))
                 .Select(o => o.GetComponent<Timberborn.AutomationBuildings.Lever>()).FirstOrDefault(l => l) ?? throw new Exception("no lever there");
 
-        private Timberborn.EntityNaming.NamedEntity NamedAt(string[] a) =>
+        // What's at x y z (a[1..3]) that has one
+        private T ComponentAt<T>(string[] a) where T : Timberborn.BaseComponentSystem.BaseComponent =>
             Get<IBlockService>().GetObjectsAt(new Vector3Int(I(a[1]), I(a[2]), I(a[3])))
-                .Select(o => o.GetComponent<Timberborn.EntityNaming.NamedEntity>()).FirstOrDefault(n => n) ?? throw new Exception("nothing named there");
+                .Select(o => o.GetComponent<T>()).FirstOrDefault(c => c) ?? throw new Exception($"no {typeof(T).Name} there");
+
+        private static Color HexColor(string hex) =>
+            ColorUtility.TryParseHtmlString("#" + hex, out Color color) ? color : throw new Exception($"not a color: {hex}");
 
         // Whether the player could place the building there now
         internal bool CanPlace(string prefab, Vector3Int at, Orientation orientation) =>
