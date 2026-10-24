@@ -13,12 +13,13 @@ namespace BeaverBuddies.DevTools
      * The test harness shaking the game up, to find what only goes wrong
      * under some timing: frames that stall or run at another rate than the
      * other copy's, messages that arrive late, and a player who changes the
-     * speed, pauses, ticks once, places and demolishes at random moments.
+     * speed, pauses, ticks once, places and demolishes, and changes settings
+     * (often to what they are already) at random moments.
      * Nothing here touches the game's own random numbers; its own are seeded,
      * so the same seed does the same things (though not at the same instants).
      *
      *   chaos off
-     *   chaos seed level [prefab,prefab,... x y z radius] [nospeed] [nodelete] [notroops] [noplace] [nonet] [nostall] [nosave]
+     *   chaos seed level [prefab,prefab,... x y z radius] [nospeed] [nodelete] [notroops] [noplace] [nonet] [nostall] [nosave] [nosettings]
      *
      * level is 1 (mild) to 3. The places are around x y z (grid), of the
      * prefabs given; without them it only changes speeds and timing.
@@ -35,6 +36,8 @@ namespace BeaverBuddies.DevTools
         // Parts to leave out, to see which one a desync goes with
         private static HashSet<string> _off = new();
         private static readonly List<(string prefab, Vector3Int at)> _placed = new();
+        // Floodgates placed built, which a player can set (one under construction has no panel)
+        private static readonly List<Vector3Int> _floodgates = new();
         public static int Actions { get; private set; }
 
         public static void Start(string[] a)
@@ -64,6 +67,7 @@ namespace BeaverBuddies.DevTools
             _nextRate = 0;
             Actions = 0;
             _placed.Clear();
+            _floodgates.Clear();
             // Only the connection's reading thread calls this
             TimberNetBase.BeforeReceive = () =>
             {
@@ -103,13 +107,49 @@ namespace BeaverBuddies.DevTools
 
         private static string Pick(string[] list) => list[_actions.Next(list.Length)];
 
+        private static readonly string[] Priorities = { "VeryLow", "Low", "Normal", "High", "VeryHigh" };
+
+        // A setting a player changes, often to what it is already, where the game's own method acts anyway (a demolish
+        // job registered again, floodgates synchronized again, a district told of its good's settings), which has to
+        // happen alike on every machine: builders' priorities over a square, marks for them to act on, a floodgate
+        // placed (one is placed built first, as one comes rarely among every building), a good of the player's district
+        private static string SettingsCommand(TestHarness harness)
+        {
+            int kind = _actions.Next(100);
+            int side = _actions.Next(3, 9);
+            int x0 = _around.x + _actions.Next(-_radius, Math.Max(1 - _radius, _radius + 1 - side));
+            int y0 = _around.y + _actions.Next(-_radius, Math.Max(1 - _radius, _radius + 1 - side));
+            string square = $"{x0} {y0} {x0 + side - 1} {y0 + side - 1}";
+            if (kind < 35) return $"priority {square} {Pick(Priorities)}";
+            if (kind < 50) return $"markresources {square}";
+            if (kind < 75)
+            {
+                if (_floodgates.Count == 0)
+                {
+                    var kinds = _prefabs.Where(f => f.Contains("Floodgate")).ToArray();
+                    return kinds.Length == 0 ? null : PlaceCommand(harness, Pick(kinds), true);
+                }
+                var at = _floodgates[_actions.Next(_floodgates.Count)];
+                string change = _actions.Next(2) == 0
+                    ? "height " + (_actions.Next(3) == 0 ? "same" : (_actions.Next(0, 7) / 2f).ToString(CultureInfo.InvariantCulture))
+                    : "sync " + Pick(new[] { "on", "off", "same", "same" });
+                return $"floodgate {at.x} {at.y} {at.z} {change}";
+            }
+            int which = _actions.Next(3);
+            string set = which == 0 ? "export " + (_actions.Next(3) == 0 ? "same" : (_actions.Next(0, 11) / 10f).ToString(CultureInfo.InvariantCulture))
+                : which == 1 ? "import " + Pick(new[] { "Disabled", "Auto", "Forced", "same", "same" })
+                : "default";
+            return $"distribution {_around.x} {_around.y} {_actions.Next(1000)} {set}";
+        }
+
         // A placement that fits, of some building: a third of them the army's, barracks, ranges, armories, siege machines
-        private static string PlaceCommand(TestHarness harness)
+        // Of some building, or the one given, built at once a third of the time, or always if told
+        private static string PlaceCommand(TestHarness harness, string prefab = null, bool built = false)
         {
             string[] rotations = { "0", "90", "180", "270" };
             var army = _prefabs.Where(f => Is(f, Military) || Is(f, Machines)).ToArray();
             var machines = _prefabs.Where(f => Is(f, Machines)).ToArray();
-            string prefab = _actions.Next(3) != 0 || army.Length == 0 ? Pick(_prefabs)
+            prefab ??= _actions.Next(3) != 0 || army.Length == 0 ? Pick(_prefabs)
                 : machines.Length > 0 && _actions.Next(2) == 0 ? Pick(machines) : Pick(army);
             // Spots until one fits: most of the map's tiles don't suit most buildings
             for (int tries = 0; tries < 25; tries++)
@@ -122,7 +162,9 @@ namespace BeaverBuddies.DevTools
                 catch { fits = false; }
                 if (!fits) continue;
                 _placed.Add((prefab, at));
-                return $"place {prefab} {at.x} {at.y} {at.z} {rotations[turn]}{(_actions.Next(3) == 0 ? " instant" : "")}";
+                built = built || _actions.Next(3) == 0;
+                if (built && prefab.Contains("Floodgate")) _floodgates.Add(at);
+                return $"place {prefab} {at.x} {at.y} {at.z} {rotations[turn]}{(built ? " instant" : "")}";
             }
             return null;
         }
@@ -157,7 +199,14 @@ namespace BeaverBuddies.DevTools
                 if (_off.Contains("nodelete")) return;
                 int i = _actions.Next(_placed.Count);
                 command = $"delete {_placed[i].at.x} {_placed[i].at.y} {_placed[i].at.z}";
+                _floodgates.Remove(_placed[i].at);
                 _placed.RemoveAt(i);
+            }
+            else if (roll < 84)
+            {
+                if (_off.Contains("nosettings")) return;
+                command = SettingsCommand(harness);
+                if (command == null) return;
             }
             else
             {

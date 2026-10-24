@@ -1,8 +1,8 @@
 # BB_EXPECT_DESYNC: this scenario resyncs the copies on purpose
 # Both copies shaken up for a while: frames that stall or run at different rates, messages that arrive
-# late, and each player changing the speed, pausing, ticking once, placing and demolishing at random
-# moments. Nothing should desync or need a resync. BB_CHAOS_SECONDS (150 by default) is how long,
-# BB_CHAOS_OFF parts to leave out (nospeed nodelete notroops noplace nonet nostall nosave), BB_CHAOS_SEED the seed (random by default; the same seed does the same things, though not at the
+# late, and each player changing the speed, pausing, ticking once, placing and demolishing, and changing settings
+# (builders' priorities and marks, floodgates, a district's goods; often to what they are already) at random moments. Nothing should desync or need a resync. BB_CHAOS_SECONDS (150 by default) is how long,
+# BB_CHAOS_OFF parts to leave out (nospeed nodelete notroops noplace nonet nostall nosave nosettings), BB_CHAOS_SEED the seed (random by default; the same seed does the same things, though not at the
 # same instants), BB_CHAOS_LEVEL 1 to 3. Saves happen during the shaking too, and after the first round both
 # copies exit to the main menu (only the host with the exit save) and play a second match without restarting, so state a save or the last match
 # left behind (statics that never reset) shows up as a desync there. BB_CHAOS_ROUNDS 1 skips the rematch.

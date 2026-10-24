@@ -318,12 +318,14 @@ namespace BeaverBuddies.Events
     // I believe that the "Set" methods here are only called from the UI, so this is
     // similar to intercepting the UI events directly. Loading and initialization don't
     // call these events.
+    // Sent even when the value is set already: the game's method tells the district
+    // anyway, which clears what it worked out about the good, and on the player's
+    // machine alone that would part it from everyone else's (the event plays only a change)
     [HarmonyPatch(typeof(GoodDistributionSetting), nameof(GoodDistributionSetting.SetExportThreshold))]
     class GoodDistributionSettingSetImportThresholdPatcher
     {
         static bool Prefix(GoodDistributionSetting __instance, float exportThreshold)
         {
-            if (__instance.ExportThreshold == exportThreshold) return true;
             return GoodDistributionSettingChangedEvent.DoPrefix(__instance, exportThreshold, __instance.ImportOption);
         }
     }
@@ -332,7 +334,6 @@ namespace BeaverBuddies.Events
     {
         static bool Prefix(GoodDistributionSetting __instance, ImportOption importOption)
         {
-            if (__instance.ImportOption == importOption) return true;
             return GoodDistributionSettingChangedEvent.DoPrefix(__instance, __instance.ExportThreshold, importOption);
         }
     }
@@ -343,7 +344,6 @@ namespace BeaverBuddies.Events
         {
             var exportThreshold = 0f;
             var importOption = ((!__instance._goodSpec.ForceImport) ? ImportOption.Auto : ImportOption.Forced);
-            if (__instance.ImportOption == importOption && __instance.ExportThreshold == exportThreshold) return true;
             return GoodDistributionSettingChangedEvent.DoPrefix(__instance, exportThreshold, importOption, false);
         }
     }

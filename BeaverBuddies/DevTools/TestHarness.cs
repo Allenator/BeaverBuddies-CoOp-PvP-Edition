@@ -753,6 +753,42 @@ namespace BeaverBuddies.DevTools
                         $"settings {Settings.AutosaveMinutes.ToString(CultureInfo.InvariantCulture)} min, {Settings.AutosavesKept}, skip paused {Settings.SkipPausedAutosaves}");
                     break;
                 }
+                case "floodgate":
+                {
+                    // floodgate x y z height <h|same> | sync <on|off|same>: as its panel's height buttons and its
+                    // synchronization toggle do; same, the value it has already
+                    var floodgate = ComponentAt<Timberborn.WaterBuildings.Floodgate>(a);
+                    if (a[4] == "height") floodgate.SetHeightAndSynchronize(a[5] == "same" ? floodgate.Height : float.Parse(a[5], CultureInfo.InvariantCulture));
+                    else if (a[4] == "sync") floodgate.ToggleSynchronization(a[5] == "same" ? floodgate.IsSynchronized : a[5] == "on");
+                    else throw new Exception("height or sync?");
+                    Plugin.Log($"[Test] {string.Join(" ", a)}: height {floodgate.Height}, synchronized {floodgate.IsSynchronized}");
+                    break;
+                }
+                case "distribution":
+                {
+                    // distribution x y n export <t|same> | import <Disabled|Auto|Forced|same> | default: the nth good (of
+                    // however many) of the district whose center is nearest x y, set as its distribution panel does;
+                    // same, the value it has already
+                    var at = new Vector2(I(a[1]), I(a[2]));
+                    var center = Get<Timberborn.GameDistricts.DistrictCenterRegistry>().AllDistrictCenters
+                        .OrderBy(d => Vector2.Distance(at, new Vector2(d.GetComponent<BlockObject>().Coordinates.x, d.GetComponent<BlockObject>().Coordinates.y)))
+                        .FirstOrDefault() ?? throw new Exception("no district");
+                    var goods = center.GetComponent<Timberborn.DistributionSystem.DistrictDistributionSetting>().GoodDistributionSettings;
+                    if (goods.Count == 0) throw new Exception("no goods");
+                    var good = goods[I(a[3]) % goods.Count];
+                    switch (a[4])
+                    {
+                        case "export": good.SetExportThreshold(a[5] == "same" ? good.ExportThreshold : float.Parse(a[5], CultureInfo.InvariantCulture)); break;
+                        case "import":
+                            good.SetImportOption(a[5] == "same" ? good.ImportOption
+                                : (Timberborn.DistributionSystem.ImportOption)Enum.Parse(typeof(Timberborn.DistributionSystem.ImportOption), a[5]));
+                            break;
+                        case "default": good.SetDefault(); break;
+                        default: throw new Exception("export, import or default?");
+                    }
+                    Plugin.Log($"[Test] {string.Join(" ", a)}: {good.GoodId} export {good.ExportThreshold}, import {good.ImportOption}");
+                    break;
+                }
                 case "nudge":
                 {
                     // nudge: a beaver moved a hair on this copy alone, as a rounding difference could leave one, so this

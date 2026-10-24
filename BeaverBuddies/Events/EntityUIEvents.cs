@@ -502,9 +502,8 @@ namespace BeaverBuddies.Events
     {
         static bool Prefix(Floodgate __instance, float newHeight)
         {
-            // Ignore if height is already new height
-            if (__instance.Height == newHeight) return true;
-
+            // Sent even at the height it has: the game's method synchronizes its neighbors anyway, which on the
+            // player's machine alone would part it from everyone else's
             return ReplayEvent.DoEntityPrefix(__instance, entityID =>
             {
                 return new FloodgateHeightChangedEvent()
@@ -541,9 +540,8 @@ namespace BeaverBuddies.Events
     {
         static bool Prefix(Floodgate __instance, bool newValue)
         {
-            // Ignore if height is already the same
-            if (__instance.IsSynchronized == newValue) return true;
-
+            // Sent even when it's set already: the game's method takes its neighbors' height anyway, which on the
+            // player's machine alone would part it from everyone else's
             return ReplayEvent.DoEntityPrefix(__instance, entityID =>
             {
                 return new FloodgateSynchronizedChangedEvent()
