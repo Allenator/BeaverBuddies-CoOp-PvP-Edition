@@ -190,6 +190,18 @@ for copy in host client; do
 done
 expect_eq "both copies the same tick by tick (share-b)" "$(agree share-b)" 0
 
+# A let-go the third player sends as the guest, as a modified game could: the host plays it as the third player's,
+# who holds nothing, so the guest's 20-tick hold stands
+watch_lever "$HTTP_LEVER" 35 forged
+send client "lever $HTTP_LEVER hold 20"; sleep 1
+send fake "releaseas client $http_id"
+watched_out forged
+for copy in host client; do
+    expect_match "a let-go sent as another player doesn't end their hold ($copy)" "$(on_ticks $copy forged)" "^(1[89]|2[0-3])$"
+done
+expect_log "the host plays it as the player who sent it" host "Third sent LeverButtonEvent as [0-9a-f-]{36}: played as $third"
+expect_eq "both copies the same tick by tick (forged)" "$(agree forged)" 0
+
 # A lever without spring return, clicked by the guest and the third player at once: one button, one switch
 send host "lever $LEVER spring off"; sleep 2
 watch_lever "$LEVER" 30 toggle
