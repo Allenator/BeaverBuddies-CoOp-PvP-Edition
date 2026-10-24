@@ -847,9 +847,10 @@ namespace BeaverBuddies.DevTools
                 }
                 case "lever":
                 {
-                    // lever x y z spring [off] | press | release | hold n | http on|off: the lever there, as its panel's
-                    // spring-return toggle and button do (hold: pressed, and let go of n ticks later), or as the HTTP
-                    // API's switch-on and switch-off do, on the next frame after a request
+                    // lever x y z spring [off] | press | release | hold n | http on|off | tickpin: the lever there, as its
+                    // panel's spring-return toggle and button do (hold: pressed, and let go of n ticks later), or as the
+                    // HTTP API's switch-on and switch-off do, on the next frame after a request; tickpin pins or unpins it
+                    // from inside the next tick, as game logic would, to trip the tick guard (see LeverWatch)
                     var lever = LeverAt(a);
                     switch (a[4])
                     {
@@ -860,10 +861,20 @@ namespace BeaverBuddies.DevTools
                         case "http":
                             (lever.GetComponent<Timberborn.HttpApiSystem.HttpLever>() ?? throw new Exception("not an HTTP lever")).SetState(a[5] == "on");
                             break;
-                        default: throw new Exception("spring, press, release, hold or http?");
+                        case "tickpin": LeverWatch.PinInTick(lever); break;
+                        default: throw new Exception("spring, press, release, hold, http or tickpin?");
                     }
                     break;
                 }
+                case "rename":
+                    // rename x y z text: what's there renamed as its name box does on OK, "_" for a space, so a name
+                    // can start or end with one
+                    Timberborn.EntityNamingUI.EntityNameDialog.SetEntityName(a[4].Replace('_', ' '), NamedAt(a));
+                    break;
+                case "name":
+                    // name x y z: what's there is called, quoted so spaces show
+                    Plugin.Log($"[Test] Name at {a[1]} {a[2]} {a[3]}: '{NamedAt(a).EntityName}'");
+                    break;
                 case "compat":
                     // What a guest's hello and presence say of its build, for a fake player (Tools/FakePlayer) to say the same
                     Plugin.Log($"[Test] compat {BuildIdentity.CompatValue} {BuildIdentity.Describe}");
@@ -1116,6 +1127,10 @@ namespace BeaverBuddies.DevTools
         private Timberborn.AutomationBuildings.Lever LeverAt(string[] a) =>
             Get<IBlockService>().GetObjectsAt(new Vector3Int(I(a[1]), I(a[2]), I(a[3])))
                 .Select(o => o.GetComponent<Timberborn.AutomationBuildings.Lever>()).FirstOrDefault(l => l) ?? throw new Exception("no lever there");
+
+        private Timberborn.EntityNaming.NamedEntity NamedAt(string[] a) =>
+            Get<IBlockService>().GetObjectsAt(new Vector3Int(I(a[1]), I(a[2]), I(a[3])))
+                .Select(o => o.GetComponent<Timberborn.EntityNaming.NamedEntity>()).FirstOrDefault(n => n) ?? throw new Exception("nothing named there");
 
         // Whether the player could place the building there now
         internal bool CanPlace(string prefab, Vector3Int at, Orientation orientation) =>

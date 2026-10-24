@@ -798,7 +798,8 @@ namespace BeaverBuddies.Events
                 return new EntityRenamedEvent()
                 {
                     entityID = entityID,
-                    newName = newName,
+                    // Trimmed, as the game does alone: an HTTP lever's URL and an adapter's {name} use it
+                    newName = newName.Trim(),
                 };
             });
         }

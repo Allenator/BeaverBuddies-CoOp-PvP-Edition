@@ -17,7 +17,9 @@ Builds BeaverBuddies first (skipped when nothing changed since the last build), 
 - `bb-only`: with Timber Empires switched off, the New Game page has no mode column, and a hosted game starts as Co-op and stays in sync.
 A scenario past `BB_SCENARIO_TIMEOUT` (600 s) fails and is stopped, and the whole run has a limit too, `BB_RUN_TIMEOUT` (1800 s, 0 for none): past it everything is killed, the copies closed, and it says so and posts a notification.
 
-A desync during a scenario stops it there and fails it ("stays in sync", with the log lines that show why) and posts a notification, so a run never sits waiting after the host has resynced. A scenario that resyncs on purpose has a `BB_EXPECT_DESYNC` comment and is left alone.
+A desync during a scenario stops it there and fails it ("stays in sync", with the log lines that show why) and posts a notification, so a run never sits waiting after the host has resynced. A scenario that resyncs on purpose has a `BB_EXPECT_DESYNC` comment and is left alone. Game logic that went out as a player's action fails a scenario too, as it ends: the tick guard's `[SyncGuard]` line in either copy's log (see `ReplayEvent.InGameTick`). A scenario that trips the guard on purpose has a `BB_EXPECT_SYNC_GUARD` comment.
+
+- `sync-rules`: the tick guard reports a synced method the game's own tick calls (a lever pinned from inside a tick, `lever x y z tickpin`), in that copy only, and not a player's own setting between ticks; a name typed with spaces around it is trimmed for everyone, as the game does alone (`rename x y z text`, `_` for a space, and `name x y z`).
 
 - `desync-resync`: a desync reloads both copies from the host's save over the connection they already have, and they carry on in sync; the dialog after it turns logging on, or with logging on saves the desync's trace next to Player.log for a report on Discord.
 
