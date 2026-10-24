@@ -373,6 +373,22 @@ place_starts() {
 
 # ---- Asking the game ------------------------------------------------------------
 
+# said <instance> <command...>: sends a harness command and prints what that copy's log answers to it, the
+# rest of its "[Test] <command>: ..." line
+said() {
+    local inst=$1 log key before i
+    shift
+    key="[Test] $*:"
+    log=$(bb_log "$inst")
+    before=$(grep -aFc "$key" "$log")
+    send "$inst" "$*"
+    for ((i = 0; i < 200; i++)); do
+        [ "$(grep -aFc "$key" "$log")" -gt "$before" ] && break
+        sleep 0.05
+    done
+    grep -aF "$key" "$log" | tail -1 | awk -v k="$key" '{ print substr($0, index($0, k) + length(k) + 1) }'
+}
+
 # probe <instance> <key...>: what Timber Empires' harness probe says for "te <key>" on that copy
 # (DevTools/HarnessProbe.cs), with player IDs shortened to P
 probe() {

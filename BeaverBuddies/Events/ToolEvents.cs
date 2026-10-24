@@ -173,22 +173,39 @@ namespace BeaverBuddies.Events
             GameObject gameObject = templateInstantiator.Instantiate(spec.Blueprint, roots.First().transform);
             gameObject.SetActive(value: false);
             var blockObject = gameObject.GetComponentSlow<BlockObject>();
-            blockObject.MarkAsPreviewAndInitialize();
-            blockObject.Reposition(placement);
-            bool isValid = blockObject.IsValid();
-            string there = Settings.Debug ? WhatIsThere(context, blockObject) : "";
-            InvalidBecause = isValid ? "" : "the game's block check failed; there: " + there;
-            ThereAtLastCheck = there;
-            if (isValid && !PlacementHooks.AllowOn(blockObject.PositionedBlocks.GetAllCoordinates(), playerID))
+            try
             {
-                Plugin.LogWarning($"Placement refused for {playerID}");
-                InvalidBecause = "refused by a mod's rule (land claims)";
-                isValid = false;
+                blockObject.MarkAsPreviewAndInitialize();
+                blockObject.Reposition(placement);
+                bool isValid = blockObject.IsValid();
+                string there = Settings.Debug ? WhatIsThere(context, blockObject) : "";
+                InvalidBecause = isValid ? "" : "the game's block check failed; there: " + there;
+                ThereAtLastCheck = there;
+                if (isValid && !PlacementHooks.AllowOn(blockObject.PositionedBlocks.GetAllCoordinates(), playerID))
+                {
+                    Plugin.LogWarning($"Placement refused for {playerID}");
+                    InvalidBecause = "refused by a mod's rule (land claims)";
+                    isValid = false;
+                }
+                return isValid;
             }
-            // On the spot: the preview is in the block service until it's gone, and
-            // at the end of the frame is too late for the next placement of this tick
-            UnityEngine.Object.DestroyImmediate(gameObject);
-            return isValid;
+            finally
+            {
+                try
+                {
+                    // What the building tool does as its preview leaves a spot: placed, the preview hid the
+                    // ground the building sinks into (an Agora's middle, an Underground Pile) and kept water
+                    // pumps' pipes from being drawn through its tiles, and destroying it undoes neither, so
+                    // the ground stayed open to the sky for the rest of the game
+                    if (blockObject.Positioned) blockObject.GetComponent<PlacementChangeNotifier>().NotifyPreChangeListeners();
+                }
+                finally
+                {
+                    // On the spot: the preview is in the block service until it's gone, and
+                    // at the end of the frame is too late for the next placement of this tick
+                    UnityEngine.Object.DestroyImmediate(gameObject);
+                }
+            }
         }
 
         public override string ToActionString()

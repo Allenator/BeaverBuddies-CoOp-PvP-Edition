@@ -1191,6 +1191,24 @@ namespace BeaverBuddies.DevTools
                     Plugin.Log($"[Test] has {a[1]}: {(entity ? "yes" : "no")}{where}");
                     break;
                 }
+                case "cutouts":
+                {
+                    // cutouts [x y z]: how many cells of ground are hidden (where a building sinks in, an Agora's
+                    // middle), how many of those the building previews hide, how many tiles the previews keep water
+                    // pumps' pipes from being drawn through, and whether the ground at x y z is hidden
+                    var terrain = Get<Timberborn.TerrainSystem.ITerrainService>();
+                    Vector3Int size = terrain.Size;
+                    int hidden = 0;
+                    for (int z = 0; z < size.z; z++)
+                        for (int y = 0; y < size.y; y++)
+                            for (int x = 0; x < size.x; x++)
+                                if (terrain.CellIsCutout(new Vector3Int(x, y, z))) hidden++;
+                    int byPreviews = Get<Timberborn.BlockObjectTools.PreviewTerrainCutoutService>()._cutoutTiles.Count;
+                    int pipeTiles = Get<Timberborn.WaterBuildings.PreviewWaterInputPipeBlockerService>()._blockedTiles.Count;
+                    string at = a.Length > 3 ? $", {(terrain.CellIsCutout(new Vector3Int(I(a[1]), I(a[2]), I(a[3]))) ? "hidden" : "shown")} there" : "";
+                    Plugin.Log($"[Test] {string.Join(" ", a.Take(a.Length > 3 ? 4 : 1))}: {hidden} hidden, {byPreviews} by previews, {pipeTiles} pipe tiles held{at}");
+                    break;
+                }
                 case "canplace":
                 {
                     // canplace Name x y z [rotation]: only asks, as the building tool's preview does
