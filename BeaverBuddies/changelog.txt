@@ -1,3 +1,14 @@
+v1.1.0-1.9.2-allenator.5
+1.1.0-1.9.2-allenator.5
+* Fixed a desync from dragging the builders' priority tool over things that already had that priority. Setting a good's export threshold or import option, a district's defaults, or a floodgate's height or synchronization to what it already was no longer desyncs either.
+* A desync is caught within a few ticks without desync tracing (formerly "detailed logging"), and the resync box says how to report it. Tracing has a button of its own there, and the screen says while it's on.
+* At speed 7, a guest's actions take effect in about a tenth of a second, not over half a second.
+* When the host leaves, guests are told at once, on Steam too, and each guest's copy of the game is saved first. Guests waiting in a lobby the host closes are told so.
+* Autosaves have a section of their own in the settings: how often (every 10 minutes by default), how many to keep (12), and none while paused. They apply to games you host or join, and to any game in the Multiplayer settlement.
+* Join code connections recover from lost packets within seconds, and Steam sends a game's save up to 8 times faster when someone joins or everyone resyncs.
+* Marking resources for demolition no longer fails for the whole area when one of them is already gone.
+* Logs are a fraction of their size, and say what each player did.
+
 v1.1.0-1.9.2-allenator.4
 1.1.0-1.9.2-allenator.4
 * Fixed holes in the ground, open to the sky, where an Agora or an Underground Pile had been placed (on Iron Teeth: a Badwater Pressurizer, Dance Pit or Motivatorium): under its construction site, and after it was canceled or demolished, until the game was loaded again.
