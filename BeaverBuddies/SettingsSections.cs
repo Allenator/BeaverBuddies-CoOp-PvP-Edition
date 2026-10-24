@@ -163,12 +163,10 @@ namespace BeaverBuddies
         }
     }
 
-    /** Logging, for desync reports and developers. */
+    /** Desync tracing, for reports and developers. */
     public class DeveloperSettings : SettingsSection
     {
         public readonly ModSetting<bool> AlwaysTrace = new(false, Described(nameof(AlwaysTrace)));
-
-        public readonly ModSetting<bool> SilenceLogging = new(false, Described(nameof(SilenceLogging)));
 
         public DeveloperSettings(ISettings settings, ModSettingsOwnerRegistry modSettingsOwnerRegistry, ModRepository modRepository) :
             base(settings, modSettingsOwnerRegistry, modRepository)
@@ -181,7 +179,6 @@ namespace BeaverBuddies
         protected override void AddSettings()
         {
             Add(AlwaysTrace, nameof(AlwaysTrace));
-            Add(SilenceLogging, nameof(SilenceLogging));
         }
 
         protected override void OnAfterLoad()

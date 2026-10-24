@@ -3,6 +3,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
@@ -23,6 +24,8 @@ namespace TimberNet
         public const string TYPE_KEY = "type";
         public const string SET_STATE_EVENT = "SetState";
         public const string HEARTBEAT_EVENT = "Heartbeat";
+        // A tick's events, sent together
+        public const string GROUPED_EVENT = "GroupedEvent";
         // Transient messages (e.g. cursor positions) skip the tick queue and
         // the hash: they're handled as soon as they arrive and never replayed.
         public const string TRANSIENT_KEY = "transient";
@@ -56,6 +59,55 @@ namespace TimberNet
         /** Seconds since anything last arrived, part of a message included. */
         public double SecondsSinceHeard =>
             (Stopwatch.GetTimestamp() - Interlocked.Read(ref lastHeard)) / (double)Stopwatch.Frequency;
+
+        // What went each way on each connection since it was last said, and its longest silence: said once a minute
+        // (see LogTraffic), in place of a line for every message, so a connection that stalled shows
+        private class Traffic
+        {
+            public long sentBytes, sentMessages, receivedBytes, receivedMessages;
+            public long lastReceived = Stopwatch.GetTimestamp();
+            public long longestSilence;
+        }
+        private readonly ConcurrentDictionary<ISocketStream, Traffic> traffic = new ConcurrentDictionary<ISocketStream, Traffic>();
+        private static readonly long TrafficInterval = Stopwatch.Frequency * 60;
+        private long lastTrafficLog = Stopwatch.GetTimestamp();
+
+        private Traffic TrafficOf(ISocketStream stream) => traffic.GetOrAdd(stream, s => new Traffic());
+
+        private void CountSent(ISocketStream stream, int bytes)
+        {
+            Traffic t = TrafficOf(stream);
+            lock (t)
+            {
+                t.sentBytes += bytes;
+                t.sentMessages++;
+            }
+        }
+
+        private void LogTraffic()
+        {
+            long now = Stopwatch.GetTimestamp();
+            if (now - lastTrafficLog < TrafficInterval) return;
+            double seconds = (now - lastTrafficLog) / (double)Stopwatch.Frequency;
+            lastTrafficLog = now;
+            foreach (var pair in traffic)
+            {
+                Traffic t = pair.Value;
+                long sentBytes, sentMessages, receivedBytes, receivedMessages, silence;
+                lock (t)
+                {
+                    sentBytes = t.sentBytes; sentMessages = t.sentMessages;
+                    receivedBytes = t.receivedBytes; receivedMessages = t.receivedMessages;
+                    // A silence still going on counts too
+                    silence = Math.Max(t.longestSilence, now - t.lastReceived);
+                    t.sentBytes = t.sentMessages = t.receivedBytes = t.receivedMessages = t.longestSilence = 0;
+                }
+                string name = pair.Key.Name ?? pair.Key.GetType().Name;
+                Log($"Traffic with {name} over {seconds.ToString("F0", CultureInfo.InvariantCulture)} s: sent {sentBytes / 1024} KB in {sentMessages} messages, " +
+                    $"received {receivedBytes / 1024} KB in {receivedMessages}, longest silence {(silence / (double)Stopwatch.Frequency).ToString("F1", CultureInfo.InvariantCulture)} s");
+                if (!pair.Key.Connected) traffic.TryRemove(pair.Key, out _);
+            }
+        }
 
         // A received message, or the save a reload starts again from
         private readonly ConcurrentQueue<(ISocketStream source, string? message, byte[]? reloadMap)> receivedEventQueue =
@@ -175,11 +227,6 @@ namespace TimberNet
         private List<JObject> PopEventsToProcess(List<JObject> events)
         {
             if (events.Count == 0) return new List<JObject>();
-            JObject firstEvent = events[0];
-            int firstEventTick = GetTick(firstEvent);
-            if (firstEventTick < TickCount)
-                Log($"Warning: late event {GetType(firstEvent)}: {firstEventTick} < {TickCount}");
-
             return PopEventsForTick(TickCount, events, GetTick);
         }
 
@@ -209,8 +256,16 @@ namespace TimberNet
             {
                 AddToHash(message.ToString());
             }
-            Log($"Event: {GetType(message)}");
+            if (!IsRoutine(message)) Log($"Event: {GetType(message)}");
         }
+
+        /**
+         * One of the messages every tick brings, the tick's events, too many
+         * to log one by one: a player's own log says what each did (see
+         * ReplayService.LogOthersAction), and the traffic each way is said once
+         * a minute (see LogTraffic).
+         */
+        protected static bool IsRoutine(JObject message) => message[TYPE_KEY]?.ToString() == GROUPED_EVENT;
 
         /**
          * Queues data to go out on the stream's own thread, after anything
@@ -218,6 +273,7 @@ namespace TimberNet
          */
         protected void QueueDataWithLength(ISocketStream stream, byte[] data)
         {
+            CountSent(stream, data.Length + HEADER_SIZE);
             senders.GetOrAdd(stream, s => new StreamSender(s, Log)).Send(data);
         }
 
@@ -242,7 +298,7 @@ namespace TimberNet
 
         protected void SendEvent(ISocketStream client, JObject message)
         {
-            Log($"Sending: {GetType(message)} for tick {GetTick(message)}");
+            if (!IsRoutine(message)) Log($"Sending: {GetType(message)} for tick {GetTick(message)}");
             byte[] buffer = MessageToBuffer(message);
             QueueDataWithLength(client, buffer);
         }
@@ -307,6 +363,8 @@ namespace TimberNet
                 //Log($"Starting to read {messageLength} bytes");
                 // TODO: How should this fail and not hang if map stops sending?
                 byte[] buffer = ReadHeard(client, messageLength);
+                Traffic t = TrafficOf(client);
+                lock (t) t.receivedMessages++;
 
                 string message = BufferToStringMessage(buffer);
                 //Log($"Queuing message of length {messageLength} bytes");
@@ -339,12 +397,20 @@ namespace TimberNet
         {
             byte[] bytes = new byte[count];
             int read = 0;
+            Traffic t = TrafficOf(stream);
             while (read < count)
             {
                 int bytesRead = stream.Read(bytes, read, count - read);
                 if (bytesRead == 0) throw new IOException("Unexpected end of stream.");
                 read += bytesRead;
-                Interlocked.Exchange(ref lastHeard, Stopwatch.GetTimestamp());
+                long now = Stopwatch.GetTimestamp();
+                Interlocked.Exchange(ref lastHeard, now);
+                lock (t)
+                {
+                    t.receivedBytes += bytesRead;
+                    t.longestSilence = Math.Max(t.longestSilence, now - t.lastReceived);
+                    t.lastReceived = now;
+                }
             }
             return bytes;
         }
@@ -540,6 +606,7 @@ namespace TimberNet
         {
             ProcessLogs();
             ProcessErrors();
+            LogTraffic();
             if (!Started) return;
             ProcessReceivedMap();
             ProcessReceivedEventsQueue();

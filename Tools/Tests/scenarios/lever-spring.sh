@@ -33,10 +33,11 @@ on_ticks() { watched "$1" "$2" | awk '$2 == "on"' | wc -l | tr -d ' '; }
 # still_on <instance> <label>: the ticks that ended with it still on
 still_on() { watched "$1" "$2" | awk '$3 == "on"' | wc -l | tr -d ' '; }
 
-# sent <instance> <label>: the lever switchings that copy sent as its player's while the watch ran
+# sent <instance> <label>: the lever switchings that copy sent as its player's while the watch ran (its own, logged as
+# they're sent, right after the time; the others' it plays are logged too, as "Playing ... by ...: Calling ...")
 sent() {
     sed -n "/\[Test\] leverwatch .* $2/,/\[Test\] Lever $2 watch done/p" "$(bb_log "$1")" \
-        | grep -ac "Calling Timberborn.AutomationBuildings.Lever.SwitchState"
+        | grep -ac "\] Calling Timberborn.AutomationBuildings.Lever.SwitchState"
 }
 
 # buttons <instance> <label>: the presses and let-gos of a lever's button that copy sent while the watch ran

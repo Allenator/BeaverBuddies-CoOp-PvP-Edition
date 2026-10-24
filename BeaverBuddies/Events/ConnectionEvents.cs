@@ -70,7 +70,7 @@ namespace BeaverBuddies.Events
             if (isDebugMode != Settings.Debug)
             {
                 Plugin.LogWarning($"Host debug mode ({isDebugMode}) differs from ours ({Settings.Debug}): " +
-                    "a desync report needs detailed logging on for both players");
+                    "a traced desync report needs desync tracing on for both players");
             }
             if (warningMessage != null)
             {
@@ -121,35 +121,65 @@ namespace BeaverBuddies.Events
         public string[] detailTraces;
         // Only for the host to say what differs, in the test harness, which keeps a desync as it is
         public bool analyzeOnly;
+        // What the player's machine found apart from the host's, when it knew (see ReplayService.HandleDesync)
+        public string reason;
+
+        public override string ToActionString() => reason == null ? "Out of sync" : $"Out of sync: {reason}";
 
         /**
-         * The trace of the desync in a file next to the game's log, and the
-         * mod's Discord open, where players post both to report it.
+         * The mod's Discord open, where players report a desync with every
+         * player's Player.log; with tracing on, the trace of it saved next to
+         * the game's log first, to post too.
          */
         private void ReportOnDiscord(IReplayContext context, Action<string> callback)
         {
-            try
+            if (Settings.Debug)
             {
-                string folder = System.IO.Path.GetDirectoryName(UnityEngine.Application.consoleLogPath);
-                string file = System.IO.Path.Combine(folder, $"BeaverBuddies-desync-{desyncID}.txt");
-                System.IO.File.WriteAllText(file, $"BeaverBuddies: {Plugin.Version} (build {InitializeClientEvent.ModBuild}); Timberborn: {GameVersions.CurrentVersion}\n\n{desyncTrace}");
-                Plugin.Log($"Desync trace saved to {file}");
-            }
-            catch (Exception e)
-            {
-                Plugin.LogError($"Couldn't save the desync trace: {e.Message}");
+                try
+                {
+                    string folder = System.IO.Path.GetDirectoryName(UnityEngine.Application.consoleLogPath);
+                    string file = System.IO.Path.Combine(folder, $"BeaverBuddies-desync-{desyncID}.txt");
+                    string why = reason == null ? "" : $"Out of sync: {reason}\n";
+                    System.IO.File.WriteAllText(file, $"BeaverBuddies: {Plugin.Version} (build {InitializeClientEvent.ModBuild}); Timberborn: {GameVersions.CurrentVersion}\n{why}\n{desyncTrace}");
+                    Plugin.Log($"Desync trace saved to {file}");
+                }
+                catch (Exception e)
+                {
+                    Plugin.LogError($"Couldn't save the desync trace: {e.Message}");
+                }
             }
             // Test copies don't open browser tabs on the Mac they run on
             if (DevTools.TestHarness.Active) Plugin.Log($"Would open {MultiplayerMenu.DiscordUrl}");
             else context.GetSingleton<UrlOpener>()?.OpenUrl(MultiplayerMenu.DiscordUrl);
-            callback("BeaverBuddies.ClientDesynced.TraceSaved");
+            callback(Settings.Debug ? "BeaverBuddies.ClientDesynced.TraceSaved" : "BeaverBuddies.ClientDesynced.PostLogs");
         }
 
-        private void TurnOnTracing(IReplayContext context, Action<string> callback)
+        private static void TurnOnTracing(IReplayContext context)
         {
             // For everyone, on the same tick (see TracingEnabledEvent)
             if (DoPrefix(() => new DesyncDetecter.TracingEnabledEvent())) new DesyncDetecter.TracingEnabledEvent().Replay(context);
-            callback("BeaverBuddies.ClientDesynced.TracingEnabled");
+        }
+
+        /**
+         * Turning on tracing, a button of its own beside the report's, looking
+         * as it does: the box has only one button of that kind, and its cancel
+         * button is what Escape presses, which mustn't turn tracing on for
+         * everyone.
+         */
+        private static void AddTracingButton(IReplayContext context, ILoc loc, Button infoButton)
+        {
+            // Of the report button's own kind, the game's, which draws its frame itself: its classes alone don't
+            var button = (Button)Activator.CreateInstance(infoButton.GetType());
+            button.name = "TracingButton";
+            button.text = loc.T("BeaverBuddies.ClientDesynced.EnableTracing");
+            foreach (string style in infoButton.GetClasses()) button.AddToClassList(style);
+            button.clicked += () =>
+            {
+                button.SetEnabled(false);
+                button.text = loc.T("BeaverBuddies.ClientDesynced.TracingEnabled");
+                TurnOnTracing(context);
+            };
+            infoButton.parent.Insert(infoButton.parent.IndexOf(infoButton) + 1, button);
         }
 
         public override void Replay(IReplayContext context)
@@ -198,26 +228,18 @@ namespace BeaverBuddies.Events
             Action bugReportAction = () =>
             {
                 infoButton?.SetEnabled(false);
-                if (Settings.Debug) ReportOnDiscord(context, infoCallback);
-                else TurnOnTracing(context, infoCallback);
+                ReportOnDiscord(context, infoCallback);
             };
 
             string message = _loc.T("BeaverBuddies.ClientDesynced.Resynced");
-            string bugReportMessageKey;
-            if (Settings.Debug)
-            {
-                bugReportMessageKey = "BeaverBuddies.ClientDesynced.ReportOnDiscord";
-            }
-            else
-            {
-                message += "\n\n" + _loc.T("BeaverBuddies.ClientDesynced.NeedToEnableTracing");
-                bugReportMessageKey = "BeaverBuddies.ClientDesynced.EnableTracing";
-            }
+            // Without tracing, every player's log is the report, and tracing can be turned on for the next one
+            if (!Settings.Debug) message += "\n\n" + _loc.T("BeaverBuddies.ClientDesynced.NeedToEnableTracing");
 
             DialogBox box = shower.Create().SetMessage(message)
-                .SetInfoButton(bugReportAction, _loc.T(bugReportMessageKey))
+                .SetInfoButton(bugReportAction, _loc.T("BeaverBuddies.ClientDesynced.ReportOnDiscord"))
                 .Show();
             infoButton = box.GetPanel().Q<Button>("InfoButton");
+            if (!Settings.Debug && infoButton != null) AddTracingButton(context, _loc, infoButton);
         }
     }
 

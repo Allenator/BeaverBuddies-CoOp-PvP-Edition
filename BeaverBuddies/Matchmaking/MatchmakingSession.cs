@@ -141,7 +141,7 @@ namespace BeaverBuddies.Matchmaking
             looking = false;
             startedAt = Time.realtimeSinceStartup;
             // Only players with the same of all of these play together: to compare when two can't
-            Plugin.Log($"[Match] Compatible with {MatchKeys.CompatValue}: {MatchKeys.CompatParts}; detailed logging {(Settings.Debug ? "on" : "off")}");
+            Plugin.Log($"[Match] Compatible with {MatchKeys.CompatValue}: {MatchKeys.CompatParts}; desync tracing {(Settings.Debug ? "on" : "off")}");
         }
 
         // Into one of the open matches, picked from the list

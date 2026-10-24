@@ -46,7 +46,6 @@ namespace BeaverBuddies
 
         public static bool Debug => TemporarilyDebug || (Developer?.AlwaysTrace.Value ?? false);
 
-        public static bool VerboseLogging => !(Developer?.SilenceLogging.Value == true);
         public static int Port => Multiplayer?.DefaultPort.Value ?? 25565;
         public static bool EnableSteam => Multiplayer?.EnableSteamConnection.Value ?? true;
         public static bool LobbyJoinable => Hosting?.FriendsCanJoinSteamGame.Value ?? true;

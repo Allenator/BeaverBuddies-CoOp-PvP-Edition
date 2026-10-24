@@ -34,7 +34,7 @@ namespace BeaverBuddies.Matchmaking
         public const int ProtocolVersion = 6;
 
         // What no mod download can fix, short enough for a lobby filter: the
-        // game's version, and detailed logging, which a desync report needs
+        // game's version, and desync tracing, which a traced desync report needs
         // on for both players
         public static string BaseValue => Hash($"match {ProtocolVersion}|{GameVersions.CurrentVersion}|{Settings.Debug}");
 

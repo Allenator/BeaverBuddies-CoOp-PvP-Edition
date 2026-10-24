@@ -742,6 +742,17 @@ namespace BeaverBuddies.DevTools
                     });
                     break;
                 }
+                case "nudge":
+                {
+                    // nudge: a beaver moved a hair on this copy alone, as a rounding difference could leave one, so this
+                    // copy's walker positions differ from the others' and nothing else does, yet
+                    var walker = Get<Timberborn.EntitySystem.EntityRegistry>().Entities.Where(e => e)
+                        .Select(e => e.GetComponent<Timberborn.WalkingSystem.Walker>()).FirstOrDefault(w => w && w.PathFollower != null)
+                        ?? throw new Exception("no beaver");
+                    walker.PathFollower._transform.position += new Vector3(0.001f, 0, 0);
+                    Plugin.Log($"[Test] Nudged {ReplayEvent.GetEntityID(walker)} at tick {Replay.TicksSinceLoad}");
+                    break;
+                }
                 case "priority":
                 {
                     // priority x0 y0 x1 y1 VeryLow|Low|Normal|High|VeryHigh: the builders' priority tool for that priority

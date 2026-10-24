@@ -243,7 +243,6 @@ namespace BeaverBuddies
 
         public static void Log(string message)
         {
-            if (!Settings.VerboseLogging) return;
             logger.LogInfo(GetWithDate(message));
         }
 

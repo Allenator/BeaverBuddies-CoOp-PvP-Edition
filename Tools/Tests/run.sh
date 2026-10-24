@@ -227,7 +227,7 @@ mkdir -p "$BB_RUN_DIR/shots" "$BB_RUN_DIR/logs"
 
 # BeaverBuddies' on/off settings as the scenarios count on them (see the loop): the defaults, but no welcome dialog
 BB_PINNED_SETTINGS="${BB_PINNED_SETTINGS-FriendsCanJoinSteamGame=1 EnableSteamConnection=1 StrictBuildMatch=1 KeepPlayingInBackground=1 \
-PauseForHostSaves=1 ShowPlayerCursors=1 AlwaysTrace=0 SilenceLogging=0 ShowFirstTimerMessage=0}"
+PauseForHostSaves=1 ShowPlayerCursors=1 AlwaysTrace=0 ShowFirstTimerMessage=0}"
 START=$(date +%s)
 LAST_FILE=$(echo $FILES | awk '{print $NF}')
 for f in $FILES; do
@@ -289,7 +289,7 @@ for f in $FILES; do
         # A desync stops it too (a scenario that makes one on purpose says so with a BB_EXPECT_DESYNC comment): the host
         # resyncing everyone means the copies have drifted apart or one lags past the limit, and nothing after it counts
         if ! grep -q "BB_EXPECT_DESYNC" "$f"; then
-            desync=$(grep -ah "Resyncing everyone after the desync\|Event past time" "$(bb_log host)" 2>/dev/null | awk -v s="$started" 'substr($1, 2, 8) >= s' | grep -a -B1 "Resyncing" | head -2 | tr '\n' ' ' | cut -c1-200)
+            desync=$(grep -ah "Resyncing everyone after the desync\|Playing ClientDesyncedEvent" "$(bb_log host)" 2>/dev/null | awk -v s="$started" 'substr($1, 2, 8) >= s' | grep -a -B1 "Resyncing" | head -2 | tr '\n' ' ' | cut -c1-300)
             if [ -n "$desync" ]; then
                 pkill -9 -P $spid 2>/dev/null; kill -9 $spid 2>/dev/null; killed=1
                 BB_SCENARIO="$name" fail "stays in sync" "the host resynced everyone: $desync"

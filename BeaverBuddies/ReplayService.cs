@@ -70,9 +70,13 @@ namespace BeaverBuddies
 
     class HeartbeatEvent : ReplayEvent
     {
+        // The host's order, move and clock hashes at the start of the tick, for a guest to check its own against
+        // (see DesyncDetecterService.DiffersFromHost)
+        public int[] hashes;
+
         public override void Replay(IReplayContext context)
         {
-            // No op
+            if (EventIO.Get() is ClientEventIO) DesyncDetecterService.ReceiveHostHashes(ticksSinceLoad, hashes);
         }
     }
 
@@ -283,6 +287,8 @@ namespace BeaverBuddies
             }
             Performance.ActionLatency.Hook();
             _determinismService.UnityThread = Thread.CurrentThread;
+            // Tracing carried into this game, always on or turned on before a reload: said on screen, as it stutters
+            if (Settings.Debug && (io is ServerEventIO || io is ClientEventIO)) DesyncDetecterService.SayTracingIsOn(this);
             // A saved game hosted by loading it twice is in: its guests' lobbies close (see Connect.SavedGameHosting)
             if (io is ServerEventIO server && server.Stage == ServerEventIO.HostingStage.Loading)
             {
@@ -307,6 +313,8 @@ namespace BeaverBuddies
             // so we still have to add them manually.
             var result = _singletonRepository.GetSingletons<T>().FirstOrDefault();
             Plugin.Log($"Searching for unregistered singleton {typeof(T)}; found = {result != null}");
+            // Kept, so the next time is the list's: some are asked for every tick
+            if (result != null) singletons.Add(result);
             return result;
         }
 
@@ -357,6 +365,23 @@ namespace BeaverBuddies
             return eventsToReplay;
         }
 
+        // More than the few ticks a guest's action takes to reach the host
+        private const int LateTicks = 30;
+
+        // Another player's action as it plays here, so each player's log says what everyone did; this player's own
+        // are logged as they're recorded
+        private static void LogOthersAction(ReplayEvent replayEvent, int eventTime, int currentTick)
+        {
+            string player = replayEvent.playerID;
+            if (player == null || player == Players.PlayerIdentity.LocalID || replayEvent is HeartbeatEvent) return;
+            string action;
+            // Only said, so it mustn't stop the action from playing
+            try { action = replayEvent is Modding.ModEvent modEvent ? modEvent.mod : replayEvent.ToActionString(); }
+            catch (Exception e) { action = $"(can't say: {e.Message})"; }
+            string sent = eventTime < currentTick ? $" (sent at {eventTime})" : "";
+            Plugin.Log($"Playing {replayEvent.type} by {player.Substring(0, Math.Min(8, player.Length))} at tick {currentTick}{sent}: {action}");
+        }
+
         private void ReplayEvents()
         {
             if (_tickingService.NextBucket != 0)
@@ -385,11 +410,13 @@ namespace BeaverBuddies
                     int eventTime = replayEvent.ticksSinceLoad;
                     if (eventTime > currentTick)
                         break;
-                    if (eventTime < currentTick)
+                    // A guest's actions reach the host a few ticks after the guest's tick they were made at; far
+                    // later, the connection held them up
+                    if (eventTime < currentTick - LateTicks)
                     {
-                        Plugin.LogWarning($"Event past time: {eventTime} < {currentTick}");
+                        Plugin.LogWarning($"{replayEvent.type} by {replayEvent.playerID} came {currentTick - eventTime} ticks late");
                     }
-                    //Plugin.Log($"Replaying event [{replayEvent.ticksSinceLoad}]: {replayEvent.type}");
+                    LogOthersAction(replayEvent, eventTime, currentTick);
 
                     // Don't play or relay dev events when the host has disabled dev tools
                     if (DevToolsPolicy.ShouldDropReplayedEvent(replayEvent))
@@ -415,7 +442,7 @@ namespace BeaverBuddies
                         if (s0 != randomS0Before)
                         {
                             Plugin.LogWarning($"Random state mismatch: {s0:X8} != {randomS0Before:X8}");
-                            HandleDesync();
+                            HandleDesync($"the random state differs from the host's at tick {currentTick}");
                             break;
                         }
                     }
@@ -520,7 +547,11 @@ namespace BeaverBuddies
             GetSingleton<Timberborn.MainMenuSceneLoading.MainMenuSceneLoader>().OpenMainMenu();
         }
 
-        public void HandleDesync()
+        /**
+         * This machine's state differs from the host's: it tells the host, which reloads everyone from its save.
+         * Why, when known, goes in the report and in the host's log.
+         */
+        public void HandleDesync(string why = null)
         {
             if (IsDesynced) return;
             // The test harness can keep a desynced game as it is, to look at what differs
@@ -556,6 +587,7 @@ namespace BeaverBuddies
                 desyncID = DesyncDetecterService.GetLastDesyncID(),
                 desyncTrace = DesyncDetecterService.GetLastDesyncTrace(),
                 playerID = Players.PlayerIdentity.LocalID,
+                reason = why,
                 detailTick = detail.tick,
                 detailEntityBuckets = detail.entityBuckets,
                 detailWaterAreas = detail.waterAreas,
@@ -842,8 +874,12 @@ namespace BeaverBuddies
             if (io.ShouldSendHeartbeat)
             {
                 // Add a heartbeat if needed to make sure all ticks have
-                // at least 1 event, so the clients know we're ticking.
-                EnqueueEventForSending(new HeartbeatEvent());
+                // at least 1 event, so the clients know we're ticking,
+                // and with what state it starts, for them to check theirs
+                EnqueueEventForSending(new HeartbeatEvent()
+                {
+                    hashes = new[] { TEBPatcher.EntityUpdateHash, TEBPatcher.PositionHash, DayClock() },
+                });
             }
             // Replay and send events at the change of a tick always.
             // For the server, sending events allows clients to keep playing.
@@ -861,6 +897,12 @@ namespace BeaverBuddies
                 $"Order hash: {TEBPatcher.EntityUpdateHash:X8}; " +
                 $"Move hash: {TEBPatcher.PositionHash:X8}; " +
                 $"Random s0: {UnityEngine.Random.state.s0:X8}");
+
+            // A guest's state checked against the host's every tick; with tracing on, its traces do more
+            if (io is ClientEventIO && !Settings.Debug && DesyncDetecterService.DiffersFromHost(ticksSinceLoad))
+            {
+                HandleDesync(DesyncDetecterService.LastSplit);
+            }
 
             if (ticksSinceLoad % 20 == 0)
             {
@@ -983,6 +1025,22 @@ namespace BeaverBuddies
             ShouldCompleteFullTick = false;
         }
 
+        // Since when a guest has waited for the host's next tick, and which; -1 when it isn't waiting
+        private float _waitingSince = -1;
+        private int _waitingFor;
+        // Waits shorter than this happen all the time and aren't said
+        private const float LongWait = 1;
+
+        // A wait for the host's tick that's over, said if it was a long one: one that doesn't end is the
+        // host going quiet (see HostSilence)
+        private void EndWait()
+        {
+            if (_waitingSince < 0) return;
+            float waited = UnityEngine.Time.realtimeSinceStartup - _waitingSince;
+            _waitingSince = -1;
+            if (waited >= LongWait) Plugin.Log($"Waited {waited.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)} s for the host's tick {_waitingFor}");
+        }
+
         private bool ShouldTick(TickableBucketService __instance, int numberOfBucketsToTick)
         {
 
@@ -990,7 +1048,12 @@ namespace BeaverBuddies
             if (ShouldInterruptTicking) return false;
 
             // Don't tick if we've set the game speed to 0 (paused)
-            if (replayService.TargetSpeed == 0) return false;
+            if (replayService.TargetSpeed == 0)
+            {
+                // A pause isn't waiting for the host
+                _waitingSince = -1;
+                return false;
+            }
 
             if (IsAtStartOfTick(__instance) && !HasTickedReplayService)
             {
@@ -1003,16 +1066,15 @@ namespace BeaverBuddies
                 if (!ready)
                 {
                     HitchWatch.Stalled();
-                    // In theory the game should be paused to prevent this, but some logs
-                    // suggest the client can get ahead of the server, which would
-                    // trigger this warning (and now prevent the client's tick)
-                    if (replayService.TicksSinceLoad > 0)
+                    // A guest waiting for the host's next tick, as one keeping close behind it does now and then
+                    if (replayService.TicksSinceLoad > 0 && _waitingSince < 0)
                     {
-                        Plugin.LogWarning($"Client trying to tick before receiving " +
-                            $"Heartbeat at tick: {replayService.TicksSinceLoad}");
+                        _waitingSince = UnityEngine.Time.realtimeSinceStartup;
+                        _waitingFor = replayService.TicksSinceLoad + 1;
                     }
                     return false;
                 }
+                EndWait();
             }
 
             // If we need to complete a full tick, make sure to go exactly until

@@ -39,13 +39,13 @@ namespace BeaverBuddies.DesyncDetecter
             if (DesyncDetecterService.ShouldResync(tick, match, hashes))
             {
                 var replayService = context.GetSingleton<ReplayService>();
-                replayService.HandleDesync();
+                replayService.HandleDesync($"the traces differ from the host's at tick {tick}");
             }
         }
     }
 
     /**
-     * Detailed logging turned on for every player at once, from the resync
+     * Desync tracing turned on for every player at once, from the resync
      * dialog: each starts its traces over on the same tick, so they compare
      * from there. Turned on one player at a time, mid-game, one's traces
      * would start where the others' didn't (a water area traced the first
@@ -58,9 +58,10 @@ namespace BeaverBuddies.DesyncDetecter
         {
             Settings.TemporarilyDebug = true;
             DesyncDetecterService.RestartTracing(context.GetSingleton<ReplayService>().TicksSinceLoad);
+            DesyncDetecterService.SayTracingIsOn(context);
         }
 
-        public override string ToActionString() => "Turning on detailed logging for everyone";
+        public override string ToActionString() => "Turning on desync tracing for everyone";
     }
 
     public class DesyncDetecterService : RegisteredSingleton, IResettableSingleton
@@ -187,6 +188,67 @@ namespace BeaverBuddies.DesyncDetecter
 
         private static int[] HashesOf(int tick) => tickHashes.TryGetValue(tick, out int[] h) ? h : null;
 
+        // The host's order, move and clock hashes at the start of each tick, from its heartbeat: without tracing, a
+        // guest checks its own against them every tick (see DiffersFromHost). The random state is checked as each
+        // event plays (see ReplayService.ReplayEvents)
+        private static readonly SortedDictionary<int, int[]> hostHashes = new SortedDictionary<int, int[]>();
+        private static readonly string[] hostHashNames = { "the entities that tick", "walker positions", "the day clock" };
+        private static int hostSplitStart = -1;
+        private static int hostSplitTicks;
+
+        /** What differed when this machine last found its state apart from the host's, for its report. */
+        public static string LastSplit { get; private set; }
+
+        public static void ReceiveHostHashes(int tick, int[] hashes)
+        {
+            if (hashes == null || hashes.Length < 3) return;
+            hostHashes[tick] = hashes;
+            while (hostHashes.Count > maxHashTicks) hostHashes.Remove(hostHashes.Keys.First());
+        }
+
+        /**
+         * Whether this machine's state, as its hashes at the start of the tick say, has differed from the host's
+         * long enough to resync everyone: a few ticks in a row, as with tracing (see ShouldResync).
+         */
+        public static bool DiffersFromHost(int tick)
+        {
+            int[] mine = HashesOf(tick);
+            if (mine == null || !hostHashes.TryGetValue(tick, out int[] host)) return false;
+            var differing = new List<string>();
+            if (mine[0] != host[0]) differing.Add(hostHashNames[0]);
+            if (mine[1] != host[1]) differing.Add(hostHashNames[1]);
+            if (mine[3] != host[2]) differing.Add(hostHashNames[2]);
+            if (differing.Count == 0)
+            {
+                hostSplitStart = -1;
+                hostSplitTicks = 0;
+                return false;
+            }
+            if (hostSplitStart < 0)
+            {
+                hostSplitStart = tick;
+                LastSplit = $"{string.Join(" and ", differing)} differ from the host's since tick {tick}";
+                Plugin.LogWarning($"State differs from the host's at tick {tick}: {string.Join(" and ", differing)}");
+            }
+            if (++hostSplitTicks < splitResyncTicks) return false;
+            Plugin.LogWarning($"Resyncing: {LastSplit}");
+            hostSplitStart = -1;
+            hostSplitTicks = 0;
+            return true;
+        }
+
+        /**
+         * Tracing on, said on screen: it makes the game stutter every few seconds, on every player's machine,
+         * and nothing else would say why.
+         */
+        public static void SayTracingIsOn(IReplayContext context)
+        {
+            var shower = context.GetSingleton<Timberborn.CoreUI.DialogBoxShower>();
+            if (shower == null) return;
+            Plugin.Log("Desync tracing is on: told the player");
+            SingletonManager.GetSingleton<DevTools.DevToolsService>()?.Notify(shower._loc.T("BeaverBuddies.Tracing.On"));
+        }
+
         // Whether this tick's traces were recorded from its start: tracing
         // turned on mid-game begins with the next whole tick
         private static bool tracing;
@@ -217,6 +279,10 @@ namespace BeaverBuddies.DesyncDetecter
             splitStart = -1;
             splitTicks = 0;
             splitDumped = false;
+            hostHashes.Clear();
+            hostSplitStart = -1;
+            hostSplitTicks = 0;
+            LastSplit = null;
             if (tracing)
             {
                 Trace("Start Preload");
@@ -263,7 +329,6 @@ namespace BeaverBuddies.DesyncDetecter
             int tick = currentTick - (traces.Count - 1);
             while (traces.Count > 0)
             {
-                Plugin.Log($"Sending {tick}: {traces[0].FirstOrDefault().message}");
                 sentTraces[tick] = traces[0];
                 while (sentTraces.Count > 14) sentTraces.Remove(sentTraces.Keys.First());
                 yield return new TraceLoggedForTickEvent()
