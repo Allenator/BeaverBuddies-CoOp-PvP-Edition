@@ -499,13 +499,11 @@ namespace BeaverBuddies.Events
 
         public override void Replay(IReplayContext context)
         {
-            var entityService = context.GetSingleton<EntityService>();
-            var blockObjects = blocks.Select(guid =>
-            {
-                return context.GetSingleton<EntityRegistry>()
-                .GetEntity(guid)
-                .GetComponent<BlockObject>();
-            }).ToList();
+            // What's gone by the time it plays (a player marked it ticks ago, and a builder took it since) is left out,
+            // on every machine alike: the rest is still marked
+            var registry = context.GetSingleton<EntityRegistry>();
+            var blockObjects = blocks.Select(guid => registry.GetEntity(guid)?.GetComponent<BlockObject>())
+                .Where(blockObject => blockObject != null).ToList();
             if (markForDemolition)
             {
                 context.GetSingleton<DemolishableSelectionTool>().ActionCallback(blockObjects, start, end, false, false);

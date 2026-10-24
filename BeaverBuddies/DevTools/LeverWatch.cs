@@ -1,4 +1,5 @@
 using HarmonyLib;
+using System;
 using Timberborn.Automation;
 using Timberborn.AutomationBuildings;
 
@@ -50,6 +51,10 @@ namespace BeaverBuddies.DevTools
 
         public static void PinInTick(Lever lever) => _pinInTick = lever;
 
+        // Anything else the harness has the next tick do, as game logic would (see TestHarness's workertick)
+        private static Action _inTick;
+        public static void InTick(Action action) => _inTick = action;
+
         // Every frame, between ticks, where a player's mouse comes up
         public static void Update()
         {
@@ -68,6 +73,12 @@ namespace BeaverBuddies.DevTools
 
         static void Postfix()
         {
+            if (_inTick != null)
+            {
+                Action action = _inTick;
+                _inTick = null;
+                action();
+            }
             if (_pinInTick)
             {
                 Lever pinned = _pinInTick;

@@ -680,6 +680,96 @@ namespace BeaverBuddies.DevTools
                     Plugin.Log($"[Test] Tool deleted {objects.Count} at {a[1]} {a[2]} {a[3]}");
                     break;
                 }
+                case "findresources":
+                {
+                    // findresources x y r size min: the size-by-size square, its corner within r of x y, with the most
+                    // unmarked natural resources the demolish resources tool can mark and a district's builders can
+                    // reach (on its roads' spill, as ReachableDemolishable asks), min at least, half of them at least
+                    // in each half of its rows: "x0 y0 x1 y1 count", or "none"
+                    int x = I(a[1]), y = I(a[2]), r = I(a[3]), size = I(a[4]), min = I(a[5]);
+                    var districts = Get<Timberborn.Navigation.IDistrictService>();
+                    var resources = Demolishables().Where(b => !b.GetComponent<Timberborn.Demolishing.Demolishable>().IsMarked
+                            && districts.IsOnInstantDistrictRoadSpill(b.GetComponent<BlockObjectCenter>().WorldCenterGrounded))
+                        .Select(b => b.Coordinates).ToList();
+                    string best = null;
+                    int most = 0;
+                    for (int y0 = y - r; y0 <= y + r; y0++)
+                        for (int x0 = x - r; x0 <= x + r; x0++)
+                        {
+                            var inside = resources.Where(c => c.x >= x0 && c.x < x0 + size && c.y >= y0 && c.y < y0 + size).ToList();
+                            int top = inside.Count(c => c.y < y0 + size / 2);
+                            if (inside.Count < min || inside.Count <= most || top < min / 2 || inside.Count - top < min / 2) continue;
+                            most = inside.Count;
+                            best = $"{x0} {y0} {x0 + size - 1} {y0 + size - 1} {most}";
+                        }
+                    Plugin.Log($"[Test] {string.Join(" ", a)}: {best ?? "none"}");
+                    break;
+                }
+                case "markresources":
+                {
+                    // markresources x0 y0 x1 y1 [gone]: the demolish resources tool dragged over the rectangle, as a player's
+                    // drag ends; gone, with one more that's no longer there by the time it plays, as a builder took it since
+                    var tool = Get<Timberborn.ToolButtonSystem.ToolButtonService>().ToolButtons.Select(b => b.Tool)
+                        .OfType<Timberborn.DemolishingUI.DemolishableSelectionTool>().FirstOrDefault()
+                        ?? throw new Exception("no demolish resources tool");
+                    var objects = Demolishables().Where(b => InRectangle(b, a)).ToList();
+                    if (a.Length > 5 && a[5] == "gone")
+                    {
+                        // Made up, not Guid.NewGuid(), which draws on the game's random numbers
+                        var ids = objects.Select(b => b.GetComponent<Timberborn.EntitySystem.EntityComponent>().EntityId).ToList();
+                        ids.Add(Guid.Parse("00000000-0000-0000-0000-00000000dead"));
+                        Record(new ClearResourcesMarkedEvent() { blocks = ids, start = Corner(a[1], a[2]), end = Corner(a[3], a[4]), markForDemolition = true });
+                    }
+                    else tool.ActionCallback(objects, Corner(a[1], a[2]), Corner(a[3], a[4]), true, true);
+                    Plugin.Log($"[Test] {string.Join(" ", a)}: {objects.Count} marked");
+                    break;
+                }
+                case "workertick":
+                {
+                    // workertick x y z: the next tick has the workplace there take its district's worker type, as a district
+                    // taking it over does, which is game logic and mustn't go out as a player's action; the first
+                    // district's, for one no path joins to one yet. Its type is already that, so nothing changes, on
+                    // this copy alone either
+                    var workplace = ComponentAt<Timberborn.WorkSystem.WorkplaceWorkerType>(a);
+                    var district = workplace._districtBuilding.InstantDistrict ?? workplace._districtBuilding.ConstructionDistrict
+                        ?? Get<Timberborn.GameDistricts.DistrictCenterRegistry>().AllDistrictCenters.FirstOrDefault()
+                        ?? throw new Exception("no district");
+                    workplace._wasSet = false;
+                    LeverWatch.InTick(() =>
+                    {
+                        workplace.SetWorkerTypeToDistrict(district);
+                        Plugin.Log($"[Test] Worker type set to the district's from inside the tick: {workplace.WorkerType}");
+                    });
+                    break;
+                }
+                case "priority":
+                {
+                    // priority x0 y0 x1 y1 VeryLow|Low|Normal|High|VeryHigh: the builders' priority tool for that priority
+                    // dragged over the rectangle, as a player's drag ends: how many it sets, and how many had it already
+                    var priority = (Timberborn.PrioritySystem.Priority)Enum.Parse(typeof(Timberborn.PrioritySystem.Priority), a[5]);
+                    var tool = Get<Timberborn.ToolButtonSystem.ToolButtonService>().ToolButtons.Select(b => b.Tool)
+                        .OfType<Timberborn.BuilderPrioritySystemUI.BuilderPriorityTool>().FirstOrDefault(t => t._priority == priority)
+                        ?? throw new Exception($"no {priority} priority tool");
+                    var objects = Get<Timberborn.EntitySystem.EntityRegistry>().Entities.Where(e => e)
+                        .Select(e => e.GetComponent<BlockObject>())
+                        .Where(b => b && b.GetComponent<Timberborn.BuilderPrioritySystem.BuilderPrioritizable>() != null && InRectangle(b, a))
+                        .OrderBy(b => b.Coordinates.y).ThenBy(b => b.Coordinates.x).ThenBy(b => b.Coordinates.z).ToList();
+                    var targets = objects.Select(b => b.GetComponent<Timberborn.BuilderPrioritySystem.BuilderPrioritizable>()).Where(p => p.Enabled).ToList();
+                    int already = targets.Count(p => p.Priority == priority);
+                    tool.ActionCallback(objects, Corner(a[1], a[2]), Corner(a[3], a[4]), true, true);
+                    Plugin.Log($"[Test] {string.Join(" ", a)}: {targets.Count} to set, {already} already {priority}");
+                    break;
+                }
+                case "demolishjobs":
+                {
+                    // The demolish jobs builders look through, in their order, by priority from the highest: each as its
+                    // entity's id, first 8 characters. Builders take the closest, and the first of those equally close
+                    var jobs = Get<Timberborn.Demolishing.DemolishJobs>()._jobs;
+                    var queues = jobs.Where(q => q.Value.Count > 0).OrderByDescending(q => q.Key)
+                        .Select(q => $"{q.Key} {string.Join(",", q.Value.Select(j => ReplayEvent.GetEntityID(j)?.Substring(0, 8)))}");
+                    Plugin.Log($"[Test] demolishjobs: {string.Join("; ", queues)}");
+                    break;
+                }
                 case "ghosts":
                 {
                     // The previews showing
@@ -1254,6 +1344,20 @@ namespace BeaverBuddies.DevTools
         private T ComponentAt<T>(string[] a) where T : Timberborn.BaseComponentSystem.BaseComponent =>
             Get<IBlockService>().GetObjectsAt(new Vector3Int(I(a[1]), I(a[2]), I(a[3])))
                 .Select(o => o.GetComponent<T>()).FirstOrDefault(c => c) ?? throw new Exception($"no {typeof(T).Name} there");
+
+        // The natural resources the demolish resources tool can mark (buildings too have Demolishable), row by row
+        private IEnumerable<BlockObject> Demolishables() =>
+            Get<Timberborn.EntitySystem.EntityRegistry>().Entities.Where(e => e)
+                .Select(e => e.GetComponent<BlockObject>())
+                .Where(b => b && b.GetComponent<Timberborn.Demolishing.Demolishable>() != null && b.GetComponent<BuildingSpec>() == null)
+                .OrderBy(b => b.Coordinates.y).ThenBy(b => b.Coordinates.x).ThenBy(b => b.Coordinates.z);
+
+        // Whether it's in the rectangle x0 y0 x1 y1 (a[1..4]), at any height
+        private static bool InRectangle(BlockObject b, string[] a) =>
+            b.Coordinates.x >= I(a[1]) && b.Coordinates.x <= I(a[3]) && b.Coordinates.y >= I(a[2]) && b.Coordinates.y <= I(a[4]);
+
+        // A drag's corner, on the ground there
+        private Vector3Int Corner(string x, string y) => new Vector3Int(I(x), I(y), GroundAt(I(x), I(y)));
 
         private static Color HexColor(string hex) =>
             ColorUtility.TryParseHtmlString("#" + hex, out Color color) ? color : throw new Exception($"not a color: {hex}");

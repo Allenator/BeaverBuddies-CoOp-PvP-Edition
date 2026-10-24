@@ -402,7 +402,9 @@ namespace BeaverBuddies.Events
     {
         static bool Prefix(BuilderPrioritizable __instance, Timberborn.PrioritySystem.Priority priority)
         {
-            if (__instance.Priority == priority) return true;
+            // Sent even when it has that priority already: the game sets it again anyway, and a demolish job set
+            // again goes to the back of its priority's queue, the order builders take equally close jobs in. Set
+            // on the player's machine alone, its builders went to other jobs than everyone else's
             return PriorityChangedEvent<BuilderPrioritizable>
                 .DoPrefix(__instance, priority, () => new ConstructionPriorityChangedEvent());
         }
@@ -872,6 +874,19 @@ namespace BeaverBuddies.Events
                 };
             });
         }
+    }
+
+    /*
+     * A workplace taking its district's worker type, as it's finished or as a district takes it over, is the game's
+     * tick, the same on every machine, not a player picking one: sent as one, it waited for the next tick, and every
+     * guest sent it again, which could undo a player's own pick in between.
+     */
+    [HarmonyPatch(typeof(WorkplaceWorkerType), nameof(WorkplaceWorkerType.SetWorkerTypeToDistrict))]
+    static class WorkplaceWorkerTypeSetWorkerTypeToDistrictPatcher
+    {
+        static void Prefix(out IDisposable __state) => __state = ReplayEvent.Unrecorded();
+
+        static void Finalizer(IDisposable __state) => __state?.Dispose();
     }
 
     [ManualMethodOverwrite]
