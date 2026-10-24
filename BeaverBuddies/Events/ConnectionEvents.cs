@@ -233,7 +233,11 @@ namespace BeaverBuddies.Events
 
             string message = _loc.T("BeaverBuddies.ClientDesynced.Resynced");
             // Without tracing, every player's log is the report, and tracing can be turned on for the next one
-            if (!Settings.Debug) message += "\n\n" + _loc.T("BeaverBuddies.ClientDesynced.NeedToEnableTracing");
+            if (!Settings.Debug)
+            {
+                message += "\n\n" + _loc.T("BeaverBuddies.ClientDesynced.NeedToEnableTracing")
+                    + "\n\n" + _loc.T("BeaverBuddies.ClientDesynced.TracingSideEffect");
+            }
 
             DialogBox box = shower.Create().SetMessage(message)
                 .SetInfoButton(bugReportAction, _loc.T("BeaverBuddies.ClientDesynced.ReportOnDiscord"))
