@@ -22,6 +22,7 @@ namespace BeaverBuddies
         internal static YouSettings You;
         internal static MultiplayerSettings Multiplayer;
         internal static HostingSettings Hosting;
+        internal static AutosaveSettings Autosaves;
         internal static DeveloperSettings Developer;
 
         // This scene's own, for what sets a setting
@@ -57,12 +58,13 @@ namespace BeaverBuddies
                 : Multiplayer?.StrictBuildMatch.Value ?? true;
         public static bool PlayInBackground => Multiplayer?.KeepPlayingInBackground.Value ?? true;
 
-        // A game hosted or joined: autosaved every so many minutes, keeping so many, and not while paused (see Connect.Autosaves)
+        // A game hosted or joined, or of the Multiplayer settlement: autosaved every so many minutes, keeping so many, and
+        // not while paused (see Connect.Autosaves)
         public static float AutosaveMinutes =>
-            float.TryParse(Multiplayer?.AutosaveMinutes?.Value, NumberStyles.Float, CultureInfo.InvariantCulture, out float minutes) && minutes > 0 ? minutes : 10;
+            float.TryParse(Autosaves?.AutosaveMinutes?.Value, NumberStyles.Float, CultureInfo.InvariantCulture, out float minutes) && minutes > 0 ? minutes : 10;
         public static int AutosavesKept =>
-            int.TryParse(Multiplayer?.AutosavesKept?.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int kept) && kept > 0 ? kept : 12;
-        public static bool SkipPausedAutosaves => Multiplayer?.SkipPausedAutosaves.Value ?? true;
+            int.TryParse(Autosaves?.AutosavesKept?.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int kept) && kept > 0 ? kept : 12;
+        public static bool SkipPausedAutosaves => Autosaves?.SkipPausedAutosaves.Value ?? true;
         public static bool ShouldShowFirstTimerMessage => You?.ShowFirstTimerMessage.Value ?? true;
         // Saved with each game, picked when it's created (see DevTools.DevToolsRule)
         public static bool AllowDevTools => DevTools.DevToolsRule.Allowed;

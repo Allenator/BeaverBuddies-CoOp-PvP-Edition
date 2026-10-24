@@ -419,6 +419,17 @@ namespace BeaverBuddies.DevTools
                     list.scrollOffset = new Vector2(0, float.MaxValue);
                     break;
                 }
+                case "scrollto":
+                {
+                    // scrollto text: the panel on top scrolled until the first label with that text in it shows
+                    string text = string.Join(" ", a.Skip(1));
+                    var panel = _panelStack._stack.Peek().PanelController.GetPanel();
+                    var label = UnityEngine.UIElements.UQueryExtensions.Query<UnityEngine.UIElements.Label>(panel)
+                        .Where(l => l.text != null && l.text.Contains(text)).First() ?? throw new Exception($"no label with {text}");
+                    var view = label.GetFirstAncestorOfType<UnityEngine.UIElements.ScrollView>() ?? throw new Exception("not in a scroll view");
+                    view.ScrollTo(label);
+                    break;
+                }
                 case "compatsettings":
                 {
                     // Settings added through the calls mods built before the Game Modes mod use, and which games they show for:
@@ -742,17 +753,6 @@ namespace BeaverBuddies.DevTools
                     });
                     break;
                 }
-                case "autosaver":
-                {
-                    // How this game autosaves: every so many minutes, keeping so many, and whether one due now waits;
-                    // and the player's settings, for a game hosted or joined (see Connect.Autosaves)
-                    var autosaver = Get<Timberborn.Autosaving.Autosaver>();
-                    var spec = autosaver._autosaverSpec;
-                    string every = spec.FrequencyInMinutes.ToString(CultureInfo.InvariantCulture);
-                    Plugin.Log($"[Test] autosaver: every {every} min, keeps {spec.AutosavesPerSettlement}, waits {(autosaver.IsNotBlocked() ? "no" : "yes")}; " +
-                        $"settings {Settings.AutosaveMinutes.ToString(CultureInfo.InvariantCulture)} min, {Settings.AutosavesKept}, skip paused {Settings.SkipPausedAutosaves}");
-                    break;
-                }
                 case "floodgate":
                 {
                     // floodgate x y z height <h|same> | sync <on|off|same>: as its panel's height buttons and its
@@ -787,6 +787,17 @@ namespace BeaverBuddies.DevTools
                         default: throw new Exception("export, import or default?");
                     }
                     Plugin.Log($"[Test] {string.Join(" ", a)}: {good.GoodId} export {good.ExportThreshold}, import {good.ImportOption}");
+                    break;
+                }
+                case "autosaver":
+                {
+                    // How this game autosaves: every so many minutes, keeping so many, and whether one due now waits;
+                    // and the player's settings, for a game hosted or joined (see Connect.Autosaves)
+                    var autosaver = Get<Timberborn.Autosaving.Autosaver>();
+                    var spec = autosaver._autosaverSpec;
+                    string every = spec.FrequencyInMinutes.ToString(CultureInfo.InvariantCulture);
+                    Plugin.Log($"[Test] autosaver: every {every} min, keeps {spec.AutosavesPerSettlement}, waits {(autosaver.IsNotBlocked() ? "no" : "yes")}; " +
+                        $"settings {Settings.AutosaveMinutes.ToString(CultureInfo.InvariantCulture)} min, {Settings.AutosavesKept}, skip paused {Settings.SkipPausedAutosaves}");
                     break;
                 }
                 case "nudge":

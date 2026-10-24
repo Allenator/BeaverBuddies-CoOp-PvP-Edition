@@ -327,7 +327,7 @@ namespace BeaverBuddies.Connect
 
             Plugin.Log("Loading map");
             // One save per game, reused for every resync, instead of a folder per map
-            SaveReference saveRef = new SaveReference(GameNames.FromSave(mapBytes), new SettlementReference("Multiplayer", gameSaveRepository.DefaultSaveDirectory));
+            SaveReference saveRef = new SaveReference(GameNames.FromSave(mapBytes), new SettlementReference(Autosaves.SharedSettlement, gameSaveRepository.DefaultSaveDirectory));
             if (gameSaveRepository.SaveExists(saveRef)) gameSaveRepository.DeleteSaveSafely(saveRef);
             Stream stream = gameSaveRepository.CreateSaveSkippingNameValidation(saveRef);
             stream.Write(mapBytes);

@@ -1,8 +1,9 @@
 # A game hosted or joined autosaves as the player's settings say (Multiplayer: "Autosave every", "Autosaves to keep" and
 # "Skip autosaves while paused"), on the host and on the guest alike, and an autosave that's due waits while the game is
 # paused, not while a guest only waits for the host's next tick; a game alone autosaves as the game does, every 10
-# minutes keeping 3, paused or not. Checked from what the game's autosaver goes by (autosaver), whatever the player
-# has picked. With BeaverBuddies on its own.
+# minutes keeping 3, paused or not, but one of the co-op games' (the Multiplayer settlement, where a guest saves) goes
+# by the settings too. Checked from what the game's autosaver goes by (autosaver), whatever the player has picked; the
+# settings screen's Autosaves section, with the line saying which games they apply to, is the "settings" shot. With BeaverBuddies on its own.
 if mod_installed TimberEmpires; then mod_disable TimberEmpires; fi
 
 # "every M min, keeps N, waits W; settings M2 min, N2, skip paused S"
@@ -38,6 +39,7 @@ for i in $(seq 1 120); do [ "$(grep -ac "Registering Main Menu Services" "$(bb_l
 sleep 5
 # The settings, where a player picks them
 send host "modsettings beaverbuddies"; sleep 3
+send host "scrollto Skip autosaves while paused"; sleep 1
 shot "settings" host
 send host escape; sleep 2
 n=$(grep -ac "Load time" "$(bb_log host)")
@@ -46,3 +48,19 @@ for i in $(seq 1 120); do [ "$(grep -ac "Load time" "$(bb_log host)")" -gt "$n" 
 sleep 3; send host dismiss; sleep 2
 send host "speedsolo 0"; sleep 2
 expect_match "a game alone autosaves as the game does, paused or not" "$(autosaver host)" "every 10 min, keeps 3, waits no"
+
+# The guest's copy of the co-op game, opened alone: the settings, as when it was joined
+joined=$(grep -aoE "Saves/Multiplayer/[^/]+\.timber" "$(bb_log client)" | head -1 | sed 's|^Saves/Multiplayer/||; s|\.timber$||')
+expect_nonempty "the guest saved the game it joined" "$joined"
+n=$(grep -ac "Load time" "$(bb_log client)")
+send client "loadsave Multiplayer|$joined"
+for i in $(seq 1 120); do [ "$(grep -ac "Load time" "$(bb_log client)")" -gt "$n" ] && break; sleep 1; done
+sleep 3; send client dismiss; sleep 2
+send client "speedsolo 1"; sleep 2
+expect_match "a co-op game opened alone autosaves as the settings say" "$(autosaver client)" "every $set_minutes min, keeps $set_kept, waits no"
+send client "speedsolo 0"; sleep 2
+if [ "$skip" == "True" ]; then
+    expect_match "and paused, an autosave that's due waits" "$(autosaver client)" "waits yes"
+else
+    expect_match "and paused, an autosave that's due goes ahead, as the setting says" "$(autosaver client)" "waits no"
+fi
