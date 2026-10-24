@@ -13,7 +13,10 @@ namespace BeaverBuddies.DevTools
      * load in a multiplayer game, the same on every machine, and the
      * automation ticks since the game started alone. "lever x y z hold n"
      * presses a lever's button and lets go of it n ticks later, as a player
-     * holding it would. Only in the harness's copies.
+     * holding it would. "lever x y z tickpin" pins or unpins it from inside
+     * the next automation tick, once, as game logic calling a synced method
+     * would, to trip the tick guard (see ReplayEvent.InGameTick). Only in
+     * the harness's copies.
      */
     [HarmonyPatch(typeof(AutomationRunner), nameof(AutomationRunner.Tick))]
     static class LeverWatch
@@ -26,6 +29,8 @@ namespace BeaverBuddies.DevTools
 
         private static Lever _held;
         private static int _releaseAt;
+
+        private static Lever _pinInTick;
 
         static bool Prepare() => TestHarness.Active;
 
@@ -42,6 +47,8 @@ namespace BeaverBuddies.DevTools
             _held = lever;
             _releaseAt = _ticks + ticks;
         }
+
+        public static void PinInTick(Lever lever) => _pinInTick = lever;
 
         // Every frame, between ticks, where a player's mouse comes up
         public static void Update()
@@ -61,6 +68,13 @@ namespace BeaverBuddies.DevTools
 
         static void Postfix()
         {
+            if (_pinInTick)
+            {
+                Lever pinned = _pinInTick;
+                _pinInTick = null;
+                Plugin.Log($"[Test] Lever {(pinned.IsPinned ? "unpinned" : "pinned")} from inside the tick");
+                pinned.SetPinned(!pinned.IsPinned);
+            }
             if (_watched == null || _ticksLeft <= 0) return;
             if (_watched)
             {

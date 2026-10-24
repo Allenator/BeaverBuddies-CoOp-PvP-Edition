@@ -1039,7 +1039,8 @@ namespace BeaverBuddies
                 if (!HasTickedReplayService)
                 {
                     // First finish any parallel ticks
-                    ((TickableSingletonService)__instance._tickableSingletonService).FinishParallelTick();
+                    using (ReplayEvent.InGameTick())
+                        ((TickableSingletonService)__instance._tickableSingletonService).FinishParallelTick();
 
                     // Tick it and stop
                     HasTickedReplayService = true;
@@ -1054,7 +1055,8 @@ namespace BeaverBuddies
             }
             int bucket = __instance._nextBucketIndex;
             long start = HitchWatch.Now;
-            __instance.TickNextBucket();
+            // The game's own tick: what it calls is game logic, never a player's action (see ReplayEvent.InGameTick)
+            using (ReplayEvent.InGameTick()) __instance.TickNextBucket();
             HitchWatch.TickedBucket(bucket, start);
             NextBucket = __instance._nextBucketIndex;
             return false;

@@ -1,5 +1,6 @@
 ﻿using BeaverBuddies.IO;
 using System;
+using System.Collections.Generic;
 using Timberborn.BaseComponentSystem;
 using Timberborn.Buildings;
 using Timberborn.EntitySystem;
@@ -133,6 +134,36 @@ namespace BeaverBuddies.Events
             return new UnrecordedScope();
         }
 
+        private static int _inGameTick;
+        // Each kind of event the guard has reported this session, so one hit every tick says so once
+        private static readonly HashSet<string> _reportedFromTick = new();
+
+        private class GameTickScope : IDisposable
+        {
+            public void Dispose() => _inGameTick--;
+        }
+
+        /**
+         * The game's own tick (see TickingService): no player acts inside
+         * it, so a synced method it calls is game logic, which every machine
+         * runs alike, going out as a player's action anyway. The tick guard
+         * says so (see DoPrefix): a warning in players' games, a failure in
+         * the tests, which look for its tag.
+         */
+        public static IDisposable InGameTick()
+        {
+            _inGameTick++;
+            return new GameTickScope();
+        }
+
+        private static void ReportFromTick(ReplayEvent message)
+        {
+            // The generic event stands for many methods: each its own
+            if (!_reportedFromTick.Add(message is AutomationEvent generic ? generic.methodKey : message.type)) return;
+            Plugin.LogWarning($"[SyncGuard] {message.type} came from the game's tick, not a player, and goes out as a player's action: " +
+                $"game logic should run in ReplayEvent.Unrecorded() ({message.ToActionString()})\n{new System.Diagnostics.StackTrace(2, false)}");
+        }
+
         // The player events recorded now are sent as, when it isn't the
         // local one (see ActAs)
         public static string ActingPlayerID { get; private set; }
@@ -195,6 +226,10 @@ namespace BeaverBuddies.Events
             // Get the event and if it's null, just use default behavior
             ReplayEvent message = getEvent();
             if (message == null) return true;
+
+            // The game's tick calling a synced method, which no player did; still sent as before. A player the host
+            // runs (ActAs), like a mod's AI opponent, acts from the tick on purpose
+            if (_inGameTick > 0 && ActingPlayerID == null) ReportFromTick(message);
 
             // Optional: Log the message
             Plugin.Log(message.ToActionString());

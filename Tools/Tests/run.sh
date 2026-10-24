@@ -300,6 +300,12 @@ for f in $FILES; do
     done
     wait $spid 2>/dev/null
     spid=
+    # Game logic that went out as a player's action (the tick guard, see ReplayEvent.InGameTick) fails it too, unless
+    # it trips the guard on purpose (a BB_EXPECT_SYNC_GUARD comment)
+    if ! grep -q "BB_EXPECT_SYNC_GUARD" "$f"; then
+        guard=$(grep -ah "\[SyncGuard\]" "$(bb_log host)" "$(bb_log client)" 2>/dev/null | awk -v s="$started" 'substr($1, 2, 8) >= s' | head -1 | cut -c1-200)
+        [ -n "$guard" ] && BB_SCENARIO="$name" fail "nothing synced comes from the game's tick" "$guard"
+    fi
     # A scenario that parked its copies (te_start, see TE_PARKED in te-lib.sh) leaves them open for the next one
     # to take back to the main menu, unless it was cut short or it's the last
     if [ -z "$killed" ] && [ "$f" != "$LAST_FILE" ] && [ -f "$BB_TEST_DIR/.parked" ] && [ "${BB_KEEP_COPIES:-1}" = 1 ]; then :; else bb_close; fi
