@@ -138,12 +138,12 @@ namespace BeaverBuddies.Steam
             SteamNetworking.AcceptP2PSessionWithUser(clientId);
         }
 
-        // A Steam connection with a player that couldn't be made, or dropped: Steam's reason, as nothing else on
-        // this end says why
+        // Steam may set the session up again on the next packet, so it's
+        // only logged: a guest that stops hearing the host is told (see HostSilence)
         private void OnP2PSessionConnectFail(P2PSessionConnectFail_t callback)
         {
-            string who = SteamFriends.GetFriendPersonaName(callback.m_steamIDRemote);
-            Plugin.LogWarning($"[Steam] The connection with {who} failed: {(EP2PSessionError)callback.m_eP2PSessionError}");
+            string name = SteamFriends.GetFriendPersonaName(callback.m_steamIDRemote);
+            Plugin.LogWarning($"The Steam session with {name} failed: {(EP2PSessionError)callback.m_eP2PSessionError}");
         }
 
         // This should only be called if the SteamOverlayInputBlocker is on top,

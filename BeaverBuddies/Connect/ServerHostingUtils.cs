@@ -39,7 +39,7 @@ namespace BeaverBuddies.Connect
             // From the main menu, one or the other, by which menu opened it: Load Game
             // plays alone, Multiplayer's Host saved game hosts. In a game, both
             bool inMenu = SingletonManager.GetSingleton<MultiplayerMenu>() != null;
-            SingletonManager.GetSingleton<Matchmaking.MatchOptionsPanel>()?.AddFriendsOnly(host, !inMenu || MultiplayerMenu.HostingSave);
+            SingletonManager.GetSingleton<Matchmaking.FriendsOnlyPanel>()?.AddFriendsOnly(host, !inMenu || MultiplayerMenu.HostingSave);
             if (!inMenu) return;
             host.ToggleDisplayStyle(MultiplayerMenu.HostingSave);
             __result.Q<Button>("LoadButton")?.ToggleDisplayStyle(!MultiplayerMenu.HostingSave);

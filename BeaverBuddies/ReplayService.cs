@@ -89,6 +89,9 @@ namespace BeaverBuddies
 
         private readonly GameSaveHelper gameSaveHelper;
 
+        // A client's box for a host gone quiet, made the first time it's needed
+        private HostSilence _hostSilence;
+
         private List<object> singletons = new();
 
         // TODO: I believe that this could be a non-static variable
@@ -472,6 +475,7 @@ namespace BeaverBuddies
         private void ShowHostLeft()
         {
             Plugin.Log("The host left: back to the main menu");
+            _hostSilence?.Close();
             EventIO.Reset();
             SpeedChangePatcher.SetSpeedSilentlyNow(_speedManager, 0);
             GetSingleton<DialogBoxShower>().Create()
@@ -485,6 +489,7 @@ namespace BeaverBuddies
         {
             Plugin.Log("Turned away by the host: back to the main menu");
             string message = refused.RefusedSilently ? null : $"\n\"{Connect.BuildIdentity.Mismatch(refused.RefusedByHost)}\"";
+            _hostSilence?.Close();
             EventIO.Reset();
             SpeedChangePatcher.SetSpeedSilentlyNow(_speedManager, 0);
             var shower = GetSingleton<DialogBoxShower>();
@@ -493,6 +498,26 @@ namespace BeaverBuddies
                     : shower._loc.T("BeaverBuddies.JoinCoopGame.Error.Incompatible") + message)
                 .SetConfirmButton(() => GetSingleton<Timberborn.MainMenuSceneLoading.MainMenuSceneLoader>().OpenMainMenu())
                 .Show();
+        }
+
+        // A connection can stall without closing: the guest hears nothing
+        // more and would only stand still, so it's told and can leave
+        private void WatchHostSilence()
+        {
+            if (io is not ClientEventIO client || isReset || _resyncService.IsReloading || GuestLobby.IsOpen)
+            {
+                _hostSilence?.Close();
+                return;
+            }
+            _hostSilence ??= new HostSilence(GetSingleton<DialogBoxShower>(), LeaveSilentHost);
+            _hostSilence.Update(client.SecondsSinceHostHeard);
+        }
+
+        private void LeaveSilentHost()
+        {
+            EventIO.Reset();
+            SpeedChangePatcher.SetSpeedSilentlyNow(_speedManager, 0);
+            GetSingleton<Timberborn.MainMenuSceneLoading.MainMenuSceneLoader>().OpenMainMenu();
         }
 
         public void HandleDesync()
@@ -628,6 +653,7 @@ namespace BeaverBuddies
                 ShowHostLeft();
                 return;
             }
+            WatchHostSilence();
             if (!CanAct)
             {
                 // Still listening while desynced, or waiting for a reload,

@@ -19,6 +19,8 @@ namespace BeaverBuddies.Cursors
         public Vector3 DisplayedPosition;
         public Color Color;
         public bool Visible;
+        // 1 in plain view, lower while the camera can't see what it points at
+        public float Alpha = 1f;
         public float LastMessageTime;
     }
 
@@ -67,12 +69,28 @@ namespace BeaverBuddies.Cursors
 
         public IEnumerable<RemoteCursor> Cursors => _cursors.Values;
 
+        // For the test harness: a cursor of a made-up player that stays put
+        public RemoteCursor AddTestCursor(string playerID, Vector3 worldPosition)
+        {
+            var cursor = new RemoteCursor
+            {
+                DisplayedPosition = worldPosition,
+                TargetPosition = worldPosition,
+                Color = Color.red,
+                Visible = true,
+                LastMessageTime = float.PositiveInfinity,
+            };
+            _cursors[playerID] = cursor;
+            return cursor;
+        }
+
         public void PostLoad()
         {
             _overlayHost = new GameObject("BeaverBuddies_PlayerCursorOverlay");
             var overlay = _overlayHost.AddComponent<PlayerCursorOverlay>();
             overlay.Service = this;
             overlay.CameraService = _cameraService;
+            overlay.TerrainPicker = _terrainPicker;
 
             EventIO.TransientMessageReceived += OnTransientMessageReceived;
 

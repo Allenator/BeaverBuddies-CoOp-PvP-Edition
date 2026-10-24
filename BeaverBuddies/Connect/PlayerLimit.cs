@@ -1,5 +1,4 @@
-using System.Collections.Generic;
-using BeaverBuddies.NewGame;
+using GameModes;
 
 namespace BeaverBuddies.Connect
 {
@@ -14,22 +13,10 @@ namespace BeaverBuddies.Connect
         public const int Default = 4;
         private const int Fewest = 2, Most = 8;
 
-        public static void AddGameSetting() => GameSettings.Add(new GameSetting
-        {
-            Id = SettingId,
-            GroupLocKey = "BeaverBuddies.Menu.Multiplayer",
-            LabelLocKey = "BeaverBuddies.Settings.MaxPlayers",
-            TooltipLocKey = "BeaverBuddies.Settings.MaxPlayers.Tooltip",
-            Min = Fewest, Max = Most, Step = 1, Default = Default.ToString(),
-            ValueLocKey = "BeaverBuddies.Settings.MaxPlayers.Value",
-            Modes = new[] { GameSettings.WithOthers },
-        });
+        // A game's limit is read from its record (Setting.Of): a save from before it was one has the default
+        public static SliderSetting Setting { get; private set; }
 
-        // A game's limit from its settings; a save from before it was one has the default
-        public static int Of(IReadOnlyDictionary<string, string> settings) =>
-            settings != null && settings.TryGetValue(SettingId, out string value) && int.TryParse(value, out int most) && most >= Fewest ? most : Default;
-
-        // The loaded game's
-        public static int Current => Of(GameRecord.Current);
+        public static void AddGameSetting(SettingGroup group) =>
+            Setting = group.Slider(SettingId, "BeaverBuddies.Settings.MaxPlayers", Fewest, Most, 1, Default);
     }
 }

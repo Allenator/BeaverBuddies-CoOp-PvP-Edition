@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using Timberborn.Options;
 using Timberborn.OptionsGame;
+using Timberborn.TimeSpeedButtonSystem;
 using Timberborn.TimeSystem;
 using Timberborn.UILayoutSystem;
 using static BeaverBuddies.SingletonManager;
@@ -83,6 +84,23 @@ namespace BeaverBuddies.Events
                 return true;
             }
             return false;
+        }
+    }
+
+    /// <summary>
+    /// The speed buttons show the speed the player picked, not the one the game
+    /// is catching up at, so they don't flicker between the two.
+    /// </summary>
+    [HarmonyPatch(typeof(TimeSpeedButtonGroup), "HighlightButton")]
+    public class SpeedButtonDisplayPatcher
+    {
+        static void Prefix(ref float speed)
+        {
+            var replayService = ReplayEvent.GetReplayServiceIfReady();
+            if (replayService == null || replayService.TargetSpeed <= 0) return;
+            var speedManager = GetSingleton<SpeedManager>();
+            if (speedManager == null || speedManager._isLocked) return;
+            speed = replayService.TargetSpeed;
         }
     }
 

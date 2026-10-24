@@ -50,7 +50,7 @@ namespace BeaverBuddies.Matchmaking
         {
             newGame = MatchPicks.Create(PlayerIdentity.LocalName, configuration, mapTitle, null, modeLocKey);
             newGameSettlement = configuration.SettlementName;
-            newGameFriendsOnly = MatchOptionsPanel.FriendsOnly;
+            newGameFriendsOnly = FriendsOnlyPanel.FriendsOnly;
         }
 
         // The save about to be hosted, read before its lobby exists
@@ -60,34 +60,29 @@ namespace BeaverBuddies.Matchmaking
             string settlement = save.SettlementReference.SettlementName;
             bool fromNewGame = newGame != null && newGameSettlement == settlement;
             hosting = fromNewGame ? newGame : FromSave(settlement, saveFile);
-            friendsOnly = fromNewGame ? newGameFriendsOnly : MatchOptionsPanel.FriendsOnly;
+            friendsOnly = fromNewGame ? newGameFriendsOnly : FriendsOnlyPanel.FriendsOnly;
         }
 
         private static MatchPicks FromSave(string settlement, byte[] saveFile)
         {
             var record = ReadRecord(saveFile) ?? new Dictionary<string, string>();
-            var optionIds = new HashSet<string>(MatchOptions.All.Select(o => o.Id));
             return new MatchPicks
             {
                 name = PlayerIdentity.LocalName,
                 faction = SingletonManager.GetSingleton<HostedGameInfo>()?.Faction,
                 mapTitle = SingletonManager.GetSingleton<ReplayService>()?.ServerMapName ?? settlement,
-                options = record.Where(p => optionIds.Contains(p.Key)).ToDictionary(p => p.Key, p => p.Value),
-                settings = record.Where(p => !optionIds.Contains(p.Key)).ToDictionary(p => p.Key, p => p.Value),
+                // A save of a game played alone has no mode among those a game with others is picked as
+                options = GameModes.Modes.IsAlone(record) ? new Dictionary<string, string>() : record.Where(p => MatchOptions.IsPick(p.Key)).ToDictionary(p => p.Key, p => p.Value),
+                settings = record.Where(p => !MatchOptions.IsPick(p.Key) && p.Key != GameModes.Modes.AloneKey).ToDictionary(p => p.Key, p => p.Value),
             };
         }
 
-        // The game's mode and settings from the save's metadata (see GameRecord)
+        // The game's mode and settings from the save's metadata (see GameModes.GameRecord)
         private static Dictionary<string, string> ReadRecord(byte[] saveFile)
         {
             try
             {
-                using var zip = new ZipArchive(new MemoryStream(saveFile), ZipArchiveMode.Read);
-                ZipArchiveEntry entry = zip.GetEntry("save_metadata.json");
-                if (entry == null) return null;
-                using var reader = new StreamReader(entry.Open());
-                JToken lines = JObject.Parse(reader.ReadToEnd())[GameRecord.MetadataName];
-                return lines is JArray array ? GameRecord.Parse(array.Select(l => (string)l)) : null;
+                return GameModes.GameRecord.FromSave(new MemoryStream(saveFile));
             }
             catch (Exception e)
             {

@@ -194,7 +194,18 @@ wait_for_watch() {
     return 1
 }
 
+# Which mods play, as preference flags ("ModEnabled.Local.BeaverBuddies.beaverbuddies=1", one per line) a runner
+# that builds mods hands over in BB_MOD_FLAGS: set before every launch, so a scenario that never says which
+# mods it plays still gets the local builds. The run puts the player's own back (BB_PREF_KEYS_EXTRA)
+bb_mod_flags() {
+    local flag on
+    while IFS='=' read -r flag on; do
+        [ -n "$flag" ] && defaults write "$BB_PREFS_DOMAIN" "$flag" -int "$on"
+    done <<< "${BB_MOD_FLAGS:-}"
+}
+
 bb_launch() {
+    bb_mod_flags
     bb_open "$1"
     wait_for_watch "$1" "Registering Main Menu Services" 120
 }

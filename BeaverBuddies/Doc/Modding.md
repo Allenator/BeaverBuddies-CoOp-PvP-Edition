@@ -172,8 +172,7 @@ Add these once, when your mod starts. Each one combines with every other mod's: 
 | `AddGameMode(id, labelLocKey)` | Adds a game mode to the Multiplayer mode list (see below) |
 | `DescribeGameMode(id, descriptionLocKey)` | A line about one of your modes, shown under the list when it's picked |
 | `GetGameMode()` | The game mode the new game loading on this machine was started with, or null |
-| `AddMatchOption(id, labelLocKey, values, valueLocKeys, defaultValue)` | Adds a choice of your own to hosting and matchmaking, a list of its own (see below) |
-| `GetMatchOption(id)` | Your option's pick for the new game loading on this machine, or null |
+| `AddMatchOption(...)` | Deprecated, does nothing: add a game mode or a game setting instead |
 | `AddGameToggle(id, groupLocKey, labelLocKey, tooltipLocKey, defaultOn, modes)` | Adds a checkbox to the game settings on the New Game screens (see below) |
 | `AddGameChoice(id, groupLocKey, labelLocKey, tooltipLocKey, values, valueLocKeys, defaultValue, modes)` | The same for one of a few values |
 | `AddGameSlider(id, groupLocKey, labelLocKey, tooltipLocKey, min, max, step, defaultValue, valueLocKey, modes)` | The same for a whole number on a slider, from `min` to `max` in steps of `step`, its value shown beside it by `valueLocKey` (`"{0} %"`) or at `min` by `valueLocKey` with `.Min` added where the mod translates that ("None"), and saved as the number |
@@ -191,8 +190,6 @@ Matchmaking only pairs players who picked the same mode, and the open match list
 Read the pick with `GetGameMode()` as the new game loads (in a singleton's `Load`, say), and save it with the game yourself: it's only there for the new game being started on this machine, and null for a game started alone or loaded from a save. Players who join load the host's save, so they get your saved value, not `GetGameMode()`.
 
 Timber Empires adds PvE (`timberempires.pve`) and PvP (`timberempires.pvp`), and plays BeaverBuddies' Co-op as a shared settlement.
-
-For a choice that isn't a game mode, `AddMatchOption` adds a column of its own next to it, with the same rules: matches pair only players who picked the same, and `GetMatchOption(id)` reads the pick as the game loads.
 
 ## Game settings
 

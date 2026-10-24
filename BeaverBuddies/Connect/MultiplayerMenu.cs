@@ -4,6 +4,7 @@ using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using Timberborn.CoreUI;
 using Timberborn.GameSaveRepositorySystemUI;
 using Timberborn.GameSceneLoading;
@@ -68,6 +69,12 @@ namespace BeaverBuddies.Connect
         // Whether the Load Game box was opened to host a save, or to play one alone
         public static bool HostingSave { get; private set; }
 
+        static MultiplayerMenu()
+        {
+            // The game modes offered on the New Game screens: those for a game with others when hosting or matching
+            GameModes.Modes.PageAlone = () => Intent == NewGameIntent.Play;
+        }
+
         public MultiplayerMenu(ILoc loc, PanelStack panelStack, NewGameFactionPanel newGameFactionPanel, LoadGameBox loadGameBox,
             GameSceneLoader gameSceneLoader, ClientConnectionUI clientConnectionUI, UrlOpener urlOpener, ITooltipRegistrar tooltipRegistrar)
         {
@@ -104,7 +111,7 @@ namespace BeaverBuddies.Connect
                 {
                     b.text = _loc.T(locKey);
                     b.RegisterCallback((ClickEvent _) => click());
-                    if (tooltipLocKey != null) Util.WrappedTooltip.Register(_tooltipRegistrar, b, () => _loc.T(tooltipLocKey));
+                    if (tooltipLocKey != null) GameModes.WrappedTooltip.Register(_tooltipRegistrar, b, () => _loc.T(tooltipLocKey));
                 });
                 button.ToggleDisplayStyle(false);
                 _buttons.Add(button);
@@ -220,8 +227,11 @@ namespace BeaverBuddies.Connect
         private void HostNewGame(NewGameModePanel panel)
         {
             if (!panel.TryGetValidatedGameMode(out GameModeSpec mode)) return;
-            // As the game names autosaves: a settlement's name is its folder, which can't have dots or colons
-            string settlement = "Co-op " + DateTime.Now.ToString("yyyy-MM-dd HH'h'mm", CultureInfo.InvariantCulture);
+            // As the game names autosaves: a settlement's name is its folder, which can't have dots or colons.
+            // Named for the game mode picked, "Co-op 2026-10-23 13h09"
+            string modeName = new string(_loc.T(GameModes.Modes.Get(GameModes.Modes.PickedMode(alone: false))?.LabelLocKey ?? "BeaverBuddies.Match.GameMode.CoOp")
+                .Where(c => c != '.' && c != ':' && c != '/' && c != '\\' && !char.IsControl(c)).ToArray()).Trim();
+            string settlement = modeName + " " + DateTime.Now.ToString("yyyy-MM-dd HH'h'mm", CultureInfo.InvariantCulture);
             var configuration = new NewGameConfiguration(panel._factionSpec.Id, panel._map.MapFileReference, mode, settlement);
             HostLobby.NextMapName = panel._map.DisplayName;
 #if IS_STEAM
@@ -350,7 +360,7 @@ namespace BeaverBuddies.Connect
     {
         public static void Postfix(NewGameModePanel __instance)
         {
-            SingletonManager.GetSingleton<Matchmaking.MatchOptionsPanel>()?.AddTo(__instance);
+            SingletonManager.GetSingleton<Matchmaking.FriendsOnlyPanel>()?.AddTo(__instance);
             SingletonManager.GetSingleton<MultiplayerMenu>()?.AddHostButton(__instance);
 #if IS_STEAM
             SingletonManager.GetSingleton<Matchmaking.MatchmakingUI>()?.AddButton(__instance);
@@ -375,9 +385,7 @@ namespace BeaverBuddies.Connect
             if (intent == NewGameIntent.Match) intent = NewGameIntent.Play;
 #endif
             Show(__instance, MultiplayerMenu.HostButtonName, intent == NewGameIntent.Host);
-            Matchmaking.MatchOptionsPanel.Show(__instance, intent == NewGameIntent.Host || intent == NewGameIntent.Match);
-            Matchmaking.MatchOptionsPanel.ShowFriendsOnly(__instance, intent == NewGameIntent.Host);
-            SingletonManager.GetSingleton<NewGame.GameSettingsSection>()?.Refresh();
+            Matchmaking.FriendsOnlyPanel.ShowFriendsOnly(__instance, intent == NewGameIntent.Host);
             __instance._nextButton.ToggleDisplayStyle(intent == NewGameIntent.Play);
         }
 

@@ -34,7 +34,7 @@ namespace BeaverBuddies.Matchmaking
         // What mods ask of a game, like Timber Empires' game mode (see MatchOptions):
         // a match only pairs players who picked the same
         public Dictionary<string, string> options = new();
-        // Mods' game settings (see NewGame.GameSettings): they go with the
+        // Mods' game settings (see GameModes.GameSettings): they go with the
         // difficulty, so whoever's difficulty is played, their settings are
         public Dictionary<string, string> settings = new();
 
@@ -76,7 +76,7 @@ namespace BeaverBuddies.Matchmaking
                 options = MatchOptions.Current(),
                 // Only the ones the match's mode shows: hidden ones (alone-only
                 // settings, say) mustn't keep two players apart or reach the game
-                settings = NewGame.GameSettings.Current(MatchOptions.ValueOf(MatchOptions.GameModeId)),
+                settings = GameModes.GameSettings.Current(new GameModes.GameKind(MatchOptions.ValueOf(MatchOptions.GameModeId), alone: false)),
             };
         }
 
