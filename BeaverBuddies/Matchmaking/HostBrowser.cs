@@ -244,8 +244,7 @@ namespace BeaverBuddies.Matchmaking
         }
 
         // The match's multiplayer options, by their values alone: Horde, PvP
-        private IEnumerable<string> OptionLabels(MatchPicks picks) =>
-            MatchOptions.All.Where(o => picks.options?.ContainsKey(o.Id) == true).Select(o => o.Label(_loc, picks.options[o.Id]));
+        private IEnumerable<string> OptionLabels(MatchPicks picks) => MatchOptions.Labels(_loc, picks.options);
 
         // Who's in: 2/4 players for a hosted game, 1v1 for a Quick match
         private string Seats(OpenMatch match)
@@ -296,7 +295,7 @@ namespace BeaverBuddies.Matchmaking
             if (picks.faction != null) text.Append(_loc.T("BeaverBuddies.Match.HostFaction", Faction(picks.faction))).Append("\n");
 
             // Only what differs from the defaults: a list of all of them buries the ones that matter
-            var settings = NewGame.GameSettings.Describe(_loc, picks.settings, NewGame.GameRecord.ModeOf(picks.options), onlyChanged: true);
+            var settings = GameModes.GameSettings.Describe(_loc, picks.settings, GameModes.GameKind.Of(picks.options), onlyChanged: true);
             text.Append($"\n<b>{_loc.T("BeaverBuddies.Match.Section.Settings")}</b>\n");
             text.Append(settings.Count == 0 ? _loc.T("BeaverBuddies.Match.SettingsDefault") : string.Join("\n", settings)).Append("\n");
 

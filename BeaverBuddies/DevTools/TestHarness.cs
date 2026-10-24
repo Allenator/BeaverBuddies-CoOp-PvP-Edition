@@ -38,7 +38,7 @@ namespace BeaverBuddies.DevTools
      * "build Template x y z [0|90|180|270]" places it through the game's own
      * placer, as the building tool does, so whatever hooks a click sees it;
      * "center" logs the tile in the middle of the screen;
-     * Alone too, for what doesn't need another player: "newgame Map Faction"
+     * Alone too, for what doesn't need another player: "newgame Map Faction [mode]"
      * at the main menu; in game "buildnow Template x y z [0|90|180|270]"
      * places it finished, "infect x y z" infects the workers of the
      * workplace there with badwater, "workers x y z" logs who works there,
@@ -162,9 +162,9 @@ namespace BeaverBuddies.DevTools
             Matchmaking.MatchMods.Entry Mod(string id, string name, string version) => new() { id = id, name = name, version = version };
             List<Matchmaking.MatchMods.Entry> Mods(Func<List<Matchmaking.MatchMods.Entry>, IEnumerable<Matchmaking.MatchMods.Entry>> change) =>
                 change(mine.Select(m => new Matchmaking.MatchMods.Entry { id = m.id, name = m.name, version = m.version, workshop = m.workshop }).ToList()).ToList();
-            var gameMode = Matchmaking.MatchOptions.All.FirstOrDefault(o => o.Id == Matchmaking.MatchOptions.GameModeId);
-            string Option(int index) => gameMode == null || gameMode.Values.Length == 0 ? null : gameMode.Values[Math.Min(index, gameMode.Values.Length - 1)];
-            var changed = NewGame.GameSettings.All.Where(g => g.Values?.Length > 1).Take(3)
+            var gameModes = GameModes.Modes.For(alone: false);
+            string Option(int index) => gameModes.Count == 0 ? null : gameModes[Math.Min(index, gameModes.Count - 1)].Id;
+            var changed = GameModes.GameSettings.All.OfType<GameModes.ChoiceSetting>().Where(g => g.Values.Count > 1).Take(3)
                 .ToDictionary(g => g.Id, g => g.Values.First(v => v != g.Default));
             Matchmaking.MatchPicks Picks(string name, string map, int option, Dictionary<string, string> settings = null, int players = 0) => new()
             {
@@ -350,10 +350,10 @@ namespace BeaverBuddies.DevTools
                 case "friendsbox":
                 {
                     // friendsbox [on|off]: whether the "Steam friends only" box shows on the New Game page, and with on or off, ticks or clears it as a click would
-                    var box = Matchmaking.MatchOptionsPanel.FriendsOnlyBox;
+                    var box = Matchmaking.FriendsOnlyPanel.FriendsOnlyBox;
                     if (box != null && a.Length > 1) UnityEngine.UIElements.UQueryExtensions.Q<UnityEngine.UIElements.Toggle>(box).value = a[1] == "on";
                     bool shown = box != null && box.resolvedStyle.display != UnityEngine.UIElements.DisplayStyle.None;
-                    Plugin.Log($"[Test] friendsbox shown {shown} ticked {Matchmaking.MatchOptionsPanel.FriendsOnly}");
+                    Plugin.Log($"[Test] friendsbox shown {shown} ticked {Matchmaking.FriendsOnlyPanel.FriendsOnly}");
                     break;
                 }
                 case "click":
@@ -419,18 +419,38 @@ namespace BeaverBuddies.DevTools
                     list.scrollOffset = new Vector2(0, float.MaxValue);
                     break;
                 }
+                case "compatsettings":
+                {
+                    // Settings added through the calls mods built before the Game Modes mod use, and which games they show for:
+                    // A a game alone in PvE, B a PvE game with others, C a Co-op game with others
+                    var kinds = new[] { new GameModes.GameKind("pve", true), new GameModes.GameKind("pve", false), new GameModes.GameKind("coop", false) };
+                    var cases = new (string Id, string[] Modes)[]
+                    {
+                        ("all", null), ("alone", new[] { "bb.alone" }), ("others", new[] { "bb.others" }),
+                        ("pve", new[] { "pve" }), ("alonepve", new[] { "bb.alone:pve" }),
+                    };
+                    foreach (var (id, modes) in cases)
+                    {
+                        Modding.ModBridge.AddGameToggle("test.compat." + id, "Test", "Test." + id, null, true, modes);
+                        var setting = GameModes.GameSettings.Find("test.compat." + id);
+                        Plugin.Log($"[Test] compat {id}: A={setting.AppliesTo(kinds[0])} B={setting.AppliesTo(kinds[1])} C={setting.AppliesTo(kinds[2])}");
+                    }
+                    break;
+                }
                 case "gamesetting":
                 {
                     // gamesetting id value: this player's pick for new games, as the Customize list would set it
-                    NewGame.GameSettings.Pick(a[1], a[2]);
-                    SingletonManager.GetSingleton<NewGame.GameSettingsSection>()?.Refresh();
+                    GameModes.GameSettings.Pick(a[1], a[2]);
                     break;
                 }
+                case "gamemode":
+                    // gamemode id: the game mode picked on the New Game page, for the game it's making (alone or with others)
+                    GameModes.Modes.Pick(a[1], GameModes.Modes.PageAlone());
+                    break;
                 case "matchoption":
                 {
                     // matchoption id value: a pick in a column next to the difficulties, like the game mode
                     Matchmaking.MatchOptions.Pick(a[1], a[2]);
-                    SingletonManager.GetSingleton<NewGame.GameSettingsSection>()?.Refresh();
                     break;
                 }
                 case "snap":
@@ -492,6 +512,12 @@ namespace BeaverBuddies.DevTools
                     Get<Timberborn.MapEditorSceneLoading.MapEditorSceneLoader>().StartNewMapInstantly(new Vector2Int(I(a[1]), I(a[1])));
                     break;
                 case "newgame":
+                    // newgame Map Faction [game mode id]: alone in that mode, as the New Game screens' Start would start it
+                    if (a.Length > 3 && a[3] != "")
+                    {
+                        GameModes.Modes.Pick(a[3], alone: true);
+                        GameModes.Modes.StartWith(a[3], alone: true);
+                    }
                     _gameSceneLoader.StartNewGameInstantly(a[2], Map(a[1]), "Harness " + DateTime.Now.ToString("HH'h'mm", CultureInfo.InvariantCulture));
                     break;
                 case "buildnow":
@@ -582,6 +608,19 @@ namespace BeaverBuddies.DevTools
                     if (a.Length > 4) camera.ZoomLevel = float.Parse(a[4], CultureInfo.InvariantCulture);
                     break;
                 }
+                case "fakecursor":
+                {
+                    // fakecursor id x y z [height]: another player's cursor held on that tile, height above the tile's floor
+                    float h = a.Length > 5 ? float.Parse(a[5], CultureInfo.InvariantCulture) : 0f;
+                    Vector3 world = CoordinateSystem.GridToWorld(new Vector3(I(a[2]) + 0.5f, I(a[3]) + 0.5f, I(a[4]) + h));
+                    Get<Cursors.PlayerCursorService>().AddTestCursor(a[1], world);
+                    Plugin.Log($"[Test] Fake cursor {a[1]} at {world}");
+                    break;
+                }
+                case "cursors":
+                    foreach (var c in Get<Cursors.PlayerCursorService>().Cursors)
+                        Plugin.Log($"[Test] Cursor {(a.Length > 1 ? a[1] : "")} alpha {c.Alpha:0.00}");
+                    break;
                 case "train":
                     // On every machine, through an event, so they stay in step
                     Record(new HarnessEvent() { command = string.Join(" ", a) });

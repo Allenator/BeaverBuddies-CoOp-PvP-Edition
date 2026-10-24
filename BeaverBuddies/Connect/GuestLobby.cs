@@ -35,7 +35,7 @@ namespace BeaverBuddies.Connect
 
         public static void Open(string mapName) => SingletonManager.GetSingleton<GuestLobby>()?.Show(mapName);
 
-        /** Up on this guest's screen: the host hasn't started the game. */
+        /** Up on this guest's screen: the host hasn't started the game, and it's quiet there on purpose (see HostSilence). */
         public static bool IsOpen => SingletonManager.GetSingleton<GuestLobby>() is { _box: not null, _closing: false };
 
         private void Show(string mapName)

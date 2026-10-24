@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using Timberborn.CameraSystem;
+using Timberborn.Coordinates;
 using Timberborn.PlatformUtilities;
+using Timberborn.TerrainQueryingSystem;
 using UnityEngine;
 using static BeaverBuddies.Util.OverlayDrawing;
 
@@ -14,6 +16,13 @@ namespace BeaverBuddies.Cursors
 
         public PlayerCursorService Service;
         public CameraService CameraService;
+        public TerrainPicker TerrainPicker;
+
+        // How see-through a cursor is while something between the camera and it hides it
+        private const float HiddenAlpha = 0.35f;
+        private const float FadeSpeed = 12f;
+        // Slack so the surface the cursor sits on doesn't count as covering it
+        private const float OcclusionMargin = 0.3f;
 
         private readonly Dictionary<Color32, Texture2D> _textures = new();
         private float _pixelsPerPoint;
@@ -42,9 +51,41 @@ namespace BeaverBuddies.Cursors
                 if (guiPos.x < -texture.width || guiPos.x > Screen.width
                     || guiPos.y < -texture.height || guiPos.y > screenH) continue;
 
+                float targetAlpha = IsOccluded(cam, cursor.DisplayedPosition, sp) ? HiddenAlpha : 1f;
+                cursor.Alpha = Mathf.MoveTowards(cursor.Alpha, targetAlpha, FadeSpeed * Time.unscaledDeltaTime);
+
                 // The arrow's tip is the texture's top left corner
+                Color previous = GUI.color;
+                GUI.color = new Color(1f, 1f, 1f, cursor.Alpha);
                 GUI.DrawTexture(new Rect(guiPos.x, guiPos.y, texture.width, texture.height), texture);
+                GUI.color = previous;
             }
+        }
+
+        /**
+         * Whether something stands between the camera and the point: the
+         * terrain, or a building, tree or anything else with a collider.
+         */
+        private bool IsOccluded(Camera cam, Vector3 worldPos, Vector3 screenPos)
+        {
+            Vector2 screenPoint = new Vector2(screenPos.x, screenPos.y);
+
+            if (TerrainPicker != null)
+            {
+                Ray gridRay = CameraService.ScreenPointToRayInGridSpace(screenPoint);
+                var hit = TerrainPicker.PickTerrainCoordinates(gridRay);
+                if (hit.HasValue)
+                {
+                    float toHit = Vector3.Distance(gridRay.origin, hit.Value.Intersection);
+                    float toCursor = Vector3.Distance(gridRay.origin, CoordinateSystem.WorldToGrid(worldPos));
+                    if (toHit < toCursor - OcclusionMargin) return true;
+                }
+            }
+
+            Ray worldRay = cam.ScreenPointToRay(screenPos);
+            float distance = Vector3.Distance(worldRay.origin, worldPos) - OcclusionMargin;
+            return distance > 0f
+                && Physics.Raycast(worldRay, distance, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
         }
 
         public void OnDestroy()

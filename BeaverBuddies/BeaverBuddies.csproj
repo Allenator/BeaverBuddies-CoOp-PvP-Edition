@@ -6,6 +6,14 @@
   <Import Project="env.props.windows-template" Condition="!Exists('env.props') AND '$(OS)' != 'Unix'" />
   <Import Project="env.props.unix-template" Condition="!Exists('env.props') AND '$(OS)' == 'Unix'" />
 
+  <!-- Game Modes as installed in the Mods folder (build it from its repo, or point GameModesDll at its DLL) -->
+  <PropertyGroup>
+    <GameModesDll Condition="'$(GameModesDll)' == ''">$(DocumentsPath)Timberborn/Mods/GameModes/version-1.1/GameModes.dll</GameModesDll>
+  </PropertyGroup>
+  <Target Name="CheckGameModes" BeforeTargets="BeforeBuild">
+    <Error Text="Game Modes isn't built: $(GameModesDll) not found. Build github.com/FezVrasta/timberborn-game-modes (it installs itself into the Mods folder) or set GameModesDll to its DLL" Condition="!Exists('$(GameModesDll)')" />
+  </Target>
+
   <!-- Before building, create a copy if it doesn't exist -->
   <Target Name="EnsureEnvProps" BeforeTargets="CheckEnv">
     <Message Importance="high" Text="Checking for env.props file..." />
@@ -17,7 +25,7 @@
     <TargetFramework>netstandard2.1</TargetFramework>
     <AssemblyName>BeaverBuddies</AssemblyName>
     <Description>TimberModTest</Description>
-    <Version>1.1.0-1.8.4-allenator.2</Version>
+    <Version>1.1.0-1.9.2-allenator.3</Version>
     <TimberbornTargetVersion>1.1</TimberbornTargetVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
@@ -70,6 +78,8 @@
   <!-- Outside Project -->
   <ItemGroup>
     <ProjectReference Include="..\TimberNet\TimberNet.csproj" />
+    <!-- The mod it depends on, a mod of its own (github.com/FezVrasta/timberborn-game-modes): its DLL stays in its own mod folder -->
+    <Reference Include="$(GameModesDll)" Private="false" />
   </ItemGroup>
 
   <!-- Reference DLL -->

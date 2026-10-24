@@ -271,97 +271,80 @@ namespace BeaverBuddies.Modding
         // mod to found each player's settlement
         public static void AddMapStartsPerPlayer(Func<bool> hook) => MatchHooks.MapStartsPerPlayer.Add(hook);
 
+        // What a game mode says about its own new games, asked only for games in that mode (see MatchHooks.ModeHooks):
+        // whether a new game hosted from the menu on a map with several starting locations gives each player one,
+        // and whether it starts with every player placing their own start. Either can be left out
+        public static void AddMultiplayerMode(string modeId, Func<bool> mapStartsPerPlayer = null, Func<bool> newGamePlacesStart = null) =>
+            MatchHooks.ByMode[modeId] = new MatchHooks.ModeHooks { MapStartsPerPlayer = mapStartsPerPlayer, NewGamePlacesStart = newGamePlacesStart };
+
         // Where the map's starting locations were, in player order, when a new
         // game starting with no starting building loads on a map with several:
         // called on the machine creating the game, before it's first saved
         public static void AddMapStarts(Action<Placement[]> hook) => MatchHooks.MapStarts += hook;
 
-        // A choice for new multiplayer games, like a game mode: a column of buttons
-        // when hosting a new game or finding a match, by loc keys, which a
-        // match needs both players to have picked the same
+        // Deprecated, does nothing: a choice for new multiplayer games is a game mode (AddGameMode)
+        // or a game setting (GameModes.GameSettings)
         public static void AddMatchOption(string id, string labelLocKey, string[] values, string[] valueLocKeys, string defaultValue) =>
-            MatchOptions.Add(new MatchOption { Id = id, LabelLocKey = labelLocKey, Values = values, ValueLocKeys = valueLocKeys, Default = defaultValue });
+            Plugin.LogWarning($"AddMatchOption({id}) does nothing any more: add a game mode (AddGameMode) or a game setting (the Game Modes mod's GameSettings) instead");
 
         // A game mode for new multiplayer games: BeaverBuddies shows one Game
         // mode list with every mod's modes, and a match only pairs players
         // who picked the same. The first mode added is the default
-        public static void AddGameMode(string id, string labelLocKey) => MatchOptions.AddGameMode(id, labelLocKey);
+        public static void AddGameMode(string id, string labelLocKey) => GameModes.Modes.Add(id, labelLocKey);
 
         // A line about one of your game modes, shown under the modes when it's picked
-        public static void DescribeGameMode(string id, string descriptionLocKey) => MatchOptions.DescribeGameMode(id, descriptionLocKey);
+        public static void DescribeGameMode(string id, string descriptionLocKey) => GameModes.Modes.Describe(id, descriptionLocKey);
+
+        // The game mode's line in a game played alone, where it isn't the one it has with others
 
         // The game mode picked for the new game starting on this machine, while
         // it loads, or null for a game started without one
-        public static string GetGameMode() => MatchOptions.GameValue(MatchOptions.GameModeId);
+        // (null for a game played alone, as before games alone had a mode: mods built then read it as "a game with others")
+        public static string GetGameMode() => GameModes.Modes.GameAlone ? null : GameModes.Modes.Game;
 
-        // The game mode picked on the New Game screens right now (what a new game with others would be)
-        public static string GetPickedGameMode() => MatchOptions.ValueOf(MatchOptions.GameModeId);
+        // Whether the new game starting on this machine was started alone (in a mode or not)
+
+        // The game mode picked on the New Game screens right now, for the game they're making
+        public static string GetPickedGameMode() => GameModes.Modes.PickedMode(alone: false);
 
         // The pick for the new game starting on this machine, while it loads,
         // or null for a game started without one (alone, or a saved game)
         public static string GetMatchOption(string id) => MatchOptions.GameValue(id);
 
-        // A rule for new games, saved with them: a checkbox at the end of the
-        // New Game screens' Customize list, under a heading per mod. Modes
-        // are the game modes it shows for ("bb.alone" for a game without
-        // others, "bb.others" for any game with them), or null for every
-        // game. Each player's pick is remembered
-        public static void AddGameToggle(string id, string groupLocKey, string labelLocKey, string tooltipLocKey, bool defaultOn, string[] modes) =>
-            GameSettings.Add(new GameSetting
-            {
-                Id = id, GroupLocKey = groupLocKey, LabelLocKey = labelLocKey, TooltipLocKey = tooltipLocKey,
-                Default = defaultOn ? GameSetting.On : GameSetting.Off, Modes = modes,
-            });
+        // ---- Game settings: kept for mods built before the Game Modes mod, which they now go through. A
+        // mod made since defines its settings there (GameModes.GameSettings.Group) and reads them typed.
 
-        // The same for one of a few values, a checkbox each under the setting's name
+        // The kinds of game a mod's list of modes names: "bb.alone" for a game without others, "bb.others"
+        // for any game with them, "bb.alone:<mode>" for a game alone in a mode, or a mode's id with others
+        private static Func<GameModes.GameKind, bool> Applies(string[] modes) => modes == null ? null : kind =>
+            modes.Any(m => m == "bb.alone" ? kind.Alone
+                : m == "bb.others" ? kind.WithOthers
+                : kind.Alone ? m == "bb.alone:" + kind.Mode : m == kind.Mode);
+
+        private static GameModes.SettingGroup Group(string groupLocKey, string[] modes) => GameModes.GameSettings.Group(groupLocKey).When(Applies(modes));
+
+        public static void AddGameToggle(string id, string groupLocKey, string labelLocKey, string tooltipLocKey, bool defaultOn, string[] modes) =>
+            Group(groupLocKey, modes).Toggle(id, labelLocKey, defaultOn).Tip(tooltipLocKey);
+
         public static void AddGameChoice(string id, string groupLocKey, string labelLocKey, string tooltipLocKey,
             string[] values, string[] valueLocKeys, string defaultValue, string[] modes) =>
-            GameSettings.Add(new GameSetting
-            {
-                Id = id, GroupLocKey = groupLocKey, LabelLocKey = labelLocKey, TooltipLocKey = tooltipLocKey,
-                Values = values, ValueLocKeys = valueLocKeys, Default = defaultValue, Modes = modes,
-            });
+            Group(groupLocKey, modes).Choice(id, labelLocKey, defaultValue, values).ValueKeys(valueLocKeys).Tip(tooltipLocKey);
 
-        // A whole number from min to max in steps of step, on a slider with its value beside it, shown by
-        // valueLocKey ("{0} %"), or at min by valueLocKey + ".Min" where the mod has that ("None"): saved as the number
         public static void AddGameSlider(string id, string groupLocKey, string labelLocKey, string tooltipLocKey,
             int min, int max, int step, int defaultValue, string valueLocKey, string[] modes) =>
-            GameSettings.Add(new GameSetting
-            {
-                Id = id, GroupLocKey = groupLocKey, LabelLocKey = labelLocKey, TooltipLocKey = tooltipLocKey,
-                Min = min, Max = max, Step = Math.Max(1, step), Default = defaultValue.ToString(System.Globalization.CultureInfo.InvariantCulture),
-                ValueLocKey = valueLocKey, Modes = modes,
-            });
+            Group(groupLocKey, modes).Slider(id, labelLocKey, min, max, step, defaultValue).ValueText(valueLocKey).Tip(tooltipLocKey);
 
-        // A list of up to maxItems picks of a few values, each its own row (itemLabelLocKey takes its number),
-        // with buttons to add one or take one off: saved as the picks joined by commas, "" for none
         public static void AddGameList(string id, string groupLocKey, string labelLocKey, string tooltipLocKey, string itemLabelLocKey,
             string[] values, string[] valueLocKeys, string itemDefault, int maxItems, string[] modes) =>
-            GameSettings.Add(new GameSetting
-            {
-                Id = id, GroupLocKey = groupLocKey, LabelLocKey = labelLocKey, TooltipLocKey = tooltipLocKey,
-                Values = values, ValueLocKeys = valueLocKeys, Default = "", Modes = modes,
-                MaxItems = maxItems, ItemLocKey = itemLabelLocKey, ItemDefault = itemDefault,
-            });
+            Group(groupLocKey, modes).List(id, labelLocKey, itemLabelLocKey, maxItems, itemDefault, values).Tip(tooltipLocKey);
 
-        // What each of the game's difficulties sets a setting to when the player picks it (the value for
-        // Easy, Normal and Hard), for a setting added before: they then change it as they like
-        public static void SetGamePresets(string id, string easy, string normal, string hard)
-        {
-            GameSetting setting = GameSettings.All.FirstOrDefault(s => s.Id == id);
-            if (setting != null) setting.Presets = new Dictionary<string, string> { ["Easy"] = easy, ["Normal"] = normal, ["Hard"] = hard };
-        }
+        public static void SetGamePresets(string id, string easy, string normal, string hard) =>
+            GameModes.GameSettings.Find(id)?.SetPresetTexts(easy, normal, hard);
 
-        // A line of small print right under a setting's name on the New Game screens ("still in beta"),
-        // for a setting added before; null takes it away
-        public static void SetGameSettingNote(string id, string noteLocKey)
-        {
-            GameSetting setting = GameSettings.All.FirstOrDefault(s => s.Id == id);
-            if (setting != null) setting.NoteLocKey = noteLocKey;
-        }
+        public static void SetGameSettingNote(string id, string noteLocKey) => GameModes.GameSettings.Find(id)?.SetNote(noteLocKey);
 
-        // A game setting's pick for the new game loading on this machine ("on"
-        // or "off" for a toggle), or null for a saved game, which has its own
-        public static string GetGameSetting(string id) => GameSettings.GameValue(id);
+        // A game setting's pick for the new game loading on this machine, as text ("on" or "off" for a
+        // toggle), or null for a saved game, which has its own
+        public static string GetGameSetting(string id) => GameModes.GameSettings.GameText(id);
     }
 }

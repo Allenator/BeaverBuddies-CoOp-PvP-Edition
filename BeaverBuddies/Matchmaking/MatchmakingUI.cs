@@ -213,7 +213,7 @@ namespace BeaverBuddies.Matchmaking
             _box.Close();
             _box = null;
             MatchOptions.StartGameWith(MatchmakingSession.Mine?.options);
-            NewGame.GameSettings.StartGameWith(MatchmakingSession.ModePicks?.settings);
+            GameModes.GameSettings.StartWith(MatchmakingSession.ModePicks?.settings);
             HostLobby.NextMapName = MatchmakingSession.MapPicks?.mapTitle;
             _gameSceneLoader.StartNewGame(configuration);
         }
@@ -274,7 +274,7 @@ namespace BeaverBuddies.Matchmaking
         private string Mode(MatchPicks picks) => _loc.T(picks.modeLocKey ?? "NewGameConfigurationPanel.Custom");
 
         // The game settings that aren't their defaults, for the match's mode
-        private string GameSettingsText(MatchPicks picks) => NewGame.GameSettings.Summary(_loc, picks.settings, NewGame.GameRecord.ModeOf(picks.options));
+        private string GameSettingsText(MatchPicks picks) => GameModes.GameSettings.Summary(_loc, picks.settings, GameModes.GameKind.Of(picks.options));
 
         private string Faction(string id)
         {

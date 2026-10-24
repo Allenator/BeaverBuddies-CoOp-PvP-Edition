@@ -26,9 +26,10 @@ namespace BeaverBuddies.IO
         private bool _saidHello;
         private ISocketStream _socket;
         // Since when the host has said nothing, though it says it's there every 2 s (Players.PlayerPresence): a host
-        // whose end dropped this player, and this end didn't notice, leaves it waiting in silence
+        // whose end dropped this player, and this end didn't notice, leaves it waiting in silence. Logged with this
+        // end's state when the guest is told (Connect.HostSilence), which says nothing of it
         private DateTime? _silentSince;
-        private const double SilentSeconds = 10;
+        private const double SilentSeconds = Connect.HostSilence.SilentSeconds;
 
         protected override void Updated()
         {
@@ -39,7 +40,7 @@ namespace BeaverBuddies.IO
         private void CheckHostHeard()
         {
             if (!_mapReceived || HostLeft || NetBase == null) return;
-            DateTime heard = NetBase.LastReceived;
+            DateTime heard = DateTime.UtcNow.AddSeconds(-NetBase.SecondsSinceHeard);
             double silent = (DateTime.UtcNow - heard).TotalSeconds;
             if (_silentSince == null && silent > SilentSeconds)
             {
@@ -91,6 +92,9 @@ namespace BeaverBuddies.IO
                 ? "Turned away by the host, which didn't hear this player's build in time"
                 : $"Turned away by the host, which plays {RefusedByHost}");
         }
+
+        /** Seconds since anything last came from the host. */
+        public double SecondsSinceHostHeard => NetBase?.SecondsSinceHeard ?? 0;
 
         private ClientEventIO(ISocketStream socket, MapReceived mapReceivedCallback,
             Action<string> onError)

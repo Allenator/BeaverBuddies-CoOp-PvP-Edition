@@ -203,14 +203,20 @@ internal static class LoadEventRouter
     private static Exception? EndDispatch(Exception? __exception, DispatchContext __state)
     {
         _dispatch = __state;
-        // Returning the exception rethrows it from this wrapper, which drops the handler's frames from the trace
-        if (__exception != null && __exception.Data["bb.logged"] == null)
+        if (__exception == null) return null;
+        if (__exception.Data["bb.logged"] == null)
         {
             __exception.Data["bb.logged"] = true;
             Debug.LogWarning("[BeaverBuddies Perf] Event handler threw: " + __exception);
         }
+        // Returning the exception rethrows it from this wrapper, which would drop the handler's frames from
+        // the trace players report: Mono keeps what's preserved here ahead of the new frames
+        try { PreserveStackTrace?.Invoke(__exception, null); }
+        catch (Exception) { }
         return __exception;
     }
+
+    private static readonly MethodInfo? PreserveStackTrace = typeof(Exception).GetMethod("InternalPreserveStackTrace", All);
 
     private static void Invalidate(SubscriptionRegistry __instance)
     {
