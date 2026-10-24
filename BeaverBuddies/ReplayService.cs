@@ -128,10 +128,17 @@ namespace BeaverBuddies
         private const float ClientCushion = 0.1f, Slowest = 0.85f, Fastest = 1.25f;
         // How much faster per second of margin off the cushion
         private const float PaceGain = 2.5f;
-        // The tick whose events arrived first while the one before was still
-        // playing, and when they did (realtime)
-        private int _nextTickSeen = -1;
-        private float _nextTickArrived;
+        // When each of the host's ticks that hasn't played yet was first seen
+        // here (realtime), and the last one seen. The margin is how long the
+        // tick starting had been here. Looking only for the next tick, as it
+        // did, it saw one that came while the tick before it still waited as
+        // coming when that one began, so the margin was never more than a
+        // tick: above speed 6 a tick is shorter than the cushion, and the
+        // client, its margin ever short, slowed itself until the coarser rule
+        // held it (more ticks behind than the speed), 0.6 s behind the host
+        // at speed 7. Every one of its actions waited that long
+        private readonly Queue<(int tick, float at)> _arrivals = new();
+        private int _lastTickSeen = -1;
         // The client's margin at the last few tick starts (averaged), and
         // when it began waiting for a tick that hadn't come
         private float _margin = ClientCushion;
@@ -505,6 +512,7 @@ namespace BeaverBuddies
             _hostSilence?.Close();
             EventIO.Reset();
             SpeedChangePatcher.SetSpeedSilentlyNow(_speedManager, 0);
+            SaveBeforeLeaving();
             GetSingleton<DialogBoxShower>().Create()
                 .SetLocalizedMessage("BeaverBuddies.Client.HostLeft")
                 .SetConfirmButton(() => GetSingleton<Timberborn.MainMenuSceneLoading.MainMenuSceneLoader>().OpenMainMenu())
@@ -512,7 +520,6 @@ namespace BeaverBuddies
         }
 
         // The host turned this player away once it was in, for another build or for never saying it: it ends here too, saying why
-            SaveBeforeLeaving();
         private void ShowRefused(ClientEventIO refused)
         {
             Plugin.Log("Turned away by the host: back to the main menu");
@@ -545,17 +552,10 @@ namespace BeaverBuddies
         {
             EventIO.Reset();
             SpeedChangePatcher.SetSpeedSilentlyNow(_speedManager, 0);
+            SaveBeforeLeaving();
             GetSingleton<Timberborn.MainMenuSceneLoading.MainMenuSceneLoader>().OpenMainMenu();
         }
 
-        /**
-         * This machine's state differs from the host's: it tells the host, which reloads everyone from its save.
-         * Why, when known, goes in the report and in the host's log.
-         */
-            SaveBeforeLeaving();
-        public void HandleDesync(string why = null)
-        {
-            if (IsDesynced) return;
         // The save the game makes on leaving for the main menu, which these ways out skip: this player's copy
         // of the game as far as it got, as when they leave it themselves. Made after the game's IO is gone, it
         // still keeps as many autosaves as the settings say, which the autosaver took as the game began (see Autosaves)
@@ -566,6 +566,13 @@ namespace BeaverBuddies
             catch (Exception e) { Plugin.LogError($"Couldn't save before leaving: {e.Message}"); }
         }
 
+        /**
+         * This machine's state differs from the host's: it tells the host, which reloads everyone from its save.
+         * Why, when known, goes in the report and in the host's log.
+         */
+        public void HandleDesync(string why = null)
+        {
+            if (IsDesynced) return;
             // The test harness can keep a desynced game as it is, to look at what differs
             if (DevTools.TestHarness.Active && DevTools.TestHarness.NoResync)
             {
@@ -826,6 +833,7 @@ namespace BeaverBuddies
             {
                 targetSpeed = Math.Max(targetSpeed, Math.Min(ticksBehind, 10));
             }
+            if (io is ClientEventIO) NoteArrivals();
             BucketBoost = io is ClientEventIO && targetSpeed > 0 && ticksBehind <= targetSpeed ? ClientPace() : 1;
 
             if (_speedManager.CurrentSpeed != targetSpeed)
@@ -835,15 +843,19 @@ namespace BeaverBuddies
             }
         }
 
-        private float ClientPace()
+        private float ClientPace() => Math.Max(Slowest, Math.Min(Fastest, 1 + (_margin - ClientCushion) * PaceGain));
+
+        // The host's ticks come in order, each with at least its heartbeat: the ones here that weren't before
+        private void NoteArrivals()
         {
-            int next = ticksSinceLoad + 1;
-            if (_nextTickSeen != next && io.HasEventsForTick(next))
+            float now = UnityEngine.Time.realtimeSinceStartup;
+            int tick = Math.Max(_lastTickSeen, ticksSinceLoad);
+            while (io.HasEventsForTick(tick + 1))
             {
-                _nextTickSeen = next;
-                _nextTickArrived = UnityEngine.Time.realtimeSinceStartup;
+                tick++;
+                _arrivals.Enqueue((tick, now));
             }
-            return Math.Max(Slowest, Math.Min(Fastest, 1 + (_margin - ClientCushion) * PaceGain));
+            _lastTickSeen = tick;
         }
 
         // A client at the start of a tick, with the host's tick for it or
@@ -856,8 +868,18 @@ namespace BeaverBuddies
                 if (_waitingSince < 0) _waitingSince = now;
                 return;
             }
-            float margin = _waitingSince >= 0 ? _waitingSince - now
-                : _nextTickSeen == ticksSinceLoad + 1 ? now - _nextTickArrived : 0;
+            float margin = 0;
+            if (_waitingSince >= 0)
+            {
+                margin = _waitingSince - now;
+            }
+            else if (io is ClientEventIO)
+            {
+                NoteArrivals();
+                int starting = ticksSinceLoad + 1;
+                while (_arrivals.Count > 0 && _arrivals.Peek().tick < starting) _arrivals.Dequeue();
+                if (_arrivals.Count > 0 && _arrivals.Peek().tick == starting) margin = now - _arrivals.Peek().at;
+            }
             _waitingSince = -1;
             _margin += (margin - _margin) * 0.25f;
         }
