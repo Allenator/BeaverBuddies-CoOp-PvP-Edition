@@ -1,3 +1,8 @@
+v1.1.0-1.9.2-allenator.4
+1.1.0-1.9.2-allenator.4
+* Fixed holes in the ground, open to the sky, where an Agora or an Underground Pile had been placed (on Iron Teeth: a Badwater Pressurizer, Dance Pit or Motivatorium): under its construction site, and after it was canceled or demolished, until the game was loaded again.
+* A water pump's pipe is no longer drawn short where a building had been placed in its way.
+
 v1.1.0-1.9.2-allenator.3
 1.1.0-1.9.2-allenator.3
 * Built on 1.1.0-1.9.2, below, which needs the Game Modes mod: install the Game Modes that comes with this build, not the Steam Workshop's.
