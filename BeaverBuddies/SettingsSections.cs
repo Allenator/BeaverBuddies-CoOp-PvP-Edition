@@ -82,6 +82,21 @@ namespace BeaverBuddies
         // "Run in background" says (see Connect.BackgroundPlay); off, the game's own setting applies
         public readonly ModSetting<bool> KeepPlayingInBackground = new(true, Described(nameof(KeepPlayingInBackground)));
 
+        // This machine's autosaves of a game hosted or joined (see Connect.Autosaves): how often, how many are kept, and
+        // none while it's paused; a game alone autosaves as the game does, every 10 minutes keeping 3
+        public static readonly string[] AutosaveMinuteValues = { "5", "10", "15", "20", "30" };
+        public static readonly string[] AutosavesKeptValues = { "3", "6", "12", "24", "48" };
+
+        public readonly LimitedStringModSetting AutosaveMinutes =
+            new(1, AutosaveMinuteValues.Select(m => new LimitedStringModSettingValue(m, "BeaverBuddies.Settings.AutosaveMinutes." + m)).ToArray(),
+                Described(nameof(AutosaveMinutes)));
+
+        public readonly LimitedStringModSetting AutosavesKept =
+            new(2, AutosavesKeptValues.Select(n => new LimitedStringModSettingValue(n, "BeaverBuddies.Settings.AutosavesKept." + n)).ToArray(),
+                Described(nameof(AutosavesKept)));
+
+        public readonly ModSetting<bool> SkipPausedAutosaves = new(true, Described(nameof(SkipPausedAutosaves)));
+
         // On, a player on another build (see Connect.BuildIdentity) can't join this player's game, nor
         // this player theirs, however they join; off, they're warned and play on, maybe out of sync
         public readonly ModSetting<bool> StrictBuildMatch = new(true, Described(nameof(StrictBuildMatch)));
@@ -105,6 +120,9 @@ namespace BeaverBuddies
         {
             Add(ShowPlayerCursors, nameof(ShowPlayerCursors));
             Add(KeepPlayingInBackground, nameof(KeepPlayingInBackground));
+            Add(AutosaveMinutes, nameof(AutosaveMinutes));
+            Add(AutosavesKept, nameof(AutosavesKept));
+            Add(SkipPausedAutosaves, nameof(SkipPausedAutosaves));
             Add(StrictBuildMatch, nameof(StrictBuildMatch));
             Add(EnableSteamConnection, nameof(EnableSteamConnection));
             Add(ClientConnectionAddress, nameof(ClientConnectionAddress));

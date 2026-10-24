@@ -742,6 +742,17 @@ namespace BeaverBuddies.DevTools
                     });
                     break;
                 }
+                case "autosaver":
+                {
+                    // How this game autosaves: every so many minutes, keeping so many, and whether one due now waits;
+                    // and the player's settings, for a game hosted or joined (see Connect.Autosaves)
+                    var autosaver = Get<Timberborn.Autosaving.Autosaver>();
+                    var spec = autosaver._autosaverSpec;
+                    string every = spec.FrequencyInMinutes.ToString(CultureInfo.InvariantCulture);
+                    Plugin.Log($"[Test] autosaver: every {every} min, keeps {spec.AutosavesPerSettlement}, waits {(autosaver.IsNotBlocked() ? "no" : "yes")}; " +
+                        $"settings {Settings.AutosaveMinutes.ToString(CultureInfo.InvariantCulture)} min, {Settings.AutosavesKept}, skip paused {Settings.SkipPausedAutosaves}");
+                    break;
+                }
                 case "nudge":
                 {
                     // nudge: a beaver moved a hair on this copy alone, as a rounding difference could leave one, so this

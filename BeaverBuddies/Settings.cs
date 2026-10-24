@@ -1,4 +1,5 @@
 using ModSettings.Core;
+using System.Globalization;
 
 namespace BeaverBuddies
 {
@@ -55,6 +56,13 @@ namespace BeaverBuddies
                 ? strict != "0"
                 : Multiplayer?.StrictBuildMatch.Value ?? true;
         public static bool PlayInBackground => Multiplayer?.KeepPlayingInBackground.Value ?? true;
+
+        // A game hosted or joined: autosaved every so many minutes, keeping so many, and not while paused (see Connect.Autosaves)
+        public static float AutosaveMinutes =>
+            float.TryParse(Multiplayer?.AutosaveMinutes?.Value, NumberStyles.Float, CultureInfo.InvariantCulture, out float minutes) && minutes > 0 ? minutes : 10;
+        public static int AutosavesKept =>
+            int.TryParse(Multiplayer?.AutosavesKept?.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int kept) && kept > 0 ? kept : 12;
+        public static bool SkipPausedAutosaves => Multiplayer?.SkipPausedAutosaves.Value ?? true;
         public static bool ShouldShowFirstTimerMessage => You?.ShowFirstTimerMessage.Value ?? true;
         // Saved with each game, picked when it's created (see DevTools.DevToolsRule)
         public static bool AllowDevTools => DevTools.DevToolsRule.Allowed;
