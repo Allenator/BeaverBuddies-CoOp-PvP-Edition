@@ -48,7 +48,7 @@ namespace BeaverBuddies.Connect
         {
             ILoc _loc = _inputBoxShower._loc;
             var builder = _inputBoxShower.Create()
-                .SetLocalizedMessage(_loc.T("BeaverBuddies.JoinCoopGame.EnterIp"))
+                .SetLocalizedMessage("BeaverBuddies.JoinCoopGame.EnterIp")
                 .SetConfirmButton(ip =>
                 {
                     _settings.ClientConnectionAddress.SetValue(ip);
