@@ -1,3 +1,9 @@
+v1.1.0-1.9.2-allenator.6
+1.1.0-1.9.2-allenator.6
+* Fixed a desync from dragging a throttling valve's outflow limit to Unlimited, or back from it.
+* Fixed a desync from changing a pump's flow rate.
+* In dev mode, a battery's charge and the Dev Power Generator's strength and rotation are the same for everyone.
+
 v1.1.0-1.9.2-allenator.5
 1.1.0-1.9.2-allenator.5
 * Fixed a desync from dragging the builders' priority tool over things that already had that priority. Setting a good's export threshold or import option, a district's defaults, or a floodgate's height or synchronization to what it already was no longer desyncs either.
