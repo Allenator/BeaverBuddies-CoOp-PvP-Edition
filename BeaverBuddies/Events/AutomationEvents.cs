@@ -173,6 +173,9 @@ namespace BeaverBuddies.Events
                 (typeof(FillValve), nameof(FillValve.SetAutomationTargetHeightAndSynchronize)),
                 (typeof(FillValve), nameof(FillValve.SetAutomationTargetHeightEnabledAndSynchronize)),
                 (typeof(FillValve), nameof(FillValve.ToggleSynchronization)),
+                // Its slider calls this before the limit, with false past the slider's end ("Unlimited"):
+                // played on the dragger's machine alone, the valve let water through there and not elsewhere
+                (typeof(ThrottlingValve), nameof(ThrottlingValve.SetOutflowLimitEnabledAndSynchronize)),
                 (typeof(ThrottlingValve), nameof(ThrottlingValve.SetOutflowLimitAndSynchronize)),
                 (typeof(ThrottlingValve), nameof(ThrottlingValve.SetReactionSpeedAndSynchronize)),
                 (typeof(ThrottlingValve), nameof(ThrottlingValve.SetAutomationOutflowLimitAndSynchronize)),
@@ -183,6 +186,8 @@ namespace BeaverBuddies.Events
                 (typeof(WaterSourceRegulator), nameof(WaterSourceRegulator.Automate)),
                 (typeof(WaterInputPipeCoordinates), nameof(WaterInputPipeCoordinates.SetDepthLimit)),
                 (typeof(WaterInputPipeCoordinates), nameof(WaterInputPipeCoordinates.DisableDepthLimit)),
+                // A pump's flow rate slider
+                (typeof(WaterMover), nameof(WaterMover.SetFlowRate)),
                 (typeof(Clutch), nameof(Clutch.SetMode)),
 
                 // A banner's or tail painter's image flipped: only its panel, Load and copying settings call it. Its

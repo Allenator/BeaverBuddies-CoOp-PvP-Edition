@@ -24,6 +24,10 @@ using Timberborn.ExplosionsUI;
 using Timberborn.Goods;
 using Timberborn.InventorySystem;
 using Timberborn.InventorySystemUI;
+using Timberborn.MechanicalSystem;
+using Timberborn.MechanicalSystemUI;
+using Timberborn.PowerGeneration;
+using Timberborn.PowerGenerationUI;
 using Timberborn.Reproduction;
 using Timberborn.Stockpiles;
 using Timberborn.StockpilesUI;
@@ -291,10 +295,15 @@ namespace BeaverBuddies.DevTools
         public const string DetonateCore = "DetonateCore";
         public const string DeleteCore = "DeleteCore";
         public const string FillStockpile = "FillStockpile";
+        public const string SetBatteryCharge = "SetBatteryCharge";
+        public const string SetGeneratorStrength = "SetGeneratorStrength";
+        public const string FlipGeneratorRotation = "FlipGeneratorRotation";
 
         public string entityID;
         public string action;
         public float delay;
+        // A slider's value, for the actions that set one
+        public float value;
 
         public override void Replay(IReplayContext context)
         {
@@ -367,6 +376,26 @@ namespace BeaverBuddies.DevTools
                         inventory.GiveProduced(new GoodAmount(good, inventory.UnreservedCapacity(good)));
                         break;
                     }
+                case SetBatteryCharge:
+                    {
+                        // Same as BatteryFragment.ChangeCharge
+                        var node = entity.GetComponent<MechanicalNode>();
+                        if (!(bool)node || !node.IsBattery) break;
+                        node.Battery.ModifyCharge(float.MinValue);
+                        node.Battery.ModifyCharge(value * (float)node.NominalBatteryCapacity);
+                        break;
+                    }
+                case SetGeneratorStrength:
+                    {
+                        // Same as AdjustableStrengthPowerGeneratorFragment.ChangeValue, from the slider's whole number
+                        var generator = entity.GetComponent<AdjustableStrengthPowerGenerator>();
+                        if (!(bool)generator) break;
+                        generator.GeneratorStrength = value / (float)generator.MaxValue;
+                        break;
+                    }
+                case FlipGeneratorRotation:
+                    entity.GetComponent<AdjustableStrengthPowerGenerator>()?.FlipRotation();
+                    break;
                 default:
                     Plugin.LogWarning($"Unknown dev entity action: {action}");
                     break;
@@ -378,13 +407,13 @@ namespace BeaverBuddies.DevTools
             return $"Dev: {action} on {entityID}";
         }
 
-        public static bool DoPrefix(BaseComponent component, string action, float delay = 0)
+        public static bool DoPrefix(BaseComponent component, string action, float delay = 0, float value = 0)
         {
             return DevToolsPolicy.DoPrefix(() =>
             {
                 string entityID = ReplayEvent.GetEntityID(component);
                 if (entityID == null) return null;
-                return new DevEntityActionEvent() { entityID = entityID, action = action, delay = delay };
+                return new DevEntityActionEvent() { entityID = entityID, action = action, delay = delay, value = value };
             });
         }
     }
@@ -457,6 +486,37 @@ namespace BeaverBuddies.DevTools
         static bool Prefix(StockpileInventoryDebugFragment __instance)
         {
             return DevEntityActionEvent.DoPrefix(__instance._stockpile, DevEntityActionEvent.FillStockpile);
+        }
+    }
+
+    // A battery's charge slider, shown in dev mode
+    [HarmonyPatch(typeof(BatteryFragment), nameof(BatteryFragment.ChangeCharge))]
+    class BatteryFragmentChangeChargePatcher
+    {
+        static bool Prefix(BatteryFragment __instance, UnityEngine.UIElements.ChangeEvent<float> changeEvent)
+        {
+            return DevEntityActionEvent.DoPrefix(
+                __instance._mechanicalNode, DevEntityActionEvent.SetBatteryCharge, value: changeEvent.newValue);
+        }
+    }
+
+    // The Dev Power Generator's strength slider and its flip button
+    [HarmonyPatch(typeof(AdjustableStrengthPowerGeneratorFragment), nameof(AdjustableStrengthPowerGeneratorFragment.ChangeValue))]
+    class AdjustableStrengthPowerGeneratorFragmentChangeValuePatcher
+    {
+        static bool Prefix(AdjustableStrengthPowerGeneratorFragment __instance, int newValue)
+        {
+            return DevEntityActionEvent.DoPrefix(
+                __instance._generator, DevEntityActionEvent.SetGeneratorStrength, value: newValue);
+        }
+    }
+
+    [HarmonyPatch(typeof(AdjustableStrengthPowerGeneratorFragment), nameof(AdjustableStrengthPowerGeneratorFragment.FlipRotation))]
+    class AdjustableStrengthPowerGeneratorFragmentFlipRotationPatcher
+    {
+        static bool Prefix(AdjustableStrengthPowerGeneratorFragment __instance)
+        {
+            return DevEntityActionEvent.DoPrefix(__instance._generator, DevEntityActionEvent.FlipGeneratorRotation);
         }
     }
 }
