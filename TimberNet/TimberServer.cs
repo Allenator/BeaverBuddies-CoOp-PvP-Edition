@@ -321,6 +321,8 @@ namespace TimberNet
 
         private async Task SendMap(ISocketStream client)
         { 
+            // Gone already: asking for the map would have the host reload everyone for nobody
+            if (!client.Connected) throw new Exception("The player left before getting the map");
             Task<byte[]> task = mapProvider();
             Log("Waiting for map...");
             byte[] mapBytes = await task;
