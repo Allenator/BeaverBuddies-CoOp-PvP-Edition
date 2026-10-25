@@ -75,6 +75,9 @@ namespace BeaverBuddies.Modding
 
         public static float SeaLevel => Bind<Func<float>>("SeaLevel")?.Invoke() ?? 0;
 
+        // How high the water stands over the ground the sea takes (ground up to two layers is seabed), in tiles
+        public static float SeaSurface => Bind<Func<float>>("SeaSurface")?.Invoke() ?? 0;
+
         // Whether the map is drawn differently from how the game has it
         public static bool IsDrawnApart => Bind<Func<bool>>("IsDrawnApart")?.Invoke() ?? false;
 
