@@ -349,6 +349,23 @@ namespace BeaverBuddies
         {
             Plugin.Log($"Setting next random state: {state.ToString("X8")}");
             nextSeedOnLoad = state;
+            lastStartState = state;
+        }
+
+        private static int lastStartState;
+        private static bool reseedAtFirstEvent;
+
+        // A guest waiting in the host's lobby: the host seeds when it starts, however long
+        // that is after this load, and whatever random the game used up while waiting is
+        // not the same here. The first events to play are the host's, from its start
+        public static void ReseedAtFirstEvents() => reseedAtFirstEvent = true;
+
+        public static void ReseedIfWaitingForStart()
+        {
+            if (!reseedAtFirstEvent) return;
+            reseedAtFirstEvent = false;
+            Plugin.Log($"The host started: setting the random state to {lastStartState:X8}");
+            UnityEngine.Random.InitState(lastStartState);
         }
     }
 
