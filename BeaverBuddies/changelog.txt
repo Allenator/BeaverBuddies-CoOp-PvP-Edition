@@ -1,3 +1,8 @@
+v1.1.0-1.9.3
+1.1.0-1.9.3
+* Fixed a guest desyncing right after joining when they waited in the lobby for a while.
+* Fixed the host reloading the game for everyone when a player left before getting the map.
+
 v1.1.0-1.9.2
 1.1.0-1.9.2
 * Fixed a crash when joining a game whose host is still in its lobby.
