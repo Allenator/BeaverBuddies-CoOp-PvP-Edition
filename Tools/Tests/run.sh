@@ -118,7 +118,7 @@ mod_enable_all
 # it builds BeaverBuddies, so a run never plays an older build than the code it's testing
 if [ -z "${BB_BUILD:-}" ]; then
     export BB_BUILD_SOURCES="$ROOT/BeaverBuddies:$ROOT/TimberNet"
-    export BB_BUILD="(cd '$ROOT/BeaverBuddies' && dotnet build -c Release -nologo -v q 2>&1 | tail -3)"
+    export BB_BUILD="(cd '$ROOT/BeaverBuddies' && dotnet build -c Release -nologo -v q -p:DocumentsPath='$BB_HOME/Documents/' 2>&1 | tail -3)"
 fi
 # The build is skipped when nothing it's made from changed since this checkout's
 # last one, and nothing else has installed into the Mods folder since (another
@@ -134,6 +134,8 @@ build_current() {
     done
     [ -z "$(find "$(bb_mods_dir)" -maxdepth 3 -name '*.dll' -newer "$stamp" -print -quit)" ]
 }
+# The run's home, which the build installs into
+bb_home_prepare
 # Before building: the build reinstalls the mods under a game that may be loading them
 if player_game_running; then
     echo "Timberborn is running: close it first, the tests need the game to themselves."

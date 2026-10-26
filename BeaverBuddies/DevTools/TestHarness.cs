@@ -991,7 +991,10 @@ namespace BeaverBuddies.DevTools
                     break;
                 }
                 case "speed":
-                    Record(new SpeedSetEvent() { speed = float.Parse(a[1], CultureInfo.InvariantCulture) });
+                    // A game alone (a scenario played on one copy) has no events to send: its own speed control
+                    if (SingletonManager.GetSingleton<ReplayService>() == null)
+                        Get<Timberborn.TimeSystem.SpeedManager>().ChangeSpeed(float.Parse(a[1], CultureInfo.InvariantCulture));
+                    else Record(new SpeedSetEvent() { speed = float.Parse(a[1], CultureInfo.InvariantCulture) });
                     break;
                 default:
                     throw new Exception("unknown command");
