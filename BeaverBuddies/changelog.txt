@@ -1,3 +1,7 @@
+v1.1.0-1.9.4
+1.1.0-1.9.4
+* Other players' cursors and pings show in the right place on maps whose islands are drawn apart.
+
 v1.1.0-1.9.3
 1.1.0-1.9.3
 * Fixed a guest desyncing right after joining when they waited in the lobby for a while.
