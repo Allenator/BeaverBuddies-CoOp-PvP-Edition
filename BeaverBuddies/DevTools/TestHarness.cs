@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Timberborn.BlockSystem;
 using Timberborn.Buildings;
 using Timberborn.Coordinates;
@@ -43,6 +44,12 @@ namespace BeaverBuddies.DevTools
      * "speedsolo n" sets the speed, "look x y z [zoom]" points the camera there,
      * "send x y z tx ty tz" orders the troops of the building at x y z to the
      * tile tx ty tz (in a multiplayer game).
+     * "until [speed n] [ticks t] [te-probe words :: regex]" sets the game
+     * going at that speed, asks Timber Empires' probe every frame and pauses
+     * the game as soon as its answer matches (logging "until matched:
+     * answer"), or t ticks on ("until timed out: last answer" when there's a
+     * probe that never matched); "until off" drops the watch (logging "until
+     * stopped: last answer").
      * And anywhere, "dismiss" presses OK on the dialogs showing.
      * Does nothing unless BB_INSTANCE is set.
      */
@@ -77,8 +84,10 @@ namespace BeaverBuddies.DevTools
 
         public void UpdateSingleton()
         {
-            if (!Active || Time.unscaledTime < _nextPoll) return;
-            _nextPoll = Time.unscaledTime + 0.5f;
+            if (!Active) return;
+            if (_untilProbe != null || _untilTick >= 0) CheckUntil();
+            if (Time.unscaledTime < _nextPoll) return;
+            _nextPoll = Time.unscaledTime + 0.1f;
             if (!File.Exists(Flag)) return;
             string[] lines = File.ReadAllLines(Flag);
             File.Delete(Flag);
@@ -99,6 +108,82 @@ namespace BeaverBuddies.DevTools
         }
 
         private static int I(string s) => int.Parse(s, CultureInfo.InvariantCulture);
+
+        // The watch "until" set: a probe and what its answer should match, or the tick to pause at
+        private string[] _untilProbe;
+        private Regex _untilMatch;
+        private string _untilLast = "";
+        private int _untilTick = -1;
+
+        private void SetUntil(string[] a)
+        {
+            _untilProbe = null;
+            _untilTick = -1;
+            if (a.Length > 1 && a[1] == "off")
+            {
+                Plugin.Log($"[Test] until stopped: {_untilLast}");
+                return;
+            }
+            _untilLast = "";
+            int from = 1;
+            float? speed = null;
+            if (a.Length > from + 1 && a[from] == "speed")
+            {
+                speed = float.Parse(a[from + 1], CultureInfo.InvariantCulture);
+                from += 2;
+            }
+            if (a.Length > from + 1 && a[from] == "ticks")
+            {
+                _untilTick = Replay.TicksSinceLoad + I(a[from + 1]);
+                from += 2;
+            }
+            if (from < a.Length)
+            {
+                int split = Array.IndexOf(a, "::");
+                if (split <= from || split == a.Length - 1) throw new Exception("until [speed n] [ticks t] [te-probe words :: regex]");
+                _untilMatch = new Regex(string.Join(" ", a.Skip(split + 1)));
+                _untilProbe = a.Skip(from).Take(split - from).ToArray();
+            }
+            // Set going here, after the watch, so a pause it makes at once comes after
+            if (speed != null) Record(new SpeedSetEvent() { speed = speed.Value });
+        }
+
+        // Every frame while a watch is set: paused on every machine once it's met, or its ticks are up
+        private void CheckUntil()
+        {
+            string result = null;
+            if (_untilProbe != null)
+            {
+                try
+                {
+                    _untilLast = Probe(_untilProbe);
+                }
+                catch (Exception e)
+                {
+                    _untilLast = $"failed: {(e.InnerException ?? e).Message}";
+                }
+                if (_untilMatch.IsMatch(_untilLast)) result = "matched";
+            }
+            if (result == null && _untilTick >= 0 && Replay.TicksSinceLoad >= _untilTick)
+            {
+                // Only ticks to wait for, they're what was wanted
+                if (_untilProbe == null) _untilLast = $"tick {Replay.TicksSinceLoad}";
+                result = _untilProbe == null ? "matched" : "timed out";
+            }
+            if (result == null) return;
+            _untilProbe = null;
+            _untilTick = -1;
+            Record(new SpeedSetEvent() { speed = 0 });
+            Plugin.Log($"[Test] until {result}: {_untilLast}");
+        }
+
+        // What Timber Empires' harness probe (its DevTools/HarnessProbe) answers on this copy
+        private static string Probe(string[] args)
+        {
+            Type probe = AppDomain.CurrentDomain.GetAssemblies().Select(x => x.GetType("TimberEmpires.DevTools.HarnessProbe")).FirstOrDefault(t => t != null)
+                ?? throw new Exception("Timber Empires isn't loaded");
+            return Convert.ToString(probe.GetMethod("Run").Invoke(null, new object[] { args }), CultureInfo.InvariantCulture);
+        }
 
         private void Run(string[] a)
         {
@@ -577,13 +662,12 @@ namespace BeaverBuddies.DevTools
                     break;
                 }
                 case "te":
-                {
-                    // Asks Timber Empires' harness probe (its DevTools/HarnessProbe) on this copy only
-                    Type probe = AppDomain.CurrentDomain.GetAssemblies().Select(x => x.GetType("TimberEmpires.DevTools.HarnessProbe")).FirstOrDefault(t => t != null)
-                        ?? throw new Exception("Timber Empires isn't loaded");
-                    Plugin.Log($"[Test] te {string.Join(" ", a.Skip(1))}: {probe.GetMethod("Run").Invoke(null, new object[] { a.Skip(1).ToArray() })}");
+                    // Asks Timber Empires' harness probe on this copy only
+                    Plugin.Log($"[Test] te {string.Join(" ", a.Skip(1))}: {Probe(a.Skip(1).ToArray())}");
                     break;
-                }
+                case "until":
+                    SetUntil(a);
+                    break;
                 case "play":
                     // The speed buttons, as a player presses them (the speed command sends the event itself)
                     Get<Timberborn.TimeSystem.SpeedManager>().ChangeSpeed(float.Parse(a[1], CultureInfo.InvariantCulture));
