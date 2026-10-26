@@ -19,7 +19,7 @@ echo "  chaos seed $seed, level $level, ${BB_CHAOS_SECONDS:-150} s"
 # (the army's buildings and the siege machines among them, for the troops the chaos sends about)
 bp_zip="$HOME/Library/Application Support/Steam/steamapps/common/Timberborn/Timberborn.app/Contents/Resources/Data/StreamingAssets/Modding/Blueprints.zip"
 all=$( { unzip -Z1 "$bp_zip" 2>/dev/null | grep "^Buildings/.*\.Folktails\.blueprint\.json$"
-         find "$HOME/Documents/Timberborn/Mods" -path "*Buildings*" -name "*.Folktails.blueprint.json" 2>/dev/null; } \
+         find "$(bb_mods_dir)/" -path "*Buildings*" -name "*.Folktails.blueprint.json" 2>/dev/null; } \
        | sed 's|.*/||; s|\.blueprint\.json$||' | grep -v "^DistrictCenter\.\|^TemplateCollection\|Collection\|^ClaimFlag" | sort -u)
 prefabs="Path,Path,Path,Path,$(echo "$all" | tr '\n' ',' | sed 's/,$//')"
 echo "  $(echo "$all" | wc -l | tr -d ' ') building types"

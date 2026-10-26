@@ -12,6 +12,11 @@ BB_PREFS_SAVED="$BB_TEST_DIR/prefs.saved"
 BB_PREFS_DOMAIN=com.mechanistry.timberborn
 # The harness reads <this>-<instance> twice a second
 BB_CMD_PREFIX="$HOME/Library/Caches/BeaverBuddies-test"
+# The home the copies play in, a checkout's own (BB_HOME_NAME, its folder's name): everything in it links
+# to the player's home but Documents/Timberborn/Mods, so a run builds its mods there and plays them,
+# whatever the player's Mods folder holds, and another checkout's run never swaps them. The game finds
+# its user folder from HOME. BB_HOME=$HOME plays from the player's own Mods folder as before
+export BB_HOME=${BB_HOME:-"$HOME/Library/Caches/TimberbornHomes/${BB_HOME_NAME:-BeaverBuddies}"}
 # How fast the copies play while a scenario waits on the game: 30x, as fast as two copies keep up on one Mac
 BB_SPEED=${BB_SPEED:-30}
 mkdir -p "$BB_TEST_DIR/shots"
@@ -112,7 +117,36 @@ prefs_restore_overrides() {
 
 # ---- Mods: switching one off for a scenario, and always back on --------------
 
-bb_mods_dir() { (cd "$HOME/Documents/Timberborn/Mods" && pwd -P); }
+bb_mods_dir() { (cd "$BB_HOME/Documents/Timberborn/Mods" && pwd -P); }
+
+# The mods a run builds itself, kept in its home's Mods folder; the player's others are linked in
+BB_OWN_MODS="GameModes BeaverBuddies TimberEmpires"
+
+# _bb_link_all <from> <to> <names kept out...>: each entry of a folder linked into another, but those
+_bb_link_all() {
+    local from=$1 to=$2 e n
+    shift 2
+    mkdir -p "$to"
+    for e in "$from"/* "$from"/.[!.]*; do
+        [ -e "$e" ] || [ -L "$e" ] || continue
+        n=$(basename "$e")
+        case " $* " in *" $n "*) continue ;; esac
+        [ -e "$to/$n" ] || [ -L "$to/$n" ] || ln -s "$e" "$to/$n"
+    done
+    # Links to what's gone from the player's folder since
+    for e in "$to"/* "$to"/.[!.]*; do [ -L "$e" ] && [ ! -e "$e" ] && rm -f "$e"; done
+    return 0
+}
+
+# bb_home_prepare: the run's home laid out, a link for everything of the player's but its own Mods folder
+bb_home_prepare() {
+    [ "$BB_HOME" == "$HOME" ] && return 0
+    _bb_link_all "$HOME" "$BB_HOME" Documents
+    _bb_link_all "$HOME/Documents" "$BB_HOME/Documents" Timberborn
+    _bb_link_all "$HOME/Documents/Timberborn" "$BB_HOME/Documents/Timberborn" Mods
+    # shellcheck disable=SC2086
+    _bb_link_all "$HOME/Documents/Timberborn/Mods" "$BB_HOME/Documents/Timberborn/Mods" $BB_OWN_MODS
+}
 
 mod_disable() {
     local mods; mods=$(bb_mods_dir)
@@ -246,7 +280,8 @@ bb_open() {
     rm -f "$BB_CMD_PREFIX-$inst"
     bb_keep_log "$inst"
     prefs_windowed
-    open -g -n -a "$BB_GAME" --env SteamAppId=1062090 --env SteamGameId=1062090 --env BB_INSTANCE="$inst" \
+    bb_home_prepare
+    open -g -n -a "$BB_GAME" --env SteamAppId=1062090 --env SteamGameId=1062090 --env BB_INSTANCE="$inst" --env HOME="$BB_HOME" \
         ${BB_RTC_CODE:+--env BB_RTC_CODE="$BB_RTC_CODE"} \
         ${BB_HITCH_MS:+--env BB_HITCH_MS="$BB_HITCH_MS"} \
         ${BB_LEAK_ROOTS:+--env BB_LEAK_ROOTS="$BB_LEAK_ROOTS"} ${BB_LEAK_SIZES:+--env BB_LEAK_SIZES=1} ${BB_LEAK_WALK:+--env BB_LEAK_WALK=1} \
