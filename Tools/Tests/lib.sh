@@ -201,7 +201,7 @@ send() {
 # wait_for <instance> <regex> [seconds]: gives up early if that copy has closed
 wait_for() {
     local inst=$1 re=$2 t=${3:-60} i
-    for ((i = 0; i < t * 2; i++)); do
+    for ((i = 0; i < t * 10; i++)); do
         grep -aEq -- "$re" "$(bb_log "$inst")" 2>/dev/null && return 0
         [ $((i % 10)) == 9 ] && [ -z "$(bb_pid "$inst")" ] && return 1
         sleep 0.5
@@ -228,6 +228,31 @@ wait_for_watch() {
     return 1
 }
 
+# answer <instance> <command...>: runs a harness command and prints what the copy logged for it
+# (the lines from the command's own on, once it's been run)
+answer() {
+    local inst=$1 log from i
+    shift
+    log=$(bb_log "$inst")
+    from=$(($(wc -l < "$log") + 1))
+    send "$inst" "$*"
+    for ((i = 0; i < 100; i++)); do
+        tail -n +"$from" "$log" | grep -aqF "[Test] $*" && break
+        sleep 0.05
+    done
+    sleep 0.1
+    tail -n +"$from" "$log"
+}
+
+# standing <instance> <x y z> <name> [seconds]: waits for that copy to have a building of that name there
+standing() {
+    local i
+    for ((i = 0; i < ${4:-10} * 4; i++)); do
+        answer "$1" "check $2" | grep -aqF "[Test] $3" && return 0
+    done
+    return 1
+}
+
 # Which mods play, as preference flags ("ModEnabled.Local.BeaverBuddies.beaverbuddies=1", one per line) a runner
 # that builds mods hands over in BB_MOD_FLAGS: set before every launch, so a scenario that never says which
 # mods it plays still gets the local builds. The run puts the player's own back (BB_PREF_KEYS_EXTRA)
@@ -236,6 +261,87 @@ bb_mod_flags() {
     while IFS='=' read -r flag on; do
         [ -n "$flag" ] && defaults write "$BB_PREFS_DOMAIN" "$flag" -int "$on"
     done <<< "${BB_MOD_FLAGS:-}"
+}
+
+# ---- Running the game until something happens ------------------------------------
+
+# The last tick each copy logged, "<host tick> <client tick>"
+last_ticks() {
+    local inst t
+    for inst in host client; do
+        t=$(tail -c 300000 "$(bb_log $inst)" | grep -aEo "Tick [0-9]+ IO done" | tail -1)
+        [ -n "$t" ] || t=$(grep -aEo "Tick [0-9]+ IO done" "$(bb_log $inst)" | tail -1)
+        echo -n "${t//[!0-9]/} "
+    done
+}
+
+# pause_game: the game paused, once both copies stand still at the same tick
+pause_game() {
+    send host "speed 0"
+    settle
+}
+
+# settle: waits for both copies to stop at the same tick (after a pause)
+settle() {
+    local now last="" same=0 i
+    for ((i = 0; i < 150; i++)); do
+        now=$(last_ticks)
+        if [ "$now" == "$last" ] && echo "$now" | awk '{exit !(NF == 0 || $1 == $2)}'; then
+            same=$((same + 1)); [ $same -ge 3 ] && return 0
+        else
+            same=0
+        fi
+        last=$now
+        sleep 0.1
+    done
+    return 1
+}
+
+# run_until <instance> <probe key...> <regex> [seconds] [ticks]: the game played at $BB_SPEED until
+# what Timber Empires' probe says for "te <key>" on that copy matches the regex (or for that many
+# ticks at most), then paused on both copies. The copy asks every frame, so a passing moment is
+# caught; the regex is .NET's, on the probe's own answer (player IDs not shortened). UNTIL is the
+# answer that matched, or the last one when it didn't, and it returns 1
+run_until() { _until "$1" "${5:+ticks $5 }$2 :: $3" "${4:-60}"; }
+
+# run_ticks <n> [seconds]: the game played at $BB_SPEED for n ticks, then paused (an in-game hour is
+# about 32 ticks)
+run_ticks() { _until host "ticks $1" "${2:-$(($1 / 25 + 30))}"; }
+
+_until() {
+    local inst=$1 log n i re="\[Test\] until (matched|timed out|stopped):"
+    log=$(bb_log "$inst")
+    n=$(grep -acE "$re" "$log")
+    send "$inst" "until speed $BB_SPEED $2"
+    for ((i = 0; i < $3 * 10; i++)); do
+        [ "$(grep -acE "$re" "$log")" -gt "$n" ] && break
+        sleep 0.1
+    done
+    if [ "$(grep -acE "$re" "$log")" -le "$n" ]; then
+        send "$inst" "until off"
+        send host "speed 0"
+        for ((i = 0; i < 50; i++)); do [ "$(grep -acE "$re" "$log")" -gt "$n" ] && break; sleep 0.1; done
+    fi
+    settle
+    UNTIL=$(grep -aE "$re" "$log" | tail -1)
+    local result; result=$(echo "$UNTIL" | sed -E 's/.*\[Test\] until (matched|timed out|stopped):.*/\1/')
+    UNTIL=$(echo "$UNTIL" | sed -E "s/.*$re *//" | sed -E 's/[0-9a-f]{8}-[0-9a-f-]{27}/P/g')
+    [ "$result" == matched ]
+}
+
+# run_until_log <instance> <regex> <count> [seconds]: the game played at $BB_SPEED until that copy's
+# log has more than count lines matching the regex, then paused (a few ticks after: the log is read
+# from here)
+run_until_log() {
+    local log i ok=1
+    log=$(bb_log "$1")
+    send host "speed $BB_SPEED"
+    for ((i = 0; i < ${4:-60} * 10; i++)); do
+        [ "$(grep -acE -- "$2" "$log")" -gt "$3" ] && { ok=0; break; }
+        sleep 0.1
+    done
+    pause_game
+    return $ok
 }
 
 bb_launch() {
@@ -336,17 +442,17 @@ start_match() {
     # BB_JOIN_ADDRESS joins some other way than 127.0.0.1, rtc:CODE over WebRTC say
     send client "joinmatch $clientf ${BB_JOIN_ADDRESS:-}"
     local i
-    for ((i = 0; i < 180; i++)); do
+    for ((i = 0; i < 360; i++)); do
         grep -aq "Registering Co-op services" "$(bb_log host)" \
             && sed -n '/Registering Co-op/,$p' "$(bb_log client)" | grep -aq "Load time" \
             && sed -n '/Registering Co-op/,$p' "$(bb_log host)" | grep -aq "Load time" && break
         e=$(bb_load_error) && { echo "  load error: $e"; return 1; }
         sleep 1
     done
-    [ $i -lt 180 ] || return 1
+    [ $i -lt 360 ] || return 1
     sleep 3
     send host dismiss; send client dismiss
-    sleep 2
+    sleep 1
     return 0
 }
 
@@ -384,12 +490,14 @@ rematch() {
 
 # place_starts <host faction> <client faction>: each player's free District Center, where the map's open
 place_starts() {
-    send host "place DistrictCenter.$1 ${BB_HOST_START:-79 46 5}"
-    sleep 3
-    send client "place DistrictCenter.$2 ${BB_CLIENT_START:-89 68 5}"
-    sleep 6
+    local host_at=${BB_HOST_START:-79 46 5} client_at=${BB_CLIENT_START:-89 68 5}
+    send host "place DistrictCenter.$1 $host_at"
+    standing client "$host_at" "DistrictCenter.$1"
+    send client "place DistrictCenter.$2 $client_at"
+    standing host "$client_at" "DistrictCenter.$2"
+    standing client "$client_at" "DistrictCenter.$2"
     send host dismiss; send client dismiss
-    sleep 3
+    sleep 1
 }
 
 # ---- Asking the game ------------------------------------------------------------
@@ -399,10 +507,10 @@ place_starts() {
 probe() {
     local inst=$1 key=$2 log before after i
     log=$(bb_log "$inst")
-    before=$(grep -aFc "[Test] te $key:" "$log")
+    before=$(grep -aFc -e "[Test] te $key:" -e "[Test] te $key failed:" "$log")
     send "$inst" "te $key"
-    for i in $(seq 1 300); do
-        after=$(grep -aFc "[Test] te $key:" "$log")
+    for ((i = 0; i < 300; i++)); do
+        after=$(grep -aFc -e "[Test] te $key:" -e "[Test] te $key failed:" "$log")
         [ "$after" -gt "$before" ] && break
         sleep 0.05
     done
@@ -427,8 +535,11 @@ sync_state() {
 
 # shot <name> [instance]: a screenshot of that copy, kept with the report
 shot() {
-    send "${2:-host}" "snap $BB_TEST_DIR/shots/${BB_SCENARIO:-x}-$1.png"
-    sleep 2
+    local file="$BB_TEST_DIR/shots/${BB_SCENARIO:-x}-$1.png" i
+    rm -f "$file"
+    send "${2:-host}" "snap $file"
+    for ((i = 0; i < 30; i++)); do [ -s "$file" ] && break; sleep 0.1; done
+    sleep 0.2
 }
 
 # ---- What a scenario expects -----------------------------------------------------
