@@ -521,6 +521,11 @@ namespace BeaverBuddies.DevTools
                     if (a.Length > 4) camera.ZoomLevel = float.Parse(a[4], CultureInfo.InvariantCulture);
                     break;
                 }
+                case "layer":
+                    // The layer tool's level, or all levels shown with none given
+                    if (a.Length > 1) Get<Timberborn.LevelVisibilitySystem.ILevelVisibilityService>().SetMaxVisibleLevel(I(a[1]));
+                    else Get<Timberborn.LevelVisibilitySystem.ILevelVisibilityService>().ResetMaxVisibleLevel();
+                    break;
                 case "fakecursor":
                 {
                     // fakecursor id x y z [height]: another player's cursor held on that tile, height above the tile's floor
