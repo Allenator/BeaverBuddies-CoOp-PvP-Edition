@@ -312,4 +312,7 @@ BeaverBuddies.Trade.UntilDistrict.Tooltip,"Este lado compra até o distrito ter 
 BeaverBuddies.Trade.KeepWorkers.Tooltip,"Quantos os trabalhadores mantêm no entreposto para vender.",""
 BeaverBuddies.Trade.PostStock.Tooltip,"Quanto este lado tem para vender.",""
 BeaverBuddies.Trade.Multiply,"Multiplicar todos os valores",""
-BeaverBuddies.Trade.Multiply.Tooltip,"Multiplica o valor de cada mercadoria deste entreposto, para deixar tudo mais barato ou mais caro de uma vez.",""
+BeaverBuddies.Trade.Multiply.Tooltip,"Digite um número e pressione Enter para multiplicar os valores: 2 os dobra, 0.5 os reduz à metade.",""
+BeaverBuddies.Trade.Multiply.All,"Todas as mercadorias que troca",""
+BeaverBuddies.Trade.Multiply.Sell,"Só o que vende",""
+BeaverBuddies.Trade.Multiply.Buy,"Só o que compra",""

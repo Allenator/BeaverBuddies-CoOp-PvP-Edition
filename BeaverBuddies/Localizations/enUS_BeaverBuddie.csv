@@ -312,4 +312,7 @@ BeaverBuddies.Trade.UntilDistrict.Tooltip,"This side buys until its district has
 BeaverBuddies.Trade.KeepWorkers.Tooltip,"How many its workers keep at the post to sell.",""
 BeaverBuddies.Trade.PostStock.Tooltip,"How much of it this side has to sell.",""
 BeaverBuddies.Trade.Multiply,"Multiply all values",""
-BeaverBuddies.Trade.Multiply.Tooltip,"Multiplies the value of every good this post trades, to make it all cheaper or dearer at once.",""
+BeaverBuddies.Trade.Multiply.Tooltip,"Type a number and press Enter to multiply the values: 2 doubles them, 0.5 halves them.",""
+BeaverBuddies.Trade.Multiply.All,"Every good it trades",""
+BeaverBuddies.Trade.Multiply.Sell,"Only what it sells",""
+BeaverBuddies.Trade.Multiply.Buy,"Only what it buys",""

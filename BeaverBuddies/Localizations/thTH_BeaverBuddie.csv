@@ -312,4 +312,7 @@ BeaverBuddies.Trade.UntilDistrict.Tooltip,"ฝั่งนี้จะซื้�
 BeaverBuddies.Trade.KeepWorkers.Tooltip,"จำนวนที่คนงานเก็บไว้ที่ด่านเพื่อขาย",""
 BeaverBuddies.Trade.PostStock.Tooltip,"ฝั่งนี้มีไว้ขายเท่าไร",""
 BeaverBuddies.Trade.Multiply,"คูณมูลค่าทั้งหมด",""
-BeaverBuddies.Trade.Multiply.Tooltip,"คูณมูลค่าของสินค้าทุกอย่างที่ด่านนี้ซื้อขาย เพื่อให้ทุกอย่างถูกลงหรือแพงขึ้นในครั้งเดียว",""
+BeaverBuddies.Trade.Multiply.Tooltip,"พิมพ์ตัวเลขแล้วกด Enter เพื่อคูณมูลค่า: 2 คือเพิ่มเป็นสองเท่า 0.5 คือลดครึ่งหนึ่ง",""
+BeaverBuddies.Trade.Multiply.All,"สินค้าทุกอย่างที่ซื้อขาย",""
+BeaverBuddies.Trade.Multiply.Sell,"เฉพาะที่ขาย",""
+BeaverBuddies.Trade.Multiply.Buy,"เฉพาะที่ซื้อ",""

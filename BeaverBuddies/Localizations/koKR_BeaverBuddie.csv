@@ -312,4 +312,7 @@ BeaverBuddies.Trade.UntilDistrict.Tooltip,"구역에 이만큼 쌓일 때까지 
 BeaverBuddies.Trade.KeepWorkers.Tooltip,"일꾼들이 팔려고 교역소에 두는 양.",""
 BeaverBuddies.Trade.PostStock.Tooltip,"이쪽이 팔 수 있는 양.",""
 BeaverBuddies.Trade.Multiply,"모든 가치 곱하기",""
-BeaverBuddies.Trade.Multiply.Tooltip,"이 교역소가 거래하는 모든 물건의 가치를 곱해 한 번에 싸게 또는 비싸게 만듭니다.",""
+BeaverBuddies.Trade.Multiply.Tooltip,"숫자를 입력하고 Enter를 눌러 가치를 곱하세요: 2는 두 배, 0.5는 절반입니다.",""
+BeaverBuddies.Trade.Multiply.All,"거래하는 모든 물건",""
+BeaverBuddies.Trade.Multiply.Sell,"파는 것만",""
+BeaverBuddies.Trade.Multiply.Buy,"사는 것만",""

@@ -312,4 +312,7 @@ BeaverBuddies.Trade.UntilDistrict.Tooltip,"Ce côté achète jusqu'à ce que son
 BeaverBuddies.Trade.KeepWorkers.Tooltip,"Combien les ouvriers en gardent au comptoir pour le vendre.",""
 BeaverBuddies.Trade.PostStock.Tooltip,"Combien ce côté en a à vendre.",""
 BeaverBuddies.Trade.Multiply,"Multiplier toutes les valeurs",""
-BeaverBuddies.Trade.Multiply.Tooltip,"Multiplie la valeur de chaque marchandise de ce comptoir, pour tout rendre moins cher ou plus cher d'un coup.",""
+BeaverBuddies.Trade.Multiply.Tooltip,"Tapez un nombre et appuyez sur Entrée pour multiplier les valeurs : 2 les double, 0.5 les divise par deux.",""
+BeaverBuddies.Trade.Multiply.All,"Toutes les marchandises échangées",""
+BeaverBuddies.Trade.Multiply.Sell,"Seulement ce qu'il vend",""
+BeaverBuddies.Trade.Multiply.Buy,"Seulement ce qu'il achète",""

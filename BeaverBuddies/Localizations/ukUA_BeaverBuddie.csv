@@ -312,4 +312,7 @@ BeaverBuddies.Trade.UntilDistrict.Tooltip,"Ця сторона купує, до�
 BeaverBuddies.Trade.KeepWorkers.Tooltip,"Скільки робітники тримають на посту для продажу.",""
 BeaverBuddies.Trade.PostStock.Tooltip,"Скільки цього в цієї сторони на продаж.",""
 BeaverBuddies.Trade.Multiply,"Помножити всі цінності",""
-BeaverBuddies.Trade.Multiply.Tooltip,"Множить цінність кожного товару цього посту, щоб одразу все здешевити або подорожчити.",""
+BeaverBuddies.Trade.Multiply.Tooltip,"Введіть число й натисніть Enter, щоб помножити цінності: 2 подвоює їх, 0.5 ділить навпіл.",""
+BeaverBuddies.Trade.Multiply.All,"Усі товари, якими торгує",""
+BeaverBuddies.Trade.Multiply.Sell,"Лише те, що продає",""
+BeaverBuddies.Trade.Multiply.Buy,"Лише те, що купує",""

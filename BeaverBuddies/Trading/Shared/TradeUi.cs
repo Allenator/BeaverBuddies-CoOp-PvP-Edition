@@ -152,6 +152,24 @@ namespace BeaverBuddies.Trading
             return field;
         }
 
+        /** A number box like Number's, taking fractions. */
+        public static FloatField Decimal(VisualElementLoader loader, int width)
+        {
+            IntegerField like = Number(loader, width);
+            var field = new FloatField { isDelayed = true };
+            foreach (string c in like.GetClasses()) field.AddToClassList(c);
+            field.style.width = width;
+            field.style.flexShrink = 0;
+            field.style.marginLeft = 4;
+            field.style.marginRight = field.style.marginTop = field.style.marginBottom = 0;
+            VisualElement input = field.Q(className: "unity-base-field__input") ?? field;
+            input.style.backgroundColor = new Color(0.08f, 0.12f, 0.1f, 0.9f);
+            input.style.borderTopWidth = input.style.borderBottomWidth = input.style.borderLeftWidth = input.style.borderRightWidth = 1;
+            input.style.borderTopColor = input.style.borderBottomColor = input.style.borderLeftColor = input.style.borderRightColor = new Color(0.8f, 0.68f, 0.35f, 0.6f);
+            input.style.paddingLeft = input.style.paddingRight = 3;
+            return field;
+        }
+
         public static Dropdown Dropdown(VisualElementLoader loader)
         {
             Dropdown dropdown = loader.LoadVisualElement(PanelPath).Q<Dropdown>("Mode");
@@ -293,11 +311,18 @@ namespace BeaverBuddies.Trading
         private readonly ITooltipRegistrar _tooltips;
         private readonly VisualElementLoader _loader;
         private readonly EntitySelectionService _selection;
+        private readonly Timberborn.SliderToggleSystem.SliderToggleFactory _sliderToggles;
+        private readonly Timberborn.AssetSystem.IAssetLoader _assets;
         private List<StyleSheet> _sheets;
+        // Which of a post's goods the multiply row changes: 0 all, 1 those it sells, 2 those it buys
+        private readonly Dictionary<Guid, int> _scopes = new();
 
         public TradeGroups(BatchControlRowGroupFactory rowGroupFactory, GoodsGroupSpecService groups, IGoodService goodService,
-            GoodDescriber goodDescriber, ITooltipRegistrar tooltips, VisualElementLoader loader, EntitySelectionService selection)
+            GoodDescriber goodDescriber, ITooltipRegistrar tooltips, VisualElementLoader loader, EntitySelectionService selection,
+            Timberborn.SliderToggleSystem.SliderToggleFactory sliderToggles, Timberborn.AssetSystem.IAssetLoader assets)
         {
+            _sliderToggles = sliderToggles;
+            _assets = assets;
             _rowGroupFactory = rowGroupFactory;
             _groups = groups;
             _goodService = goodService;
@@ -372,7 +397,11 @@ namespace BeaverBuddies.Trading
             help.style.paddingTop = 4;
             help.Add(Pieces.Label(site.Editable ? site.Help : TradeText.T("BeaverBuddies.Trade.TheirsHelp")));
             group.AddRow(new BatchControlRow(help));
-            if (site.Editable) group.AddRow(new BatchControlRow(Multiplier(site)));
+            if (site.Editable)
+            {
+                VisualElement multiplier = Multiplier(site, out Timberborn.SliderToggleSystem.SliderToggle toggle);
+                group.AddRow(new BatchControlRow(multiplier, new Updater(toggle.Update)));
+            }
             var cards = new List<Card>();
             foreach (GoodGroupSpec goodGroup in _groups.GoodGroupSpecs.OrderBy(g => g.Order))
             {
@@ -405,11 +434,12 @@ namespace BeaverBuddies.Trading
             return group;
         }
 
-        // Factors for every value of a post at once, cheaper or dearer
-        private static readonly float[] Factors = { 0.5f, 0.75f, 1.5f, 2f };
-
-        /** A row of buttons that multiply every value the post has set, so all its prices move together. */
-        private VisualElement Multiplier(ITradeSite site)
+        /**
+         * A row that multiplies the values a post has set, so its prices move together: a factor typed in, applied on
+         * Enter, and the game's slider toggle for which goods, all of them, those it sells (green arrow) or those it
+         * buys (red arrow).
+         */
+        private VisualElement Multiplier(ITradeSite site, out Timberborn.SliderToggleSystem.SliderToggle toggle)
         {
             var row = Pieces.Row();
             Styled(row);
@@ -419,30 +449,43 @@ namespace BeaverBuddies.Trading
             label.style.marginRight = 6;
             row.Add(label);
             _tooltips.Register(label, () => TradeText.T("BeaverBuddies.Trade.Multiply.Tooltip"));
-            foreach (float factor in Factors)
+            FloatField factor = Pieces.Decimal(_loader, 52);
+            factor.name = "TradeMultiplyFactor";
+            factor.SetValueWithoutNotify(1f);
+            factor.RegisterValueChangedCallback(evt =>
             {
-                var button = new NineSliceButton();
-                button.AddToClassList("menu-button");
-                button.AddToClassList("menu-button--small");
-                button.text = "×" + factor.ToString(System.Globalization.CultureInfo.InvariantCulture);
-                button.name = "TradeMultiply" + factor.ToString(System.Globalization.CultureInfo.InvariantCulture);
-                button.style.width = button.style.minWidth = 52;
-                button.style.height = 22;
-                button.style.fontSize = 12;
-                button.style.marginLeft = button.style.marginRight = 2;
-                button.RegisterCallback<ClickEvent>(_ => Multiply(site, factor));
-                row.Add(button);
-            }
+                if (evt.newValue > 0 && !Mathf.Approximately(evt.newValue, 1f)) Multiply(site, evt.newValue);
+                // Back to 1, ready for the next
+                factor.SetValueWithoutNotify(1f);
+            });
+            row.Add(factor);
+            var holder = new VisualElement();
+            holder.style.marginLeft = 8;
+            row.Add(holder);
+            Guid id = site.Id;
+            // Red going out for what it sells, green coming in for what it buys, both for everything
+            Timberborn.SliderToggleSystem.SliderToggleItem Item(int scope, string key, string icon) =>
+                Timberborn.SliderToggleSystem.SliderToggleItem.Create(() => TradeText.T(key), _assets.Load<Sprite>("Sprites/Trade/" + icon),
+                    () => _scopes[id] = scope, () => Scope(id) == scope);
+            toggle = _sliderToggles.Create(holder,
+                Item(0, "BeaverBuddies.Trade.Multiply.All", "TradeAll"),
+                Item(1, "BeaverBuddies.Trade.Multiply.Sell", "TradeSell"),
+                Item(2, "BeaverBuddies.Trade.Multiply.Buy", "TradeBuy"));
+            // In their own colors, untinted by the toggle
+            toggle.Root.Query<Image>("Icon").ForEach(i => i.tintColor = Color.white);
             return row;
         }
+
+        private int Scope(Guid id) => _scopes.TryGetValue(id, out int scope) ? scope : 0;
 
         private void Multiply(ITradeSite site, float factor)
         {
             if (!site.Editable || !site.Entity) return;
+            int scope = Scope(site.Id);
             foreach (string good in _goodService.Goods)
             {
                 TradeRule rule = site.Rule(good);
-                if (rule.Mode == TradeMode.Off) continue;
+                if (rule.Mode == TradeMode.Off || scope == 1 && rule.Mode != TradeMode.Sell || scope == 2 && rule.Mode != TradeMode.Buy) continue;
                 // Never below 1: a value can't halve away to nothing
                 int value = Mathf.Clamp(Mathf.RoundToInt(rule.Value * factor), 1, TradeRule.MostValue);
                 if (value != rule.Value) site.Send(good, new TradeRule(rule.Mode, value, rule.Limit));

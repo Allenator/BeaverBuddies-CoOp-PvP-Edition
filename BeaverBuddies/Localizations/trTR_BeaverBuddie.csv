@@ -312,4 +312,7 @@ BeaverBuddies.Trade.UntilDistrict.Tooltip,"Bu taraf, bölgesinde bu kadar olana 
 BeaverBuddies.Trade.KeepWorkers.Tooltip,"İşçilerin satmak için karakolda tuttuğu miktar.",""
 BeaverBuddies.Trade.PostStock.Tooltip,"Bu tarafın satacak ne kadarı var.",""
 BeaverBuddies.Trade.Multiply,"Tüm değerleri çarp",""
-BeaverBuddies.Trade.Multiply.Tooltip,"Bu karakolun takas ettiği her malın değerini çarpar; hepsini tek seferde ucuzlatır ya da pahalılaştırır.",""
+BeaverBuddies.Trade.Multiply.Tooltip,"Değerleri çarpmak için bir sayı yazıp Enter'a bas: 2 ikiye katlar, 0.5 yarıya indirir.",""
+BeaverBuddies.Trade.Multiply.All,"Takas ettiği her mal",""
+BeaverBuddies.Trade.Multiply.Sell,"Yalnızca sattıkları",""
+BeaverBuddies.Trade.Multiply.Buy,"Yalnızca aldıkları",""

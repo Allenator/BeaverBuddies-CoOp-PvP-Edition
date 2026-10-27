@@ -312,4 +312,7 @@ BeaverBuddies.Trade.UntilDistrict.Tooltip,"這一側會一直收購，直到所�
 BeaverBuddies.Trade.KeepWorkers.Tooltip,"工人留在交易站待售的數量。",""
 BeaverBuddies.Trade.PostStock.Tooltip,"這一側可出售的數量。",""
 BeaverBuddies.Trade.Multiply,"所有價值乘以",""
-BeaverBuddies.Trade.Multiply.Tooltip,"將此交易站交易的每種貨物的價值相乘，一次性讓一切更便宜或更貴。",""
+BeaverBuddies.Trade.Multiply.Tooltip,"輸入一個數字並按 Enter 來乘以價值：2 翻倍，0.5 減半。",""
+BeaverBuddies.Trade.Multiply.All,"交易的所有貨物",""
+BeaverBuddies.Trade.Multiply.Sell,"只限出售的",""
+BeaverBuddies.Trade.Multiply.Buy,"只限收購的",""

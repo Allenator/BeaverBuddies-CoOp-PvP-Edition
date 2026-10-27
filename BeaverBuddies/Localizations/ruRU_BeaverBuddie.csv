@@ -312,4 +312,7 @@ BeaverBuddies.Trade.UntilDistrict.Tooltip,"Эта сторона покупае�
 BeaverBuddies.Trade.KeepWorkers.Tooltip,"Сколько рабочие держат на посту для продажи.",""
 BeaverBuddies.Trade.PostStock.Tooltip,"Сколько этого у этой стороны на продажу.",""
 BeaverBuddies.Trade.Multiply,"Умножить все ценности",""
-BeaverBuddies.Trade.Multiply.Tooltip,"Умножает ценность каждого товара этого поста, чтобы сразу всё удешевить или удорожить.",""
+BeaverBuddies.Trade.Multiply.Tooltip,"Введите число и нажмите Enter, чтобы умножить ценности: 2 удваивает их, 0.5 делит пополам.",""
+BeaverBuddies.Trade.Multiply.All,"Все товары, которыми торгует",""
+BeaverBuddies.Trade.Multiply.Sell,"Только то, что продаёт",""
+BeaverBuddies.Trade.Multiply.Buy,"Только то, что покупает",""

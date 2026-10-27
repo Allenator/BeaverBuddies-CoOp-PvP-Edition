@@ -312,4 +312,7 @@ BeaverBuddies.Trade.UntilDistrict.Tooltip,"地区にこの数がそろうまで�
 BeaverBuddies.Trade.KeepWorkers.Tooltip,"労働者が売るために交易所に置いておく数。",""
 BeaverBuddies.Trade.PostStock.Tooltip,"こちら側が売れる量。",""
 BeaverBuddies.Trade.Multiply,"すべての価値を掛ける",""
-BeaverBuddies.Trade.Multiply.Tooltip,"この交易所で扱うすべての品物の価値に掛け、まとめて安く、または高くします。",""
+BeaverBuddies.Trade.Multiply.Tooltip,"数字を入力してEnterで価値に掛けます：2で2倍、0.5で半分です。",""
+BeaverBuddies.Trade.Multiply.All,"扱うすべての品物",""
+BeaverBuddies.Trade.Multiply.Sell,"売るものだけ",""
+BeaverBuddies.Trade.Multiply.Buy,"買うものだけ",""

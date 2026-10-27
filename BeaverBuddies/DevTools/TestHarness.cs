@@ -421,6 +421,13 @@ namespace BeaverBuddies.DevTools
                 {
                     // setfield Name value: a number field of the panel on top, as typing it would set it
                     var panel = _panelStack._stack.Peek().PanelController.GetPanel();
+                    // A decimal one takes fractions
+                    var number = UnityEngine.UIElements.UQueryExtensions.Q<UnityEngine.UIElements.FloatField>(panel, a[1]);
+                    if (number != null)
+                    {
+                        number.value = float.Parse(a[2], System.Globalization.CultureInfo.InvariantCulture);
+                        break;
+                    }
                     var field = UnityEngine.UIElements.UQueryExtensions.Q<UnityEngine.UIElements.IntegerField>(panel, a[1]) ?? throw new Exception($"no field {a[1]}");
                     field.value = int.Parse(a[2]);
                     break;

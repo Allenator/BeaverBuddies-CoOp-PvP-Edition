@@ -312,4 +312,7 @@ BeaverBuddies.Trade.UntilDistrict.Tooltip,"Ta strona kupuje, aż jej dzielnica b
 BeaverBuddies.Trade.KeepWorkers.Tooltip,"Ile robotnicy trzymają w punkcie na sprzedaż.",""
 BeaverBuddies.Trade.PostStock.Tooltip,"Ile ta strona ma tego na sprzedaż.",""
 BeaverBuddies.Trade.Multiply,"Pomnóż wszystkie wartości",""
-BeaverBuddies.Trade.Multiply.Tooltip,"Mnoży wartość każdego towaru tego punktu, by od razu wszystko potanić albo podrożyć.",""
+BeaverBuddies.Trade.Multiply.Tooltip,"Wpisz liczbę i naciśnij Enter, by pomnożyć wartości: 2 je podwaja, 0.5 zmniejsza o połowę.",""
+BeaverBuddies.Trade.Multiply.All,"Każdy towar, którym handluje",""
+BeaverBuddies.Trade.Multiply.Sell,"Tylko to, co sprzedaje",""
+BeaverBuddies.Trade.Multiply.Buy,"Tylko to, co kupuje",""
