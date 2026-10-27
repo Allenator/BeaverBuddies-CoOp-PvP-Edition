@@ -758,6 +758,36 @@ namespace BeaverBuddies.DevTools
                     Plugin.Log($"[Test] Has tool {a[1]}: {has}");
                     break;
                 }
+                case "traderule":
+                {
+                    // traderule X Y Z GOOD Off|Buy|Sell VALUE LIMIT: sets a trading post half's rule, as the Trades tab does
+                    var half = Get<IBlockService>().GetObjectsAt(new Vector3Int(I(a[1]), I(a[2]), I(a[3])))
+                        .Select(o => o.GetComponent<Trading.DistrictTrade>()).FirstOrDefault(t => t) ?? throw new Exception("no trading post there");
+                    var mode = (Trading.TradeMode)Enum.Parse(typeof(Trading.TradeMode), a[5]);
+                    half.SendRule(a[4], (int)mode, I(a[6]), I(a[7]));
+                    Plugin.Log($"[Test] Trade rule {a[4]} {mode} {a[6]} {a[7]} at {a[1]} {a[2]} {a[3]}");
+                    break;
+                }
+                case "tradetab":
+                {
+                    // tradetab X Y Z: the Trade tab opened on the trade post there, either mod's, as its panel's button does
+                    var post = Get<IBlockService>().GetObjectsAt(new Vector3Int(I(a[1]), I(a[2]), I(a[3]))).FirstOrDefault(o => o) ?? throw new Exception("nothing there");
+                    Trading.TradeHub.Open(post);
+                    break;
+                }
+                case "tradestate":
+                {
+                    // tradestate X Y Z: a trading post half's district, rules and stock, and its other half's
+                    var half = Get<IBlockService>().GetObjectsAt(new Vector3Int(I(a[1]), I(a[2]), I(a[3])))
+                        .Select(o => o.GetComponent<Trading.DistrictTrade>()).FirstOrDefault(t => t) ?? throw new Exception("no trading post there");
+                    foreach (var h in new[] { half, half.Linked }.Where(h => h))
+                    {
+                        string rules = string.Join(",", h.Rules.Select(r => $"{r.Key}:{r.Value.Mode}:{r.Value.Value}:{r.Value.Limit}"));
+                        string stock = h.Inventory == null ? "" : string.Join(",", h.Inventory.Stock.Select(g => $"{g.GoodId}:{g.Amount}"));
+                        Plugin.Log($"[Test] Trading post half {h.Side} district={h.District?.DistrictName} owner={h.Owner} finished={h.Finished} rules=[{rules}] stock=[{stock}]");
+                    }
+                    break;
+                }
                 case "plantables":
                 {
                     // The crops and trees this player's planting tools offer
