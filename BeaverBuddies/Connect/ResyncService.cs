@@ -94,12 +94,20 @@ namespace BeaverBuddies.Connect
          * On the host, at the end of a tick: saves the game, sends the save
          * to every player (and those waiting to join), and loads it here.
          */
-        public void SaveAndReload(ServerEventIO server)
+        public void SaveAndReload(ServerEventIO server, bool joinOnly, Action onJoinGone)
         {
             bool saving = _rehostingService.SaveRehostFile(saveReference =>
             {
                 // Stopped hosting in the meantime
                 if (EventIO.Get() != server) return;
+                // The one who asked to join dropped while it saved, and nobody else needs the reload
+                if (joinOnly && server.CancelJoinIfGone())
+                {
+                    Plugin.Log("The player joining left before the game was saved: not reloading");
+                    _loading = false;
+                    onJoinGone();
+                    return;
+                }
                 try
                 {
                     byte[] saveBytes = ServerHostingUtils.GetMapBtyes(_gameSaveRepository, saveReference);
