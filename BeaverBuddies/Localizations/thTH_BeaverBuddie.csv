@@ -311,3 +311,5 @@ BeaverBuddies.Trade.DistrictStock.Tooltip,"เขตมีสิ่งนี้�
 BeaverBuddies.Trade.UntilDistrict.Tooltip,"ฝั่งนี้จะซื้อจนกว่าเขตจะมีเท่านี้",""
 BeaverBuddies.Trade.KeepWorkers.Tooltip,"จำนวนที่คนงานเก็บไว้ที่ด่านเพื่อขาย",""
 BeaverBuddies.Trade.PostStock.Tooltip,"ฝั่งนี้มีไว้ขายเท่าไร",""
+BeaverBuddies.Trade.Multiply,"คูณมูลค่าทั้งหมด",""
+BeaverBuddies.Trade.Multiply.Tooltip,"คูณมูลค่าของสินค้าทุกอย่างที่ด่านนี้ซื้อขาย เพื่อให้ทุกอย่างถูกลงหรือแพงขึ้นในครั้งเดียว",""

@@ -67,6 +67,12 @@ namespace BeaverBuddies.Trading
             _tolls.Clear();
             foreach (EntityComponent entity in entities)
             {
+                // Deleted since the panel last looked
+                if (!entity) continue;
+                // Deleted since the panel last looked
+                if (!entity) continue;
+                // Deleted since the panel last looked
+                if (!entity) continue;
                 // One group per pair: the Power Exchange half with the lower entity ID
                 PowerExchange exchange = entity.GetComponent<PowerExchange>();
                 if (exchange && exchange.Linked != null && IsFirstHalf(exchange)) _exchanges.Add(exchange);

@@ -388,9 +388,14 @@ namespace BeaverBuddies.DevTools
                 case "click":
                 {
                     // A button by name on the panel on top, as a player's click would press it
-                    var panel = _panelStack._stack.Peek().PanelController.GetPanel();
-                    // click name [n]: the nth of the buttons by that name, the first by default
-                    var button = UnityEngine.UIElements.UQueryExtensions.Query<UnityEngine.UIElements.Button>(panel, a[1]).ToList().ElementAtOrDefault(a.Length > 2 ? I(a[2]) : 0) ?? throw new Exception($"no button {a[1]}");
+                    // With no panel open, the entity panel and the rest of the screen: every UI document's
+                    var roots = _panelStack._stack.Count > 0
+                        ? new[] { _panelStack._stack.Peek().PanelController.GetPanel() }
+                        : UnityEngine.Object.FindObjectsOfType<UnityEngine.UIElements.UIDocument>().Select(d => d.rootVisualElement).Where(r => r != null).ToArray();
+                    // click name [n]: the nth of the shown buttons by that name, the first by default
+                    var button = roots.SelectMany(r => UnityEngine.UIElements.UQueryExtensions.Query<UnityEngine.UIElements.Button>(r, a[1]).ToList())
+                        .Where(b => b.resolvedStyle.display != UnityEngine.UIElements.DisplayStyle.None && b.panel != null)
+                        .ElementAtOrDefault(a.Length > 2 ? I(a[2]) : 0) ?? throw new Exception($"no button {a[1]}");
                     using var click = UnityEngine.UIElements.ClickEvent.GetPooled();
                     click.target = button;
                     button.SendEvent(click);
@@ -773,6 +778,17 @@ namespace BeaverBuddies.DevTools
                     // tradetab X Y Z: the Trade tab opened on the trade post there, either mod's, as its panel's button does
                     var post = Get<IBlockService>().GetObjectsAt(new Vector3Int(I(a[1]), I(a[2]), I(a[3]))).FirstOrDefault(o => o) ?? throw new Exception("nothing there");
                     Trading.TradeHub.Open(post);
+                    break;
+                }
+                case "beavers":
+                {
+                    // beavers N X Y Z: N adults at the door of the District Center of the building there
+                    var at = Get<IBlockService>().GetObjectsAt(new Vector3Int(I(a[2]), I(a[3]), I(a[4]))).FirstOrDefault(o => o) ?? throw new Exception("nothing there");
+                    var center = at.GetComponent<Timberborn.GameDistricts.DistrictCenter>() ?? at.GetComponent<Timberborn.GameDistricts.DistrictBuilding>()?.District
+                        ?? throw new Exception("no district there");
+                    Vector3 door = Timberborn.Coordinates.CoordinateSystem.GridToWorldCentered(center.GetComponent<BlockObject>().PositionedEntrance.Coordinates);
+                    for (int i = 0; i < I(a[1]); i++) Get<Timberborn.Beavers.BeaverFactory>().CreateAdult(door, 0.3f);
+                    Plugin.Log($"[Test] {a[1]} beavers at {center.DistrictName}");
                     break;
                 }
                 case "tradestate":

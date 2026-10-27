@@ -311,3 +311,5 @@ BeaverBuddies.Trade.DistrictStock.Tooltip,"Сколько этого в райо
 BeaverBuddies.Trade.UntilDistrict.Tooltip,"Эта сторона покупает, пока в её районе не станет столько.",""
 BeaverBuddies.Trade.KeepWorkers.Tooltip,"Сколько рабочие держат на посту для продажи.",""
 BeaverBuddies.Trade.PostStock.Tooltip,"Сколько этого у этой стороны на продажу.",""
+BeaverBuddies.Trade.Multiply,"Умножить все ценности",""
+BeaverBuddies.Trade.Multiply.Tooltip,"Умножает ценность каждого товара этого поста, чтобы сразу всё удешевить или удорожить.",""

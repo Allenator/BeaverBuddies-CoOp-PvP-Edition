@@ -166,6 +166,8 @@ namespace BeaverBuddies.Trading
 
         public DistrictCenter District => _districtBuilding.District;
 
+        public bool Staffed => GetComponent<Timberborn.WorkSystem.Workplace>()?.NumberOfAssignedWorkers > 0;
+
         /**
          * The owner of the district on this side, or null if it has none.
          */
@@ -201,12 +203,15 @@ namespace BeaverBuddies.Trading
             DistrictTrade there = Linked;
             if (there == null || District == null || there.District == null || District == there.District) return;
             if (Inventory == null || there.Inventory == null || !Inventory.Enabled || !there.Inventory.Enabled) return;
+            // Each half trades only with workers
+            if (!Staffed || !there.Staffed) return;
             if (_book.Rules.Count == 0 || there._book.Rules.Count == 0) return;
 
             Barter.SwapResult result = Barter.Swap(Post(), there.Post(), sameOwner: Owner == there.Owner);
             if (!result.Any) return;
             Move(this, there, result.AToB);
             Move(there, this, result.BToA);
+            Plugin.Log($"Trading post {District.DistrictName} traded with {there.District.DistrictName}: gave {Describe(result.AToB)}, got {Describe(result.BToA)}");
         }
 
         private Barter.Post Post()
@@ -220,6 +225,8 @@ namespace BeaverBuddies.Trading
             }
             return new Barter.Post { Rules = _book.Rules, Stock = stock, BuyRoom = room };
         }
+
+        private static string Describe(IDictionary<string, int> goods) => goods.Count == 0 ? "nothing" : string.Join(", ", goods.Select(g => $"{g.Value} {g.Key}"));
 
         private static void Move(DistrictTrade from, DistrictTrade to, IDictionary<string, int> goods)
         {

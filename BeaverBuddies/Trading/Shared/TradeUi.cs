@@ -36,7 +36,8 @@ namespace BeaverBuddies.Trading
             var button = new NineSliceButton();
             button.AddToClassList("entity-panel__text");
             button.AddToClassList("entity-fragment__button");
-            if (red) button.AddToClassList("entity-fragment__button--red");
+            // The plain class has no look of its own outside the entity panel's middle: green or red, as the game's
+            button.AddToClassList(red ? "entity-fragment__button--red" : "entity-fragment__button--green");
             button.text = text;
             // The game's class stretches a button across its row: these keep to their text unless told otherwise
             button.style.flexGrow = 0;
@@ -49,15 +50,22 @@ namespace BeaverBuddies.Trading
             return button;
         }
 
-        /** A framed box like the game's sub-panels: the plain frame, or green for what's happening now. */
-        public static VisualElement Box(bool green = false)
+        /** A box like the game's sub-panels, edged in gold for what's happening now. */
+        public static VisualElement Box(bool current = false)
         {
             var box = new NineSliceVisualElement();
-            box.AddToClassList(green ? "bg-sub-box--green" : "bg-sub-box--frame");
+            box.AddToClassList("bg-sub-box--green");
+            Highlight(box, current);
             box.style.paddingLeft = box.style.paddingRight = 6;
             box.style.paddingTop = box.style.paddingBottom = 4;
             box.style.marginBottom = 4;
             return box;
+        }
+
+        public static void Highlight(VisualElement box, bool on)
+        {
+            box.style.borderTopWidth = box.style.borderBottomWidth = box.style.borderLeftWidth = box.style.borderRightWidth = on ? 1 : 0;
+            box.style.borderTopColor = box.style.borderBottomColor = box.style.borderLeftColor = box.style.borderRightColor = new Color(0.85f, 0.72f, 0.36f);
         }
 
         /** A thin gold line between sections. */
@@ -364,6 +372,7 @@ namespace BeaverBuddies.Trading
             help.style.paddingTop = 4;
             help.Add(Pieces.Label(site.Editable ? site.Help : TradeText.T("BeaverBuddies.Trade.TheirsHelp")));
             group.AddRow(new BatchControlRow(help));
+            if (site.Editable) group.AddRow(new BatchControlRow(Multiplier(site)));
             var cards = new List<Card>();
             foreach (GoodGroupSpec goodGroup in _groups.GoodGroupSpecs.OrderBy(g => g.Order))
             {
@@ -394,6 +403,50 @@ namespace BeaverBuddies.Trading
                 group.AddRow(new BatchControlRow(row, new Updater(() => cards.ForEach(c => c.Update()))));
             }
             return group;
+        }
+
+        // Factors for every value of a post at once, cheaper or dearer
+        private static readonly float[] Factors = { 0.5f, 0.75f, 1.5f, 2f };
+
+        /** A row of buttons that multiply every value the post has set, so all its prices move together. */
+        private VisualElement Multiplier(ITradeSite site)
+        {
+            var row = Pieces.Row();
+            Styled(row);
+            row.style.paddingLeft = row.style.paddingRight = 8;
+            row.style.paddingTop = row.style.paddingBottom = 4;
+            var label = Pieces.Label(TradeText.T("BeaverBuddies.Trade.Multiply"), 12);
+            label.style.marginRight = 6;
+            row.Add(label);
+            _tooltips.Register(label, () => TradeText.T("BeaverBuddies.Trade.Multiply.Tooltip"));
+            foreach (float factor in Factors)
+            {
+                var button = new NineSliceButton();
+                button.AddToClassList("menu-button");
+                button.AddToClassList("menu-button--small");
+                button.text = "×" + factor.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                button.name = "TradeMultiply" + factor.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                button.style.width = button.style.minWidth = 52;
+                button.style.height = 22;
+                button.style.fontSize = 12;
+                button.style.marginLeft = button.style.marginRight = 2;
+                button.RegisterCallback<ClickEvent>(_ => Multiply(site, factor));
+                row.Add(button);
+            }
+            return row;
+        }
+
+        private void Multiply(ITradeSite site, float factor)
+        {
+            if (!site.Editable || !site.Entity) return;
+            foreach (string good in _goodService.Goods)
+            {
+                TradeRule rule = site.Rule(good);
+                if (rule.Mode == TradeMode.Off) continue;
+                // Never below 1: a value can't halve away to nothing
+                int value = Mathf.Clamp(Mathf.RoundToInt(rule.Value * factor), 1, TradeRule.MostValue);
+                if (value != rule.Value) site.Send(good, new TradeRule(rule.Mode, value, rule.Limit));
+            }
         }
 
         private class Updater : IBatchControlRowItem, IUpdatableBatchControlRowItem

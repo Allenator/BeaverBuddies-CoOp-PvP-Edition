@@ -8,20 +8,23 @@ namespace BeaverBuddies.Trading
     /**
      * One ship's trade at one post, worked out without the game: what goes ashore and what comes aboard.
      *
-     * The ship gives what it carries beyond what it's set to load, of the goods the post buys, up to the
-     * room the post has for each. It takes what it's set to load and hasn't got, of the goods the post
-     * sells, up to the post's stock and the hold's room. Between one owner's ship and post that's all.
-     * Between two owners the post's values balance it: the ship gives a good at a time until what it has
-     * given pays for the next good it takes, and what it gave and never needed goes back aboard. So a ship
-     * never gives more than one good's worth over what it gets, and gets nothing it hasn't paid for.
+     * The ship sells everything it carries that the post buys, up to the post's room for each. It buys what the
+     * post sells of the goods it wants (those another stop of its route buys), up to the post's stock and the
+     * hold's room. At its owner's post it can also leave what nothing on its route buys. Between one owner's
+     * ship and post that's all. Between two owners the post's values balance it: the ship gives a good at a time
+     * until what it has given pays for the next good it takes, and what it gave and never needed goes back
+     * aboard. So a ship never gives more than one good's worth over what it gets, and gets nothing it hasn't
+     * paid for.
      */
     public static class Barter
     {
         public class Ship
         {
-            // What is aboard, and what it's set to load
+            // What is aboard, and the goods it buys here: those some other stop of its route buys
             public IReadOnlyDictionary<string, int> Aboard;
-            public IReadOnlyDictionary<string, int> Loads;
+            public IReadOnlyCollection<string> Wants;
+            // Its owner's post where it leaves what nothing on its route buys
+            public bool Unload;
             // How much more the hold takes, all goods together
             public int Room;
         }
@@ -48,23 +51,32 @@ namespace BeaverBuddies.Trading
             foreach (var aboard in ship.Aboard)
             {
                 if (!post.Rules.TryGetValue(aboard.Key, out TradeRule rule) || rule.Mode != TradeMode.Buy) continue;
-                int spare = aboard.Value - Get(ship.Loads, aboard.Key);
-                int amount = Math.Min(spare, Get(post.BuyRoom, aboard.Key));
+                int amount = Math.Min(aboard.Value, Get(post.BuyRoom, aboard.Key));
                 if (amount > 0) offer[aboard.Key] = amount;
             }
-            foreach (var load in ship.Loads)
+            foreach (string good in ship.Wants ?? (IReadOnlyCollection<string>)Array.Empty<string>())
             {
-                if (!post.Rules.TryGetValue(load.Key, out TradeRule rule) || rule.Mode != TradeMode.Sell) continue;
-                int amount = Math.Min(load.Value - Get(ship.Aboard, load.Key), Get(post.Stock, load.Key));
-                if (amount > 0) want[load.Key] = amount;
+                if (!post.Rules.TryGetValue(good, out TradeRule rule) || rule.Mode != TradeMode.Sell) continue;
+                int amount = Get(post.Stock, good);
+                if (amount > 0) want[good] = amount;
             }
             var result = new Result();
             int room = ship.Room;
             if (sameOwner)
             {
                 foreach (var o in offer) result.Given[o.Key] = o.Value;
+                // What nothing on its route buys goes ashore too, for the post's workers to carry off
+                if (ship.Unload)
+                {
+                    foreach (var aboard in ship.Aboard)
+                    {
+                        if (ship.Wants?.Contains(aboard.Key) == true) continue;
+                        int left = aboard.Value - Get(result.Given, aboard.Key);
+                        if (left > 0) result.Given[aboard.Key] = Get(result.Given, aboard.Key) + left;
+                    }
+                }
                 // What goes ashore makes room for what comes aboard
-                room += offer.Values.Sum();
+                room += result.Given.Values.Sum();
                 foreach (var w in want)
                 {
                     int amount = Math.Min(w.Value, room);
