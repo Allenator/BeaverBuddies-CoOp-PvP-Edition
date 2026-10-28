@@ -165,6 +165,17 @@ mod_enable_all
 if [ -z "${BB_BUILD:-}" ]; then
     export BB_BUILD_SOURCES="$ROOT/BeaverBuddies:$ROOT/TimberNet"
     export BB_BUILD="(cd '$ROOT/BeaverBuddies' && dotnet build -c Release -nologo -v q -p:DocumentsPath='$BB_HOME/Documents/' 2>&1 | tail -3)"
+    # Game Modes, which BeaverBuddies is built against and won't load without: built into the run's home from the
+    # parent repo's submodule, the version a release ships, as fast.sh builds it; without that checkout, the
+    # player's own is linked in. The player's other mods (Timber Empires among them) are linked in as ever
+    gm="${GAMEMODES_REPO:-$(cd "$ROOT/../GameModes" 2>/dev/null && pwd)}"
+    if [ -n "$gm" ] && [ -d "$gm/GameModes" ]; then
+        BB_OWN_MODS="GameModes BeaverBuddies"
+        BB_BUILD_SOURCES="$gm/GameModes:$BB_BUILD_SOURCES"
+        BB_BUILD="(cd '$gm/GameModes' && dotnet build -c Release -nologo -v q -p:DocumentsPath='$BB_HOME/Documents/' 2>&1 | tail -3) && $BB_BUILD"
+    else
+        BB_OWN_MODS="BeaverBuddies"
+    fi
 fi
 # The files the build is made from, by name: one taken out, or put back with its
 # old date (moved aside and back), changes the build as much as an edit

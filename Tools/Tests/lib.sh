@@ -122,8 +122,9 @@ prefs_restore_overrides() {
 
 bb_mods_dir() { (cd "$BB_HOME/Documents/Timberborn/Mods" && pwd -P); }
 
-# The mods a run builds itself, kept in its home's Mods folder; the player's others are linked in
-BB_OWN_MODS="GameModes BeaverBuddies TimberEmpires"
+# The mods a run builds itself, kept in its home's Mods folder; the player's others are linked in. A runner that
+# builds fewer says which (run.sh, when Game Modes comes from the player's own)
+BB_OWN_MODS=${BB_OWN_MODS:-"GameModes BeaverBuddies TimberEmpires"}
 
 # _bb_link_all <from> <to> <names kept out...>: each entry of a folder linked into another, but those
 _bb_link_all() {
