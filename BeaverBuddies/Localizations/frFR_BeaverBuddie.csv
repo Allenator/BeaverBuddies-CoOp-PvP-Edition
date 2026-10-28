@@ -7,6 +7,7 @@ BeaverBuddies.Menu.JoinGame,"Rejoindre une partie","Join game"
 BeaverBuddies.Menu.Back,"Retour","Back"
 BeaverBuddies.Menu.HostGame,"Héberger la partie","Host game"
 BeaverBuddies.Menu.HostFailed,"Impossible d'héberger la nouvelle partie.","Couldn't host the new game."
+BeaverBuddies.Menu.LoadInCoop,"On ne peut pas encore charger une sauvegarde pendant une partie en coopération : les autres joueurs resteraient dans celle-ci. L'hôte peut jouer une sauvegarde avec tout le monde avec « Héberger la partie » dans cette fenêtre, et chacun peut revenir au menu principal pour la charger là.","A save can't be loaded during a co-op game yet: the other players would stay in this one. The host can play a save together with everyone with Host game in this box, and anyone can leave to the main menu and load it there."
 BeaverBuddies.JoinCoopGame.EnterIp,"Saisis le code de l'hôte, ou son adresse IP globale ou son nom de domaine :","Enter the host's join code, or their global IP address or domain name:"
 BeaverBuddies.FirstTimer.Message,"Il semble que vous utilisiez BeaverBuddies pour la première fois. Nous vous recommandons de jeter un coup d'œil rapide à notre guide pour vous assurer que vous êtes prêt à jouer. Voulez-vous le faire maintenant ?","It looks like this is your first time using BeaverBuddies. We recommend taking a quick look through our guide to make sure you are set up to play. Would you like to do that now?"
 BeaverBuddies.JoinCoopGame.ConnectionFailedMessageWithError,"La connexion a échoué en raison d'une erreur :

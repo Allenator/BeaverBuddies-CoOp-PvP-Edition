@@ -7,6 +7,7 @@ BeaverBuddies.Menu.JoinGame,"ゲームに参加","Join game"
 BeaverBuddies.Menu.Back,"戻る","Back"
 BeaverBuddies.Menu.HostGame,"ゲームをホスト","Host game"
 BeaverBuddies.Menu.HostFailed,"新しいゲームをホストできませんでした。","Couldn't host the new game."
+BeaverBuddies.Menu.LoadInCoop,"協力プレイ中はまだセーブデータを読み込めません。ほかのプレイヤーはこのゲームに残ってしまいます。ホストはこの画面の「ゲームをホスト」でセーブデータを全員で遊べます。また、メインメニューに戻ればだれでもそこで読み込めます。","A save can't be loaded during a co-op game yet: the other players would stay in this one. The host can play a save together with everyone with Host game in this box, and anyone can leave to the main menu and load it there."
 BeaverBuddies.JoinCoopGame.EnterIp,"ホストの参加コード、またはグローバルIPアドレスかドメイン名を入力してください:","Enter the host's join code, or their global IP address or domain name:"
 BeaverBuddies.FirstTimer.Message,"BeaverBuddiesを使用するのは初めてのようです。プレイの準備ができていることを確認するために、ガイドを一読することをお勧めします。今すぐ確認しますか？","It looks like this is your first time using BeaverBuddies. We recommend taking a quick look through our guide to make sure you are set up to play. Would you like to do that now?"
 BeaverBuddies.JoinCoopGame.ConnectionFailedMessageWithError,"エラーが発生して参加に失敗しました:

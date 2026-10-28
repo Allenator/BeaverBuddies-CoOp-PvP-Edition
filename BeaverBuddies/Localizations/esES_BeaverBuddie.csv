@@ -7,6 +7,7 @@ BeaverBuddies.Menu.JoinGame,"Unirse a partida","Join game"
 BeaverBuddies.Menu.Back,"Volver","Back"
 BeaverBuddies.Menu.HostGame,"Alojar partida","Host game"
 BeaverBuddies.Menu.HostFailed,"No se pudo alojar la partida nueva.","Couldn't host the new game."
+BeaverBuddies.Menu.LoadInCoop,"Todavía no se puede cargar una partida guardada durante una partida cooperativa: los demás jugadores se quedarían en esta. El anfitrión puede jugar una partida guardada con todos con «Alojar partida» en esta ventana, y cualquiera puede volver al menú principal y cargarla allí.","A save can't be loaded during a co-op game yet: the other players would stay in this one. The host can play a save together with everyone with Host game in this box, and anyone can leave to the main menu and load it there."
 BeaverBuddies.JoinCoopGame.EnterIp,"Introduce el código del anfitrión, o su dirección IP global o nombre de dominio:","Enter the host's join code, or their global IP address or domain name:"
 BeaverBuddies.FirstTimer.Message,"Parece que es la primera vez que usas BeaverBuddies. Recomendamos echar un vistazo rápido a nuestra guía para asegurarte de que estás listo para jugar. ¿Te gustaría hacerlo ahora?","It looks like this is your first time using BeaverBuddies. We recommend taking a quick look through our guide to make sure you are set up to play. Would you like to do that now?"
 BeaverBuddies.JoinCoopGame.ConnectionFailedMessageWithError,"Fallo al unirse con error:

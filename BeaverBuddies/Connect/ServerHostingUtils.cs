@@ -25,6 +25,26 @@ using Timberborn.Common;
 namespace BeaverBuddies.Connect
 {
 
+    /**
+     * The Load game box's Load, in a co-op game: the game loads the save on this machine alone, under the connection
+     * it has, and the others stay in the game left behind. A guest whose host did so stood still, waiting for ticks
+     * the host's new game started again from 0, and no desync was reported (October 28, 2026). Until the host can load
+     * a save for everyone, Load says what to do instead: the host's Host in this box, or the main menu.
+     */
+    [HarmonyPatch(typeof(LoadGameBox), nameof(LoadGameBox.LoadGame))]
+    public class LoadGameBoxLoadGamePatcher
+    {
+        public static bool Prefix(LoadGameBox __instance, ref bool __result)
+        {
+            // The main menu's box, or a game alone
+            if (EventIO.IsNull || SingletonManager.GetSingleton<MultiplayerMenu>() != null) return true;
+            Plugin.Log("Load in a co-op game: not loaded, as the others would stay in this one");
+            __instance._dialogBoxShower.Create().SetLocalizedMessage("BeaverBuddies.Menu.LoadInCoop").Show();
+            __result = false;
+            return false;
+        }
+    }
+
     [HarmonyPatch(typeof(LoadGameBox), nameof(LoadGameBox.GetPanel))]
     public class LoadGameBoxGetPanelPatcher
     {

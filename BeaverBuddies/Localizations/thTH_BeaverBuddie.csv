@@ -7,6 +7,7 @@ BeaverBuddies.Menu.JoinGame,"เข้าร่วมเกม","Join game"
 BeaverBuddies.Menu.Back,"กลับ","Back"
 BeaverBuddies.Menu.HostGame,"โฮสต์เกม","Host game"
 BeaverBuddies.Menu.HostFailed,"โฮสต์เกมใหม่ไม่ได้","Couldn't host the new game."
+BeaverBuddies.Menu.LoadInCoop,"ยังโหลดเซฟระหว่างเกมแบบร่วมมือไม่ได้ ผู้เล่นคนอื่นจะยังอยู่ในเกมนี้ โฮสต์เล่นเซฟร่วมกับทุกคนได้ด้วย ""โฮสต์เกม"" ในหน้าต่างนี้ และใครก็ออกไปที่เมนูหลักแล้วโหลดที่นั่นได้","A save can't be loaded during a co-op game yet: the other players would stay in this one. The host can play a save together with everyone with Host game in this box, and anyone can leave to the main menu and load it there."
 BeaverBuddies.JoinCoopGame.EnterIp,"ใส่รหัสเข้าร่วมของโฮสต์ หรือที่อยู่ IP สาธารณะหรือชื่อโดเมนของโฮสต์:","Enter the host's join code, or their global IP address or domain name:"
 BeaverBuddies.FirstTimer.Message,"ดูเหมือนว่านี่จะเป็นครั้งแรกที่คุณใช้ BeaverBuddies เราขอแนะนำให้ดูคำแนะนำของเราอย่างรวดเร็วเพื่อให้แน่ใจว่าคุณพร้อมที่จะเล่นแล้ว คุณต้องการทำเช่นนั้นตอนนี้หรือไม่?","It looks like this is your first time using BeaverBuddies. We recommend taking a quick look through our guide to make sure you are set up to play. Would you like to do that now?"
 BeaverBuddies.JoinCoopGame.ConnectionFailedMessageWithError,"การเชื่อมต่อล้มเหลวพร้อมข้อผิดพลาด:

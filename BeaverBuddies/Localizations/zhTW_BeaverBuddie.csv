@@ -7,6 +7,7 @@ BeaverBuddies.Menu.JoinGame,"加入遊戲","Join game"
 BeaverBuddies.Menu.Back,"返回","Back"
 BeaverBuddies.Menu.HostGame,"主持遊戲","Host game"
 BeaverBuddies.Menu.HostFailed,"無法主持新遊戲。","Couldn't host the new game."
+BeaverBuddies.Menu.LoadInCoop,"合作遊戲中暫時無法讀取存檔：其他玩家會留在目前的遊戲中。主機可以用此視窗中的「主持遊戲」和所有人一起遊玩存檔，任何人也可以回到主選單在那裡讀取。","A save can't be loaded during a co-op game yet: the other players would stay in this one. The host can play a save together with everyone with Host game in this box, and anyone can leave to the main menu and load it there."
 BeaverBuddies.JoinCoopGame.EnterIp,"輸入主機的加入代碼，或其公用 IP 位址或網域名稱：","Enter the host's join code, or their global IP address or domain name:"
 BeaverBuddies.FirstTimer.Message,"看起來這是您第一次使用BeaverBuddies。我們建議快速瀏覽一下我們的指南，以確保您已準備好進行遊戲。您現在要這樣做嗎？","It looks like this is your first time using BeaverBuddies. We recommend taking a quick look through our guide to make sure you are set up to play. Would you like to do that now?"
 BeaverBuddies.JoinCoopGame.ConnectionFailedMessageWithError,"連接失敗，錯誤：
