@@ -26,7 +26,8 @@ internal static class BlockLoadRouting
 {
     private const BindingFlags All = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
     private const string Owner = "beaverbuddies.perf.load.block-routing";
-    private sealed class Marker { internal object Subscriber = null!; internal byte Kind; }
+    // The subscriber held weakly: held strongly, a game's handlers would reach its event bus through the table's values
+    private sealed class Marker { internal WeakReference<object> Subscriber = null!; internal byte Kind; }
     private sealed class Session
     {
         internal SubscriptionRegistry Registry = null!;
@@ -141,7 +142,7 @@ internal static class BlockLoadRouting
     {
         var kind = subscriber.GetType() == _water && _waterHandlers.Contains(method) ? (byte)1 :
             subscriber.GetType() == typeof(LayeredBlockObstacle) && _layeredHandlers.Contains(method) ? (byte)2 : (byte)0;
-        if (kind != 0) Markers.Add(action, new Marker { Subscriber = subscriber, Kind = kind });
+        if (kind != 0) Markers.Add(action, new Marker { Subscriber = new WeakReference<object>(subscriber), Kind = kind });
     }
     private static object? CreateSession(SubscriptionRegistry registry)
     {
@@ -166,7 +167,8 @@ internal static class BlockLoadRouting
         var items = Fixes.EventOrderFix.Ordered(registry, type, source) ?? source.Select(p => new Subscription(p.Key, p.Value)).ToArray();
         var plan = new Plan { Dictionary = source, Version = _version(source), Items = items, Kinds = new byte[items.Length], Runs = new Run?[items.Length] };
         for (var i = 0; i < items.Length; i++)
-            if (Markers.TryGetValue(items[i].Action, out var marker) && ReferenceEquals(marker.Subscriber, items[i].Subscriber)) plan.Kinds[i] = marker.Kind;
+            if (Markers.TryGetValue(items[i].Action, out var marker) && marker.Subscriber.TryGetTarget(out var subscriber)
+                && ReferenceEquals(subscriber, items[i].Subscriber)) plan.Kinds[i] = marker.Kind;
         for (var i = 0; i < items.Length;)
         {
             if (plan.Kinds[i] == 0) { i++; continue; }

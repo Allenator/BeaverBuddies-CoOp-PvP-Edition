@@ -285,6 +285,7 @@ namespace BeaverBuddies
             Plugin.Log("PostLoad");
             DeterminismService.ReseedAfterLoad();
             Fixes.DeferredDestroyFix.Reset();
+            Fixes.MenuReleaseFix.GameLoaded();
             if (DevTools.TestHarness.Active) Util.ObjectCensus.Log("after loading");
             if (HitchWatch.Profiling)
             {
