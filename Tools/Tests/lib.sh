@@ -120,7 +120,8 @@ prefs_restore_overrides() {
 
 # ---- Mods: switching one off for a scenario, and always back on --------------
 
-bb_mods_dir() { (cd "$BB_HOME/Documents/Timberborn/Mods" && pwd -P); }
+# Empty before the run's home is laid out (a first run's start)
+bb_mods_dir() { (cd "$BB_HOME/Documents/Timberborn/Mods" 2>/dev/null && pwd -P); }
 
 # The mods a run builds itself, kept in its home's Mods folder; the player's others are linked in. A runner that
 # builds fewer says which (run.sh, when Game Modes comes from the player's own)
@@ -154,13 +155,13 @@ bb_home_prepare() {
 
 mod_disable() {
     local mods; mods=$(bb_mods_dir)
-    [ -d "$mods/$1" ] || return 0
+    [ -n "$mods" ] && [ -d "$mods/$1" ] || return 0
     mv "$mods/$1" "$mods/../$1.disabled-by-tests" && echo "$1" >> "$BB_TEST_DIR/disabled-mods"
 }
 
 mod_enable_all() {
     local mods name; mods=$(bb_mods_dir)
-    [ -f "$BB_TEST_DIR/disabled-mods" ] || return 0
+    [ -n "$mods" ] && [ -f "$BB_TEST_DIR/disabled-mods" ] || return 0
     while read -r name; do
         [ -d "$mods/../$name.disabled-by-tests" ] && [ ! -e "$mods/$name" ] && mv "$mods/../$name.disabled-by-tests" "$mods/$name"
     done < "$BB_TEST_DIR/disabled-mods"

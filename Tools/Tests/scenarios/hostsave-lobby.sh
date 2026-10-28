@@ -42,6 +42,8 @@ send client "speedkey 1"
 send client "play 2"
 sleep 2
 expect_log "what the guest does in the lobby isn't sent" client "Not sending .*: the host hasn't started the game"
+# A while in the lobby, which the game spends some random state in (BB_LOBBY_WAIT, 20 s)
+sleep "${BB_LOBBY_WAIT:-20}"
 loads=$(grep -ac "Load time" "$(bb_log host)")
 send host "click ConfirmButton"
 for ((i = 0; i < 180; i++)); do
@@ -57,6 +59,7 @@ expect_no_log "the host's load isn't taken for silence" client "Nothing from the
 expect_no_log "the guest sent nothing while it waited" host "Discarded [0-9]+ events"
 send host "speed 1"; sleep 15
 expect_in_sync "they play the same game"
+expect_log "the guest takes the host's start state" client "The host started: setting the random state to"
 expect_no_errors "no errors"
 shot "playing" host
 bb_close
