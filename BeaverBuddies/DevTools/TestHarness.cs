@@ -889,7 +889,8 @@ namespace BeaverBuddies.DevTools
                 }
                 case "tool":
                 {
-                    // The build tool for a template, its preview over a tile, and a click there with "click"
+                    // The build tool for a template, its preview over a tile, and a click there with "click"; with
+                    // "hover", the pointer stays there until the tool is put away, as a player's does after a click
                     var tool = Get<Timberborn.ToolButtonSystem.ToolButtonService>().ToolButtons.Select(b => b.Tool)
                         .OfType<Timberborn.BlockObjectTools.BlockObjectTool>()
                         .FirstOrDefault(t => t.Template.GetSpec<Timberborn.TemplateSystem.TemplateSpec>().TemplateName == a[1]) ?? throw new Exception($"no tool for {a[1]}");
@@ -902,6 +903,14 @@ namespace BeaverBuddies.DevTools
                         if (preview.GameObject.activeSelf) Plugin.Log($"[Test] Tool preview {preview.GameObject.name} at {preview.BlockObject.Coordinates} {preview.PreviewState.IsBuildable} valid={preview.BlockObject.IsValid()} warning='{tool.WarningText}'");
                     }
                     if (a.Contains("click")) tool.ActionCallback(new[] { placement });
+                    if (a.Contains("hover"))
+                    {
+                        // The frame after a placement shows nothing, the one after that the preview
+                        ToolHoverPatcher.Held = (tool, placement);
+                        tool.PreviewCallback(new[] { placement });
+                        tool.PreviewCallback(new[] { placement });
+                        Plugin.Log($"[Test] Tool hover: shown {tool._previewPlacer.Previews.Any(p => p.GameObject.activeSelf)}; districts: {DistrictCenters()}");
+                    }
                     break;
                 }
                 case "pile":
@@ -926,6 +935,17 @@ namespace BeaverBuddies.DevTools
                         ?.Select(s => s.Subscriber).OfType<Timberborn.RecoveredGoodSystem.RecoveredGoodStackMover>()
                         .Select(m => ReplayEvent.GetEntityID(m)?.Substring(0, 8)) ?? Enumerable.Empty<string>();
                     Plugin.Log($"[Test] eventorder: {string.Join(" ", order)}");
+                    break;
+                }
+                case "defaulttool":
+                    // The build tool put away, as a player's right click does: its previews go
+                    Get<Timberborn.ToolSystem.ToolService>().SwitchToDefaultTool();
+                    break;
+                case "districts":
+                {
+                    // The district centers each district map has: the one the game plays by, the instant one, and the
+                    // preview one the building tool checks a new district center or road against
+                    Plugin.Log($"[Test] districts: {DistrictCenters()}");
                     break;
                 }
                 case "hastool":
@@ -1466,6 +1486,19 @@ namespace BeaverBuddies.DevTools
             return terrain.GetTerrainHeightBelow(terrain.Clamp(new Vector3Int(x, y, 999)));
         }
 
+        // Each district map's centers; in the preview map, one that isn't the game's district there (a preview's own)
+        // is marked p
+        private string DistrictCenters()
+        {
+            var nodes = Get<Timberborn.Navigation.NodeIdService>();
+            var regular = Get<Timberborn.Navigation.DistrictMap>();
+            string Centers(Timberborn.Navigation.DistrictMap map) => string.Join(" ", map._districtCenters
+                .Select(e => (c: nodes.IdToGrid(e.Key), p: map != regular && !(regular._districtCenters.TryGetValue(e.Key, out var d) && d == e.Value)))
+                .OrderBy(e => e.c.x).ThenBy(e => e.c.y).ThenBy(e => e.c.z).Select(e => $"({e.c.x},{e.c.y},{e.c.z}){(e.p ? "p" : "")}"));
+            return $"regular {Centers(regular)}; instant {Centers(Get<Timberborn.Navigation.InstantDistrictMap>())};"
+                + $" preview {Centers(Get<Timberborn.Navigation.PreviewDistrictMap>())}";
+        }
+
         private T Get<T>() where T : class =>
             _container.GetInstance<T>() ?? throw new Exception($"no {typeof(T).Name}");
 
@@ -1515,6 +1548,28 @@ namespace BeaverBuddies.DevTools
     {
         [OnEvent]
         public void OnEntityDeleted(Timberborn.EntitySystem.EntityDeletedEvent entityDeletedEvent) { }
+    }
+
+    // "tool ... hover": each frame the build tool shows its preview where the harness left it, not at the pointer of a
+    // copy playing behind other windows
+    [HarmonyLib.HarmonyPatch(typeof(Timberborn.BlockObjectTools.BlockObjectTool), nameof(Timberborn.BlockObjectTools.BlockObjectTool.ProcessInput))]
+    static class ToolHoverPatcher
+    {
+        internal static (Timberborn.BlockObjectTools.BlockObjectTool Tool, Placement Placement)? Held;
+
+        static bool Prefix(Timberborn.BlockObjectTools.BlockObjectTool __instance, ref bool __result)
+        {
+            if (Held is not { } held || held.Tool != __instance) return true;
+            __instance.PreviewCallback(new[] { held.Placement });
+            __result = false;
+            return false;
+        }
+    }
+
+    [HarmonyLib.HarmonyPatch(typeof(Timberborn.BlockObjectTools.BlockObjectTool), nameof(Timberborn.BlockObjectTools.BlockObjectTool.Exit))]
+    static class ToolHoverEndPatcher
+    {
+        static void Prefix() => ToolHoverPatcher.Held = null;
     }
 
     // A harness command played on every machine, like a player's action
