@@ -228,6 +228,20 @@ namespace BeaverBuddies.IO
             if (count > 0) Plugin.Log($"Discarded {count} events the guests sent before the game started");
         }
 
+        /**
+         * Those who asked to join left before the game was saved for them:
+         * there's nothing to reload. False if one is still there.
+         */
+        public bool CancelJoinIfGone()
+        {
+            lock (mapLock)
+            {
+                if (NetBase.HasLiveJoiner) return false;
+                joinWaiting = false;
+                return true;
+            }
+        }
+
         /** The game couldn't be saved for the players waiting: they're turned away. */
         public void TurnAwayJoins()
         {

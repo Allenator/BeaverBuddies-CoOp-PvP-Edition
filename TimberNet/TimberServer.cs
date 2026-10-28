@@ -375,13 +375,28 @@ namespace TimberNet
             }
         }
 
+        // Those who asked for the map and are still waiting for it
+        private readonly ConcurrentDictionary<ISocketStream, bool> joining = new ConcurrentDictionary<ISocketStream, bool>();
+
+        /** True while someone who asked to join is still connected and waiting for the map. */
+        public bool HasLiveJoiner => joining.Keys.Any(c => c.Connected);
+
         private async Task SendMap(ISocketStream client)
         { 
             // Gone already: asking for the map would have the host reload everyone for nobody
             if (!client.Connected) throw new Exception("The player left before getting the map");
-            Task<byte[]> task = mapProvider();
-            Log("Waiting for map...");
-            byte[] mapBytes = await task;
+            joining[client] = true;
+            byte[] mapBytes;
+            try
+            {
+                Task<byte[]> task = mapProvider();
+                Log("Waiting for map...");
+                mapBytes = await task;
+            }
+            finally
+            {
+                joining.TryRemove(client, out _);
+            }
 
             // TODO: This may happen a bit early - it seems possible for
             // events from a prior frame to get queued. Maybe just need to filter

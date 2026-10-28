@@ -781,6 +781,8 @@ namespace BeaverBuddies
         private void ReloadForEveryone(ServerEventIO server)
         {
             Plugin.Log("Reloading the game for everyone");
+            bool joinOnly = !_resyncService.HostPending;
+            float speedBefore = TargetSpeed;
             _resyncService.BeginHostReload();
             FinishFullTickIfNeededAndThen(() =>
             {
@@ -790,7 +792,11 @@ namespace BeaverBuddies
                 // others, goes in the save
                 io.Update();
                 DoTickIO();
-                _resyncService.SaveAndReload(server);
+                _resyncService.SaveAndReload(server, joinOnly, () =>
+                {
+                    SetTargetSpeed(speedBefore);
+                    SpeedChangePatcher.SetSpeedSilentlyNow(_speedManager, speedBefore);
+                });
             });
         }
 

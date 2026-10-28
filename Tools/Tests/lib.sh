@@ -407,7 +407,7 @@ bb_open() {
         ${BB_RTC_CODE:+--env BB_RTC_CODE="$BB_RTC_CODE"} \
         ${fake:+--env BB_FAKE_BUILD="$fake"} ${strict:+--env BB_STRICT="$strict"} ${pauses:+--env BB_PAUSES="$pauses"} ${throttle:+--env BB_THROTTLE="$throttle"} \
         ${hide:+--env BB_HIDE_CUSTOM_FILES="$hide"} \
-        ${BB_HITCH_MS:+--env BB_HITCH_MS="$BB_HITCH_MS"} ${BB_PACE_SECONDS:+--env BB_PACE_SECONDS="$BB_PACE_SECONDS"} ${BB_TICKLOG_LIVE:+--env BB_TICKLOG_LIVE=1} ${BB_DIGEST_OFF:+--env BB_DIGEST_OFF=1} ${BB_SIM_STEAM_CLOSE:+--env BB_SIM_STEAM_CLOSE=1} ${BB_SILENT_FIRST:+--env BB_SILENT_FIRST=1} \
+        ${BB_HITCH_MS:+--env BB_HITCH_MS="$BB_HITCH_MS"} ${BB_PACE_SECONDS:+--env BB_PACE_SECONDS="$BB_PACE_SECONDS"} ${BB_TICKLOG_LIVE:+--env BB_TICKLOG_LIVE=1} ${BB_DIGEST_OFF:+--env BB_DIGEST_OFF=1} ${BB_SIM_STEAM_CLOSE:+--env BB_SIM_STEAM_CLOSE=1} ${BB_SILENT_FIRST:+--env BB_SILENT_FIRST=1} ${BB_SLOW_JOIN_SAVE:+--env BB_SLOW_JOIN_SAVE="$BB_SLOW_JOIN_SAVE"} \
         ${BB_LEAK_ROOTS:+--env BB_LEAK_ROOTS="$BB_LEAK_ROOTS"} ${BB_LEAK_SIZES:+--env BB_LEAK_SIZES=1} ${BB_LEAK_WALK:+--env BB_LEAK_WALK=1} \
         --args -skipModManager -logFile "$(bb_log "$inst")" -screen-fullscreen 0 -screen-width ${BB_RES_W:-1400} -screen-height ${BB_RES_H:-880}
 }
