@@ -1071,9 +1071,13 @@ namespace BeaverBuddies.Events
             ZiplineConnectionService ziplineConnectionService = context.GetSingleton<ZiplineConnectionService>();
             if (add)
             {
-                if (!ziplineConnectionService.CanBeConnected(currentTower, otherTower))
+                // The game checks only the tower picked: its tool never goes on from a full one. A connection sent
+                // as another came back (two players at once, or a modified game) can find either full: every
+                // machine has the same towers here, so all of them refuse it alike
+                if (!currentTower.HasFreeSlots || !ziplineConnectionService.CanBeConnected(currentTower, otherTower))
                 {
-                    Plugin.LogError($"Tried to connect {currentTowerEntityID} to {otherTowerEntityID}, but it was not possible");
+                    Plugin.LogWarning($"Not connecting zipline {currentTowerEntityID} to {otherTowerEntityID}: " +
+                        (currentTower.HasFreeSlots ? "they can't be connected" : "it has no free slot"));
                     return;
                 }
                 ziplineConnectionService.Connect(currentTower, otherTower);
@@ -1091,12 +1095,18 @@ namespace BeaverBuddies.Events
         }
     }
 
+    /**
+     * The connection is sent, and the tool does what the game's Connect does after connecting: it's put away and the
+     * tower picked is selected, going on from it only if that tower has a slot left. Skipping all of Connect left the
+     * tool on the first tower, so each further pick connected that one again, past its limit (the game checks only
+     * the tower picked). The connection is still on its way, so it counts already.
+     */
     [HarmonyPatch(typeof(ZiplineConnectionAddingTool), nameof(ZiplineConnectionAddingTool.Connect))]
     class ZiplineConnectionAddingToolConnectPatcher
     {
         public static bool Prefix(ZiplineConnectionAddingTool __instance, ZiplineTower ziplineTower)
         {
-            return ReplayEvent.DoPrefix(() =>
+            if (ReplayEvent.DoPrefix(() =>
             {
                 return new ZiplineConnectionChangedEvent()
                 {
@@ -1104,7 +1114,50 @@ namespace BeaverBuddies.Events
                     otherTowerEntityID = ReplayEvent.GetEntityID(ziplineTower),
                     add = true,
                 };
-            });
+            })) return true;
+            __instance._toolService.SwitchToDefaultTool();
+            __instance._entitySelectionService.Select(ziplineTower);
+            if (ziplineTower.ConnectionTargets.Count + 1 < ziplineTower.MaxConnections)
+            {
+                __instance.SwitchTo(ziplineTower);
+                __instance._toolService.SwitchTool(__instance);
+            }
+            return false;
+        }
+    }
+
+    /**
+     * A zipline tower's panel builds its connections' buttons when it's shown, and the game shows it again itself
+     * after a connection is added or removed. In a Co-op game the connection changes when it's played, a moment later,
+     * and maybe by another player: the buttons are built again when the tower shown no longer has the connections they
+     * were built for.
+     */
+    [HarmonyPatch(typeof(ZiplineTowerFragment))]
+    class ZiplineTowerFragmentPatcher
+    {
+        private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<ZiplineTowerFragment, List<ZiplineTower>> Shown =
+            new System.Runtime.CompilerServices.ConditionalWeakTable<ZiplineTowerFragment, List<ZiplineTower>>();
+
+        [HarmonyPatch(nameof(ZiplineTowerFragment.ShowFragment))]
+        [HarmonyPostfix]
+        static void ShowFragment(ZiplineTowerFragment __instance) => Remember(__instance);
+
+        [HarmonyPatch(nameof(ZiplineTowerFragment.UpdateFragment))]
+        [HarmonyPostfix]
+        static void UpdateFragment(ZiplineTowerFragment __instance)
+        {
+            var tower = __instance._ziplineTower;
+            if (IO.EventIO.IsNull || !tower || !Shown.TryGetValue(__instance, out var built)) return;
+            if (built.SequenceEqual(tower.ConnectionTargets)) return;
+            __instance._buttons.Clear();
+            __instance.CreateButtons();
+            Remember(__instance);
+        }
+
+        private static void Remember(ZiplineTowerFragment fragment)
+        {
+            Shown.Remove(fragment);
+            if (fragment._ziplineTower) Shown.Add(fragment, fragment._ziplineTower.ConnectionTargets.ToList());
         }
     }
 

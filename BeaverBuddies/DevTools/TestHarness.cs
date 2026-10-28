@@ -1034,6 +1034,59 @@ namespace BeaverBuddies.DevTools
                     Plugin.Log($"[Test] loadorder: {string.Join("; ", parts)}");
                     break;
                 }
+                case "ziplines":
+                {
+                    // Every zipline tower by where it is: its connections and the towers they go to
+                    string At(Timberborn.ZiplineSystem.ZiplineTower t)
+                    {
+                        var c = t.GetComponent<BlockObject>().Coordinates;
+                        return $"({c.x},{c.y},{c.z})";
+                    }
+                    var towers = Get<Timberborn.ZiplineSystem.ZiplineTowerRegistry>().ZiplineTowers
+                        .OrderBy(t => t.GetComponent<BlockObject>().Coordinates.x).ThenBy(t => t.GetComponent<BlockObject>().Coordinates.y)
+                        .Select(t => $"{At(t)}:{t.ConnectionTargets.Count}[{string.Join(",", t.ConnectionTargets.Select(At))}]");
+                    Plugin.Log($"[Test] ziplines: {string.Join(" ", towers)}");
+                    break;
+                }
+                case "ziplineadd":
+                    // ziplineadd x y z: the tower's Add connection button, as its panel has it
+                    Get<Timberborn.ZiplineSystemUI.ZiplineConnectionButtonFactory>().AddConnection(ComponentAt<Timberborn.ZiplineSystem.ZiplineTower>(a));
+                    break;
+                case "ziplinepick":
+                {
+                    // ziplinepick x y z: a click on the tower with the connection tool, as the tool takes one
+                    var tool = Get<Timberborn.ZiplineSystemUI.ZiplineConnectionAddingTool>();
+                    var target = ComponentAt<Timberborn.ZiplineSystem.ZiplineTower>(a);
+                    string result = Get<Timberborn.ToolSystem.ToolService>().ActiveTool != tool ? "no tool"
+                        : !Get<Timberborn.ZiplineSystem.ZiplineConnectionService>().CanBeConnected(tool._currentZiplineTower, target) ? "refused"
+                        : "picked";
+                    if (result == "picked") tool.Connect(target);
+                    Plugin.Log($"[Test] ziplinepick {a[1]} {a[2]} {a[3]}: {result}");
+                    break;
+                }
+                case "ziplinetool":
+                {
+                    // Whether the connection tool is up, and which tower it connects from
+                    var tool = Get<Timberborn.ZiplineSystemUI.ZiplineConnectionAddingTool>();
+                    var from = tool._currentZiplineTower;
+                    var c = from ? from.GetComponent<BlockObject>().Coordinates : default;
+                    Plugin.Log($"[Test] ziplinetool: {(Get<Timberborn.ToolSystem.ToolService>().ActiveTool == tool && from ? $"from ({c.x},{c.y},{c.z})" : "off")}");
+                    break;
+                }
+                case "ziplineconnect":
+                {
+                    // ziplineconnect x y z x2 y2 z2: a connection from one tower to another sent as a player's action
+                    // as is, not through the tool
+                    var from = ComponentAt<Timberborn.ZiplineSystem.ZiplineTower>(a);
+                    var to = ComponentAt<Timberborn.ZiplineSystem.ZiplineTower>(new[] { a[0], a[4], a[5], a[6] });
+                    Record(new ZiplineConnectionChangedEvent
+                    {
+                        currentTowerEntityID = ReplayEvent.GetEntityID(from),
+                        otherTowerEntityID = ReplayEvent.GetEntityID(to),
+                        add = true,
+                    });
+                    break;
+                }
                 case "defaulttool":
                     // The build tool put away, as a player's right click does: its previews go
                     Get<Timberborn.ToolSystem.ToolService>().SwitchToDefaultTool();
