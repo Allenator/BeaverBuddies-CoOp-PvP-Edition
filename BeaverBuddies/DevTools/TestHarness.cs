@@ -904,6 +904,30 @@ namespace BeaverBuddies.DevTools
                     if (a.Contains("click")) tool.ActionCallback(new[] { placement });
                     break;
                 }
+                case "pile":
+                    // pile x y z Good amount: a pile of recovered goods there, on every machine as a player's action
+                    Record(new HarnessEvent() { command = string.Join(" ", a) });
+                    break;
+                case "eventchurn":
+                {
+                    // eventchurn n: n handlers of entity deletions come and go on this copy alone, as the batch control
+                    // window's tabs do as a player opens and closes it
+                    var bus = Get<EventBus>();
+                    var churn = Enumerable.Range(0, I(a[1])).Select(_ => new DeletionListener()).ToList();
+                    foreach (var listener in churn) bus.Register(listener);
+                    foreach (var listener in churn) bus.Unregister(listener);
+                    Plugin.Log($"[Test] eventchurn {a[1]}: done");
+                    break;
+                }
+                case "eventorder":
+                {
+                    // The goods piles' handlers of an entity's deletion, in the order the event bus calls them
+                    var order = Get<EventBus>()._subscriptions.Get(typeof(Timberborn.EntitySystem.EntityDeletedEvent))
+                        ?.Select(s => s.Subscriber).OfType<Timberborn.RecoveredGoodSystem.RecoveredGoodStackMover>()
+                        .Select(m => ReplayEvent.GetEntityID(m)?.Substring(0, 8)) ?? Enumerable.Empty<string>();
+                    Plugin.Log($"[Test] eventorder: {string.Join(" ", order)}");
+                    break;
+                }
                 case "hastool":
                 {
                     // Whether the toolbar has a build tool for a template, without opening it: a linked
@@ -1457,6 +1481,10 @@ namespace BeaverBuddies.DevTools
                         o.GetComponent<Timberborn.ConstructionSites.ConstructionSite>()?.FinishNow();
                     }
                     break;
+                case "pile":
+                    context.GetSingleton<Timberborn.RecoveredGoodSystem.RecoveredGoodStackFactory>()
+                        .Create(new Vector3Int(I(a[1]), I(a[2]), I(a[3])), new[] { new Timberborn.Goods.GoodAmount(a[4], I(a[5])) });
+                    break;
                 case "train":
                 {
                     // The troops of the building there done training at once (Timber Empires' TroopTraining)
@@ -1480,6 +1508,13 @@ namespace BeaverBuddies.DevTools
         private static ReplayService Replay => SingletonManager.GetSingleton<ReplayService>() ?? throw new Exception("not in a multiplayer game");
 
         private static void Record(ReplayEvent replayEvent) => Replay.RecordEvent(replayEvent);
+    }
+
+    // A handler of entity deletions that does nothing: eventchurn's, standing in for a player's own panels
+    class DeletionListener
+    {
+        [OnEvent]
+        public void OnEntityDeleted(Timberborn.EntitySystem.EntityDeletedEvent entityDeletedEvent) { }
     }
 
     // A harness command played on every machine, like a player's action
