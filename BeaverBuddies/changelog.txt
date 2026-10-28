@@ -1,3 +1,12 @@
+v1.1.0-1.9.4-allenator.7
+1.1.0-1.9.4-allenator.7
+* Built on 1.1.0-1.9.4, below. Install the Game Modes that comes with this build, not the Steam Workshop's.
+* Fixed desyncs after demolishing a platform, or anything else, with goods piles on it.
+* Fixed a crash for everyone when two districts' roads joined: a District Center placed in a co-op game now counts for its placer's next one, so the game refuses a second one too close, as it does alone.
+* A zipline tower can no longer get more than two connections: the connection tool goes on from the tower picked, or is put away, as it does alone.
+* Guests in a saved game's lobby are told when the host starts it, and a saved game started after a long wait in the lobby starts in sync.
+* For bug reports, the log says every ten minutes how the game kept pace, how long each load took, and whether a Steam connection goes through Steam's relays.
+
 v1.1.0-1.9.4
 1.1.0-1.9.4
 * Other players' cursors and pings show in the right place on maps whose islands are drawn apart.
