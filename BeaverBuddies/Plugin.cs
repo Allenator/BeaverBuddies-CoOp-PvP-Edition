@@ -39,6 +39,7 @@ namespace BeaverBuddies
             containerDefinition.Bind<GuestLobby>().AsSingleton();
             containerDefinition.Bind<BuildNotice>().AsSingleton();
             containerDefinition.Bind<BackgroundPlay>().AsSingleton();
+            containerDefinition.Bind<PlayOn>().AsSingleton();
             containerDefinition.Bind<PauseMenuInvite>().AsSingleton();
             if (Steam.SteamSupport.Installed)
             {

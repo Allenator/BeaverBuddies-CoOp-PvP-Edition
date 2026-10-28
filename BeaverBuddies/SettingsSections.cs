@@ -142,6 +142,10 @@ namespace BeaverBuddies
         // A save the host makes itself is written with the game paused, as a save made alone is (see GameSaverSavePatcher)
         public readonly ModSetting<bool> PauseForHostSaves = new(true, Described(nameof(PauseForHostSaves)));
 
+        // On, after everyone reloads for a desync or a player joining, the game plays on at its speed once they're back
+        // (see Connect.PlayOn); off, it waits paused for the host, as it always did
+        public readonly ModSetting<bool> PlayOnAfterReload = new(false, Described(nameof(PlayOnAfterReload)));
+
         public readonly ModSetting<bool> FriendsCanJoinSteamGame = new(true, Described(nameof(FriendsCanJoinSteamGame)));
 
         public HostingSettings(ISettings settings, ModSettingsOwnerRegistry modSettingsOwnerRegistry, ModRepository modRepository) :
@@ -157,6 +161,7 @@ namespace BeaverBuddies
             AddNonPersistentModSetting(Note);
             Add(PauseReduction, nameof(PauseReduction));
             Add(PauseForHostSaves, nameof(PauseForHostSaves));
+            Add(PlayOnAfterReload, nameof(PlayOnAfterReload));
             Add(FriendsCanJoinSteamGame, nameof(FriendsCanJoinSteamGame));
         }
 

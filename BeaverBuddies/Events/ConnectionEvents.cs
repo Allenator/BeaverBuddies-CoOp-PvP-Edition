@@ -185,7 +185,10 @@ namespace BeaverBuddies.Events
         public override void Replay(IReplayContext context)
         {
             if (analyzeOnly && !(EventIO.Get() is ServerEventIO)) return;
-            context.GetSingleton<ReplayService>().SetTargetSpeed(0);
+            ReplayService replayService = context.GetSingleton<ReplayService>();
+            // The speed it was at, before this pause, for what the game does once everyone is back (see Connect.PlayOn)
+            ResyncService.NoteSpeedBeforeResync(replayService.TargetSpeed);
+            replayService.SetTargetSpeed(0);
             ResyncService resyncService = context.GetSingleton<ResyncService>();
             // The host reloads everyone's game from its save, and the report
             // is offered once it's back (see ShowResynced)

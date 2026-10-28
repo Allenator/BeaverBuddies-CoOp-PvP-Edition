@@ -1124,6 +1124,18 @@ namespace BeaverBuddies.DevTools
                     Plugin.Log($"[Test] loadorder: {string.Join("; ", parts)}");
                     break;
                 }
+                case "modsetting":
+                {
+                    // modsetting Name 0|1: one of BeaverBuddies' on/off settings set in this running copy, as the
+                    // settings screen does (a preference set from outside only counts at the next start)
+                    var setting = new object[] { Settings.You, Settings.Multiplayer, Settings.Hosting, Settings.Autosaves, Settings.Developer }
+                        .Where(section => section != null)
+                        .Select(section => section.GetType().GetField(a[1])?.GetValue(section))
+                        .OfType<ModSettings.Core.ModSetting<bool>>().FirstOrDefault() ?? throw new Exception($"no on/off setting {a[1]}");
+                    setting.SetValue(a[2] == "1");
+                    Plugin.Log($"[Test] modsetting {a[1]} {a[2]}: {setting.Value}");
+                    break;
+                }
                 case "keepawake":
                     // Whether this copy keeps the computer awake, and how (see Connect.KeepAwake)
                     Plugin.Log($"[Test] keepawake: {Connect.KeepAwake.State}");

@@ -58,6 +58,7 @@ namespace BeaverBuddies
                 : Multiplayer?.StrictBuildMatch.Value ?? true;
         public static bool PlayInBackground => Multiplayer?.KeepPlayingInBackground.Value ?? true;
         public static bool KeepAwake => Multiplayer?.KeepComputerAwake.Value ?? true;
+        public static bool PlayOnAfterReload => Hosting?.PlayOnAfterReload.Value ?? false;
 
         // A game hosted or joined, or of the Multiplayer settlement: autosaved every so many minutes, keeping so many, and
         // not while paused (see Connect.Autosaves)

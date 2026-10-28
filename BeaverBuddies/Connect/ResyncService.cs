@@ -90,7 +90,10 @@ namespace BeaverBuddies.Connect
         public void BeginHostReload()
         {
             LastReloadReason = _hostPending ? ReloadReason.Resync : ReloadReason.Join;
-            SpeedBeforeReload = SingletonManager.GetSingleton<ReplayService>()?.TargetSpeed ?? 0;
+            // A desync's report pauses the game as it plays, before this: the speed from before it
+            SpeedBeforeReload = _hostPending && _speedBeforeResync is float speed ? speed
+                : SingletonManager.GetSingleton<ReplayService>()?.TargetSpeed ?? 0;
+            _speedBeforeResync = null;
             Plugin.Log($"Why everyone reloads: {LastReloadReason}, from speed {SpeedBeforeReload}");
             _hostPending = false;
             _loading = true;
@@ -103,6 +106,20 @@ namespace BeaverBuddies.Connect
         // back. Kept past the reload, which replaces this service with the scene
         public static ReloadReason? LastReloadReason { get; private set; }
         public static float SpeedBeforeReload { get; private set; }
+
+        // The speed the game was at as the first report of a desync paused it
+        private static float? _speedBeforeResync;
+
+        /** A desync's report is about to pause the game: the speed it's at, for after the resync (the first report's). */
+        public static void NoteSpeedBeforeResync(float speed) => _speedBeforeResync ??= speed;
+
+        /** The reason of the reload just done, once: a load after it that isn't one has none (see PlayOn). */
+        public static ReloadReason? TakeReloadReason()
+        {
+            ReloadReason? reason = LastReloadReason;
+            LastReloadReason = null;
+            return reason;
+        }
 
         /**
          * On the host, at the end of a tick: saves the game, sends the save

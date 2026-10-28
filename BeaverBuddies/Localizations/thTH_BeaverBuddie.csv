@@ -87,10 +87,13 @@ BeaverBuddies.Settings.PauseReduction.LowRisk,"เฉพาะเมนู",""
 BeaverBuddies.Settings.PauseReduction.HighRisk,"ไม่มี",""
 BeaverBuddies.Settings.PauseForHostSaves,"หยุดเกมชั่วคราวขณะคุณบันทึก",""
 BeaverBuddies.Settings.PauseForHostSaves.Tooltip,"การบันทึกที่คุณทำเองจะถูกเขียนขณะเกมหยุดชั่วคราว เหมือนในเกมผู้เล่นคนเดียว แล้วเกมจะเล่นต่อด้วยความเร็วเดิม การบันทึกอัตโนมัติจะไม่หยุดเกม ไม่ว่าแบบใด แขกจะรออยู่ ณ จุดเดียวกันขณะที่คุณบันทึก",""
+BeaverBuddies.Settings.PlayOnAfterReload,"เล่นต่อหลังซิงก์ใหม่หรือมีผู้เล่นเข้าร่วม",""
+BeaverBuddies.Settings.PlayOnAfterReload.Tooltip,"เมื่อเกมโหลดใหม่สำหรับทุกคน หลังจากไม่ซิงก์กันหรือมีผู้เล่นเข้าร่วม เกมจะเล่นต่อที่ความเร็วเดิมเมื่อทุกคนกลับมา หรือหลังจากหนึ่งนาที แทนที่จะหยุดรอให้คุณกดเล่น การตั้งความเร็วระหว่างนั้นจะยกเลิกการเล่นต่อ",""
 BeaverBuddies.Host.ConnectedClients,"กำลังรอลูกค้าเชื่อมต่อ…
 ลูกค้าที่เชื่อมต่อขณะนี้:",""
 BeaverBuddies.Host.DirectConnectClient,"ไคลเอนต์เชื่อมต่อโดยตรง",""
 BeaverBuddies.Host.StartGame,"เริ่มเกม",""
+BeaverBuddies.Host.PlayOnSoon,"จะเล่นต่อที่ความเร็ว {0} เมื่อทุกคนกลับมา",""
 BeaverBuddies.Host.InviteFriends,"เชิญเพื่อน",""
 BeaverBuddies.JoinCoopGame.Success,"เข้าร่วมแล้ว! กำลังรับแผนที่…",""
 BeaverBuddies.JoinCoopGame.Connecting,"กำลังเชื่อมต่อกับโฮสต์…",
