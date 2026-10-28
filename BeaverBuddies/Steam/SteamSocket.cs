@@ -161,6 +161,12 @@ namespace BeaverBuddies.Steam
             }
         }
 
+        // Steam's own word on the session: through its relays, or straight between the two
+        public string Route =>
+            !SteamNetworking.GetP2PSessionState(friendID, out P2PSessionState_t state) ? null
+            : state.m_bConnectionActive == 0 ? "Steam connecting"
+            : state.m_bUsingRelay != 0 ? "through Steam's relays" : "direct over Steam";
+
         private int QueuedBytes() =>
             SteamNetworking.GetP2PSessionState(friendID, out P2PSessionState_t state) ? state.m_nBytesQueuedForSend : 0;
 

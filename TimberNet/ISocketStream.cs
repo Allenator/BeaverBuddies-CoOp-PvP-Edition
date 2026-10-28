@@ -23,6 +23,9 @@ namespace TimberNet
         void Close();
         Task ConnectAsync();
 
+        // How the connection goes, for the traffic line: relayed or direct, never an address, as players post their logs
+        string? Route => null;
+
         // Waits, for a while at most, for what's written to go out, before closing on purpose (see TimberNetBase.Close):
         // a connection that keeps what's written and drops it as it closes (a Steam session) has its goodbye go first
         void Flush(int milliseconds) { }

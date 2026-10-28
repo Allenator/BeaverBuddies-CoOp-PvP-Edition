@@ -87,12 +87,17 @@ namespace BeaverBuddies.Performance
             // The frames that loaded a game don't count. Nor do the ones of
             // a game in the background, which may be throttled
             bool inGame = !EventIO.IsNull;
-            if (inGame && _wasInGame && frame == _frame + 1 && (Profiling || UnityEngine.Application.isFocused))
+            if (inGame && _wasInGame && frame == _frame + 1)
             {
                 double ms = Ms(now - _frameStart);
-                if (ms > HitchMs) Report(ms, gc - _gcAtStart, now);
-                if (Profiling) Pace(ms, now);
+                LivePace(ms, now);
+                if (Profiling || UnityEngine.Application.isFocused)
+                {
+                    if (ms > HitchMs) Report(ms, gc - _gcAtStart, now);
+                    if (Profiling) Pace(ms, now);
+                }
             }
+            else if (!inGame) _liveStart = 0;
             if (gc != _gcAtStart) _lastGc = now;
             _frame = frame;
             _wasInGame = inGame;
@@ -156,6 +161,51 @@ namespace BeaverBuddies.Performance
             _gcsAtStart = GC.CollectionCount(0);
             _frames = _framesNoTick = _framesSlow = _framesStalled = 0;
             _maxFrame = _sumFrame = _sumTicking = 0;
+        }
+
+        // Every Co-op game, focused or not: how its frames and ticks went over the last ten minutes, and its memory,
+        // so a session's logs say what each player's game did (a guest's frame rate, collections, the speed it got)
+        // Tests take it shorter, with BB_PACE_SECONDS
+        private static readonly double LivePaceSeconds =
+            double.TryParse(Environment.GetEnvironmentVariable("BB_PACE_SECONDS"), out double paceSeconds) ? paceSeconds : 600;
+        private static long _liveStart;
+        private static int _liveFrames, _liveUnfocused, _liveGcs, _liveTicks;
+        private static double _liveSum, _liveMax;
+        // Frame times by the millisecond, the last for 255 ms and over: the 95th percentile with nothing allocated
+        private static readonly int[] _liveFrameTimes = new int[256];
+
+        private static void LivePace(double ms, long now)
+        {
+            var replay = SingletonManager.GetSingleton<ReplayService>();
+            if (replay == null) return;
+            // A load starts the ticks again, and the window with them
+            if (_liveStart == 0 || replay.TicksSinceLoad < _liveTicks)
+            {
+                _liveStart = now;
+                _liveTicks = replay.TicksSinceLoad;
+                _liveGcs = GC.CollectionCount(0);
+                _liveFrames = _liveUnfocused = 0;
+                _liveSum = _liveMax = 0;
+                Array.Clear(_liveFrameTimes, 0, _liveFrameTimes.Length);
+            }
+            _liveFrames++;
+            _liveSum += ms;
+            if (ms > _liveMax) _liveMax = ms;
+            _liveFrameTimes[Math.Min(_liveFrameTimes.Length - 1, (int)ms)]++;
+            if (!UnityEngine.Application.isFocused) _liveUnfocused++;
+            double seconds = Ms(now - _liveStart) / 1000;
+            if (seconds < LivePaceSeconds) return;
+            int under = _liveFrameTimes.Length, seen = 0;
+            for (int i = 0; i < _liveFrameTimes.Length; i++)
+            {
+                seen += _liveFrameTimes[i];
+                if (seen >= _liveFrames * 0.95) { under = i + 1; break; }
+            }
+            Plugin.Log($"[Pace] {seconds:F0} s to tick {replay.TicksSinceLoad}: {(replay.TicksSinceLoad - _liveTicks) / seconds:F1} ticks a second " +
+                $"at speed {replay.TargetSpeed} (time scale {UnityEngine.Time.timeScale:F2}), {_liveFrames} frames, avg {_liveSum / _liveFrames:F1} ms, " +
+                $"95% under {under} ms, max {_liveMax:F0} ms, {_liveUnfocused} unfocused, " +
+                $"{GC.CollectionCount(0) - _liveGcs} collections, heap {GC.GetTotalMemory(false) >> 20} MB");
+            _liveStart = 0;
         }
 
         internal static void Stalled() => _stalled = true;

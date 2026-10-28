@@ -124,6 +124,8 @@ namespace BeaverBuddies.WebRtc
         public string State =>
             $"WebRTC with {other}: connection {peer?.connectionState}, ICE {peer?.iceConnectionState}, data channel {channel?.readyState}, {(Connected ? "open" : "ended")} here";
 
+        string ISocketStream.Route => peer == null ? null : Route(peer);
+
         // The way the two settled on, by kind, never the addresses, as players post their logs: each side's own
         // address on its network (host), or the one its router shows the internet (srflx, prflx)
         private static string Route(RTCPeerConnection peer)

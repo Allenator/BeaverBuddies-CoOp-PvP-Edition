@@ -66,8 +66,8 @@ namespace BeaverBuddies.IO
     {
         public JsonSettings()
         {
-            // TODO: Undo for production
-            Formatting = Formatting.Indented;
+            // On one line: the log has every action in it, and reads better a line each
+            Formatting = Formatting.None;
             TypeNameHandling = TypeNameHandling.All;
             Converters.Add(new Vector3Converter());
             Converters.Add(new Vector3IntConverter());

@@ -112,8 +112,10 @@ namespace TimberNet
                     t.sentBytes = t.sentMessages = t.receivedBytes = t.receivedMessages = t.longestSilence = 0;
                 }
                 string name = pair.Key.Name ?? pair.Key.GetType().Name;
+                string? route = pair.Key.Route;
                 Log($"Traffic with {name} over {seconds.ToString("F0", CultureInfo.InvariantCulture)} s: sent {sentBytes / 1024} KB in {sentMessages} messages, " +
-                    $"received {receivedBytes / 1024} KB in {receivedMessages}, longest silence {(silence / (double)Stopwatch.Frequency).ToString("F1", CultureInfo.InvariantCulture)} s");
+                    $"received {receivedBytes / 1024} KB in {receivedMessages}, longest silence {(silence / (double)Stopwatch.Frequency).ToString("F1", CultureInfo.InvariantCulture)} s" +
+                    (route == null ? "" : $", {route}"));
                 if (!pair.Key.Connected) traffic.TryRemove(pair.Key, out _);
             }
         }

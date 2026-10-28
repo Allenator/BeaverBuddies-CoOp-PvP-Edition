@@ -8,9 +8,29 @@ using Timberborn.SingletonSystem;
 namespace BeaverBuddies.Util
 {
     /**
-     * In the test harness, times each singleton's Load and PostLoad as a game
-     * loads and logs the slow ones, and the total of each step: where a load
-     * spends its time, the mods' share included.
+     * In a Co-op game and in the test harness, times each singleton's Load and
+     * PostLoad as a game loads and logs the slow ones, and the total of each
+     * step: where a load spends its time, the mods' share included. A player's
+     * load that takes half a minute says why in their log.
+     */
+    [ManualMethodOverwrite]
+    /*
+        10/27/2026 (1.1.2.8), each step a private method looping over its singletons, as Step does
+        public void LoadAll()
+        {
+            _loadableSingletons = _singletonRepository.GetSingletons<ILoadableSingleton>().ToImmutableArray();
+            _nonSingletonLoaders = _singletonRepository.GetSingletons<INonSingletonLoader>().ToImmutableArray();
+            _postLoadableSingletons = _singletonRepository.GetSingletons<IPostLoadableSingleton>().ToImmutableArray();
+            _nonSingletonPostLoaders = _singletonRepository.GetSingletons<INonSingletonPostLoader>().ToImmutableArray();
+            _unloadableSingletons = _singletonRepository.GetSingletons<IUnloadableSingleton>().ToImmutableArray();
+            _updatableSingletons = _singletonRepository.GetSingletons<IUpdatableSingleton>().ToImmutableArray();
+            _lateUpdatableSingletons = _singletonRepository.GetSingletons<ILateUpdatableSingleton>().ToImmutableArray();
+            LoadSingletons();
+            LoadNonSingletons();
+            PostLoadSingletons();
+            PostLoadNonSingletons();
+            _initializedSuccessfully = true;
+        }
      */
     [HarmonyPatch(typeof(SingletonLifecycleService), nameof(SingletonLifecycleService.LoadAll))]
     class LoadProfiler
@@ -21,7 +41,7 @@ namespace BeaverBuddies.Util
         [HarmonyPriority(Priority.Last)]
         static bool Prefix(SingletonLifecycleService __instance)
         {
-            if (!DevTools.TestHarness.Active) return true;
+            if (!DevTools.TestHarness.Active && IO.EventIO.IsNull) return true;
             var s = __instance;
             s._loadableSingletons = s._singletonRepository.GetSingletons<ILoadableSingleton>().ToImmutableArray();
             s._nonSingletonLoaders = s._singletonRepository.GetSingletons<INonSingletonLoader>().ToImmutableArray();

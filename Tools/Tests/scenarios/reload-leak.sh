@@ -6,7 +6,10 @@
 # These read the logging, so it is on, whatever this Mac has it at
 pref_set ModSetting.beaverbuddies.Settings.AlwaysTrace 1
 bb_close
-start_match Folktails Folktails || { fail "a match starts" "the copies never got into the game"; return; }
+# The pace line every 10 s rather than 10 minutes, for these copies
+export BB_PACE_SECONDS=10
+start_match Folktails Folktails || { unset BB_PACE_SECONDS; fail "a match starts" "the copies never got into the game"; return; }
+unset BB_PACE_SECONDS
 pass "a match starts"
 place_starts Folktails Folktails
 send host "speed 1"; sleep 6
@@ -24,6 +27,11 @@ for ((n = 1; n <= ${BB_RELOADS:-3}; n++)); do
     heap=$(said client heap)
     echo "  after reload $n: client $heap"
     heaps="$heaps $(echo "$heap" | sed -E 's/^collected ([0-9]+) MB.*/\1/')"
+done
+# The pace line, on both copies, and actions logged on one line
+for inst in host client; do
+    expect_log "the pace line ($inst)" $inst "\[Pace\] [0-9]+ s to tick [0-9]+: [0-9.]+ ticks a second at speed"
+    expect_no_log "actions on one line ($inst)" $inst '^  "\$type"'
 done
 # Each reload is said why, a desync here, and from which speed
 expect_log "the host says why everyone reloads" host "Why everyone reloads: Resync, from speed"

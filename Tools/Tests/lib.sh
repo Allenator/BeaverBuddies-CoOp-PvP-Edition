@@ -262,7 +262,7 @@ bb_open() {
         ${BB_RTC_CODE:+--env BB_RTC_CODE="$BB_RTC_CODE"} \
         ${fake:+--env BB_FAKE_BUILD="$fake"} ${strict:+--env BB_STRICT="$strict"} ${pauses:+--env BB_PAUSES="$pauses"} \
         ${hide:+--env BB_HIDE_CUSTOM_FILES="$hide"} \
-        ${BB_HITCH_MS:+--env BB_HITCH_MS="$BB_HITCH_MS"} \
+        ${BB_HITCH_MS:+--env BB_HITCH_MS="$BB_HITCH_MS"} ${BB_PACE_SECONDS:+--env BB_PACE_SECONDS="$BB_PACE_SECONDS"} \
         ${BB_LEAK_ROOTS:+--env BB_LEAK_ROOTS="$BB_LEAK_ROOTS"} ${BB_LEAK_SIZES:+--env BB_LEAK_SIZES=1} ${BB_LEAK_WALK:+--env BB_LEAK_WALK=1} \
         --args -skipModManager -logFile "$(bb_log "$inst")" -screen-fullscreen 0 -screen-width ${BB_RES_W:-1400} -screen-height ${BB_RES_H:-880}
 }
