@@ -1124,6 +1124,10 @@ namespace BeaverBuddies.DevTools
                     Plugin.Log($"[Test] loadorder: {string.Join("; ", parts)}");
                     break;
                 }
+                case "keepawake":
+                    // Whether this copy keeps the computer awake, and how (see Connect.KeepAwake)
+                    Plugin.Log($"[Test] keepawake: {Connect.KeepAwake.State}");
+                    break;
                 case "watersource":
                 {
                     // watersource list: every water source, its strength and contamination; watersource x y z strength|contamination

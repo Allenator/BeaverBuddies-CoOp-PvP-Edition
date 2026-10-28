@@ -56,6 +56,8 @@ BeaverBuddies.Settings.StrictBuildMatch,"僅與完全相同的版本建置一起
 BeaverBuddies.Settings.StrictBuildMatch.Tooltip,"拒絕 BeaverBuddies 版本建置與你不完全相同（包括遊戲版本、附加模組和派系）的玩家，也不讓你加入版本建置不同的主機。關閉後會顯示警告並可繼續遊戲，但遊戲可能失去同步。只有主機和客人都關閉此選項時，不同版本建置的玩家才能一起遊戲。",""
 BeaverBuddies.Settings.KeepPlayingInBackground,"在背景繼續執行",""
 BeaverBuddies.Settings.KeepPlayingInBackground.Tooltip,"當你主持遊戲或在別人的遊戲中遊玩時，無論遊戲本身的「在背景執行」設定為何，即使其他應用程式在前景，你的遊戲也會繼續執行。主機的遊戲一停，所有人的遊戲都會停；客人的遊戲停下則會落後，之後再追上。在多人遊戲以外，使用遊戲本身的設定。在筆電上會更耗電。",""
+BeaverBuddies.Settings.KeepComputerAwake,"保持電腦喚醒",""
+BeaverBuddies.Settings.KeepComputerAwake.Tooltip,"主持遊戲或加入他人遊戲時，電腦不會進入睡眠，讓所有人的遊戲繼續進行。螢幕仍可關閉，闔上筆記型電腦的蓋子仍會使其睡眠。",""
 BeaverBuddies.Settings.AutosaveMinutes,"自動存檔間隔",""
 BeaverBuddies.Settings.AutosaveMinutes.Tooltip,"遊戲自動存檔的間隔（按現實時間，而非遊戲內時間）。適用於你主持或加入的遊戲，以及定居點「Multiplayer」下的任何遊戲；其他遊戲依遊戲本身的方式每 10 分鐘存檔一次。",""
 BeaverBuddies.Settings.AutosaveMinutes.5,"5 分鐘",""

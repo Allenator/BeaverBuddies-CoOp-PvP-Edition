@@ -56,6 +56,8 @@ BeaverBuddies.Settings.StrictBuildMatch,"完全に同じビルドとだけプレ
 BeaverBuddies.Settings.StrictBuildMatch.Tooltip,"BeaverBuddiesのビルドがあなたと完全に同じ（ゲームのバージョン、アドオンMOD、勢力も同じ）でないプレイヤーを拒否し、そうでないホストへの参加も防ぎます。オフにすると、警告が表示された上でプレイを続けられますが、ゲームの同期がずれることがあります。異なるビルドのプレイヤー同士は、ホストとゲストの両方がこの設定をオフにしている場合にのみ一緒にプレイできます。",""
 BeaverBuddies.Settings.KeepPlayingInBackground,"バックグラウンドでもプレイを続ける",""
 BeaverBuddies.Settings.KeepPlayingInBackground.Tooltip,"ホスト中や他の人のゲームに参加中は、ゲーム本体の「バックグラウンドでもゲーム続行」の設定に関係なく、別のアプリが前面にあってもゲームが動き続けます。ホストのゲームが止まると全員のゲームが止まり、ゲストのゲームが止まるとそのゲストは遅れ、あとで追いつきます。マルチプレイ以外ではゲーム本体の設定が適用されます。ノートPCではバッテリーを多く消費します。",""
+BeaverBuddies.Settings.KeepComputerAwake,"コンピューターをスリープさせない",""
+BeaverBuddies.Settings.KeepComputerAwake.Tooltip,"ホスト中やほかの人のゲームに参加中は、全員のゲームが止まらないようにコンピューターがスリープしなくなります。画面はオフになることがあり、ノートパソコンのふたを閉じた場合はスリープします。",""
 BeaverBuddies.Settings.AutosaveMinutes,"オートセーブの間隔",""
 BeaverBuddies.Settings.AutosaveMinutes.Tooltip,"ゲームが自動保存する間隔です（ゲーム内時間ではなく実時間）。ホストまたは参加したゲームと、入植地「Multiplayer」のゲームに適用されます。その他のゲームは通常どおり10分ごとに保存します。",""
 BeaverBuddies.Settings.AutosaveMinutes.5,"5分",""

@@ -56,6 +56,8 @@ BeaverBuddies.Settings.StrictBuildMatch,"Graj tylko z dokładnie tą samą kompi
 BeaverBuddies.Settings.StrictBuildMatch.Tooltip,"Odrzuca graczy, których BeaverBuddies nie jest dokładnie tą samą kompilacją co twoja, z tą samą wersją gry, modami dodatkowymi i frakcjami, i nie pozwala ci dołączyć do hosta, u którego tak nie jest. Po wyłączeniu dostajesz ostrzeżenie i grasz dalej, ale gra może się rozsynchronizować. Gracze z różnymi kompilacjami mogą grać razem tylko wtedy, gdy zarówno host, jak i gość mają to wyłączone.",""
 BeaverBuddies.Settings.KeepPlayingInBackground,"Graj dalej w tle",""
 BeaverBuddies.Settings.KeepPlayingInBackground.Tooltip,"Gdy hostujesz lub grasz w czyjejś grze, twoja gra działa dalej, gdy na wierzchu jest inna aplikacja, niezależnie od ustawienia gry ""Działanie w tle"". Gdy zatrzymuje się gra hosta, zatrzymują się gry wszystkich; gdy zatrzymuje się gra gościa, gość zostaje w tyle, a potem nadrabia. Poza grą wieloosobową obowiązuje ustawienie samej gry. Zużywa więcej baterii na laptopie.",""
+BeaverBuddies.Settings.KeepComputerAwake,"Nie usypiaj komputera",""
+BeaverBuddies.Settings.KeepComputerAwake.Tooltip,"Gdy hostujesz lub grasz w czyjejś grze, komputer nie przechodzi w uśpienie, więc gra toczy się dalej dla wszystkich. Ekran nadal może się wyłączyć, a zamknięcie pokrywy laptopa nadal go usypia.",""
 BeaverBuddies.Settings.AutosaveMinutes,"Autozapis co",""
 BeaverBuddies.Settings.AutosaveMinutes.Tooltip,"Jak często gra zapisuje się automatycznie, według upływu prawdziwego czasu, a nie czasu gry. Dla gier, które hostujesz lub do których dołączasz, oraz każdej gry z osady Multiplayer; inne gry zapisują się co 10 minut, tak jak w grze.",""
 BeaverBuddies.Settings.AutosaveMinutes.5,"5 minut",""

@@ -56,6 +56,8 @@ BeaverBuddies.Settings.StrictBuildMatch,"Yalnızca birebir aynı derlemeyle oyna
 BeaverBuddies.Settings.StrictBuildMatch.Tooltip,"BeaverBuddies'i seninkiyle aynı oyun sürümü, eklenti modları ve gruplarla birebir aynı derleme olmayan oyuncuları reddeder ve böyle olmayan bir sunucuya katılmanı engeller. Kapalıyken uyarılırsın ve oynamaya devam edersin, ama oyunun senkronizasyonu bozulabilir. Farklı derlemelerdeki oyuncular yalnızca hem sunucu hem de konuk bu ayarı kapattıysa birlikte oynayabilir.",""
 BeaverBuddies.Settings.KeepPlayingInBackground,"Arka planda oynamaya devam et",""
 BeaverBuddies.Settings.KeepPlayingInBackground.Tooltip,"Sunucu olduğunda ya da birinin oyununda oynadığında, oyunun kendi ""Arka planda oynat"" ayarı ne olursa olsun, önde başka bir uygulama varken de senin oyunun çalışmaya devam eder. Oyunu duran sunucu herkesinkini durdurur; oyunu duran konuk geride kalır ve sonra yetişir. Çok oyunculu oyun dışında oyunun kendi ayarı geçerlidir. Dizüstü bilgisayarda daha çok pil harcar.",""
+BeaverBuddies.Settings.KeepComputerAwake,"Bilgisayarı uyanık tut",""
+BeaverBuddies.Settings.KeepComputerAwake.Tooltip,"Oyun kurarken veya başkasının oyununda oynarken bilgisayarın uyku moduna geçmez, böylece oyun herkes için sürer. Ekran yine de kapanabilir ve dizüstü bilgisayarın kapağını kapatmak onu yine uyutur.",""
 BeaverBuddies.Settings.AutosaveMinutes,"Otomatik kayıt sıklığı",""
 BeaverBuddies.Settings.AutosaveMinutes.Tooltip,"Oyununuzun ne sıklıkla otomatik kaydedileceği; oyun zamanına göre değil, gerçek zamana göre. Ev sahibi olduğunuz ya da katıldığınız oyunlar ve Multiplayer yerleşimindeki her oyun için geçerlidir; diğer oyunlar oyunun kendi ayarıyla her 10 dakikada bir kaydedilir.",""
 BeaverBuddies.Settings.AutosaveMinutes.5,"5 dakika",""

@@ -27,6 +27,7 @@ namespace BeaverBuddies.Connect
         public void UpdateSingleton()
         {
             if (Application.runInBackground != _lastSet) Apply();
+            KeepAwake.Update();
         }
 
         /** Runs in the background if the player has it so, or while hosting or joined if they let the mod. */
