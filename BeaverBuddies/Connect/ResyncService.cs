@@ -66,6 +66,7 @@ namespace BeaverBuddies.Connect
         {
             if (_hostPending || IsReloading) return;
             Plugin.Log($"Resyncing everyone after the desync of {desync.playerID}");
+            DesyncDetecter.TickLog.Dump("at the resync");
             _resyncedFrom = desync;
             _hostPending = true;
         }
@@ -77,6 +78,7 @@ namespace BeaverBuddies.Connect
         public void WaitForHost(ClientDesyncedEvent desync)
         {
             _resyncedFrom ??= desync;
+            DesyncDetecter.TickLog.Dump("at the resync");
         }
 
         /** The host's save has arrived over the connection (on the Update() thread). */

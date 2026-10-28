@@ -286,6 +286,7 @@ namespace BeaverBuddies
             DeterminismService.ReseedAfterLoad();
             Fixes.DeferredDestroyFix.Reset();
             Fixes.MenuReleaseFix.GameLoaded();
+            DesyncDetecter.TickLog.Forget();
             if (DevTools.TestHarness.Active) Util.ObjectCensus.Log("after loading");
             if (HitchWatch.Profiling)
             {
@@ -579,6 +580,7 @@ namespace BeaverBuddies
         public void HandleDesync(string why = null)
         {
             if (IsDesynced) return;
+            DesyncDetecter.TickLog.Dump("at this machine's desync");
             // The test harness can keep a desynced game as it is, to look at what differs
             if (DevTools.TestHarness.Active && DevTools.TestHarness.NoResync)
             {
@@ -932,11 +934,8 @@ namespace BeaverBuddies
 
             DesyncDetecterService.RecordHashes(ticksSinceLoad, TEBPatcher.EntityUpdateHash, TEBPatcher.PositionHash, UnityEngine.Random.state.s0, DayClock());
 
-            // IO Complete for Tick
-            Plugin.Log($"Tick {ticksSinceLoad:D5} IO done; " +
-                $"Order hash: {TEBPatcher.EntityUpdateHash:X8}; " +
-                $"Move hash: {TEBPatcher.PositionHash:X8}; " +
-                $"Random s0: {UnityEngine.Random.state.s0:X8}");
+            // IO Complete for Tick: logged every 100th tick, the last 1000 kept for a desync, a resync or a crash
+            DesyncDetecter.TickLog.Record(ticksSinceLoad, (uint)TEBPatcher.EntityUpdateHash, (uint)TEBPatcher.PositionHash, (uint)UnityEngine.Random.state.s0);
 
             // A guest's state checked against the host's every tick; with tracing on, its traces do more
             if (io is ClientEventIO && !Settings.Debug && DesyncDetecterService.DiffersFromHost(ticksSinceLoad))
