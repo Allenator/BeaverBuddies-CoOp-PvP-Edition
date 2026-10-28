@@ -109,6 +109,7 @@ BeaverBuddies.JoinCoopGame.Error.Incompatible,"L'hôte joue avec d'autres mods o
 BeaverBuddies.JoinCoopGame.Error.Full,"La partie est pleine.",""
 BeaverBuddies.Host.RefusedBuild,"{0} n'a pas pu rejoindre : BeaverBuddies {1} de son côté, {2} chez toi. Tout le monde doit avoir exactement la même version compilée.",""
 BeaverBuddies.JoinCoopGame.Error.Silent,"L'hôte n'a pas eu de nouvelles de ta partie à temps. Rejoins à nouveau.",""
+BeaverBuddies.JoinCoopGame.Error.NoMap,"Rien n'est venu de l'hôte pendant 30 secondes, la partie n'est donc pas arrivée. Rejoignez-la à nouveau.",""
 BeaverBuddies.Host.RefusedSilent,"{0} a été refusé : sa partie n'a jamais dit quelle version compilée de BeaverBuddies elle utilise.",""
 BeaverBuddies.JoinCoopGame.Error.CouldNotConnect,"Impossible de se connecter à l’hôte. Veuillez vérifier l’adresse et le port, et assurez-vous que l’hôte héberge bien la partie et a configuré la redirection de port si nécessaire. Détails de l’erreur :",""
 BeaverBuddies.KeyBindings.Group,"BeaverBuddies",""

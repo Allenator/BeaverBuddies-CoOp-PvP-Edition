@@ -109,6 +109,7 @@ BeaverBuddies.JoinCoopGame.Error.Incompatible,"主机使用了其他模组，或
 BeaverBuddies.JoinCoopGame.Error.Full,"游戏已满。",""
 BeaverBuddies.Host.RefusedBuild,"{0} 无法加入：对方使用 BeaverBuddies {1}，而你的主机是 {2}。所有人都需要完全相同的版本构建。",""
 BeaverBuddies.JoinCoopGame.Error.Silent,"主机没有及时收到你的游戏的回应。请重新加入。",""
+BeaverBuddies.JoinCoopGame.Error.NoMap,"30 秒内没有收到主机的任何数据，所以游戏没有送达。请重新加入。",""
 BeaverBuddies.Host.RefusedSilent,"{0} 被拒绝：对方的游戏始终没有说明它使用的是哪个 BeaverBuddies 版本构建。",""
 BeaverBuddies.JoinCoopGame.Error.CouldNotConnect,"无法连接到主机。请检查地址和端口，并确保主机正在运行且在需要时已正确设置端口转发。错误详情：",""
 BeaverBuddies.KeyBindings.Group,"BeaverBuddies",""

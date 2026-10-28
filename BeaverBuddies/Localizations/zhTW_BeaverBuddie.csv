@@ -109,6 +109,7 @@ BeaverBuddies.JoinCoopGame.Error.Incompatible,"主機使用了其他模組，或
 BeaverBuddies.JoinCoopGame.Error.Full,"遊戲已滿。",""
 BeaverBuddies.Host.RefusedBuild,"{0} 無法加入：對方使用 BeaverBuddies {1}，而你的主機是 {2}。所有人都需要完全相同的版本建置。",""
 BeaverBuddies.JoinCoopGame.Error.Silent,"主機沒有及時收到你的遊戲的回應。請重新加入。",""
+BeaverBuddies.JoinCoopGame.Error.NoMap,"30 秒內沒有收到主機的任何資料，所以遊戲沒有送達。請重新加入。",""
 BeaverBuddies.Host.RefusedSilent,"{0} 被拒絕：對方的遊戲始終沒有說明它使用的是哪個 BeaverBuddies 版本建置。",""
 BeaverBuddies.JoinCoopGame.Error.CouldNotConnect,"無法連線到主機。請檢查位址和埠號，並確保主機正在運行且在需要時已設定埠號轉送。錯誤詳細資訊：",""
 BeaverBuddies.KeyBindings.Group,"BeaverBuddies",""

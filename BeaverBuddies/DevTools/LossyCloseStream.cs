@@ -76,4 +76,38 @@ namespace BeaverBuddies.DevTools
 
         public Task ConnectAsync() => _inner.ConnectAsync();
     }
+
+    /**
+     * For tests: the host's first connection gets nothing the host sends (BB_SILENT_FIRST=1), as a Steam session that
+     * failed and lost the game on its way did on October 25, 2026, so the guest's wait for the game can be seen to end.
+     * The connections after it are whole.
+     */
+    public class SilentFirstStream : ISocketStream
+    {
+        private static int _accepted;
+
+        public static ISocketStream Wrap(ISocketStream stream) =>
+            TestHarness.Active && Environment.GetEnvironmentVariable("BB_SILENT_FIRST") == "1" && Interlocked.Increment(ref _accepted) == 1
+                ? new SilentFirstStream(stream) : stream;
+
+        private readonly ISocketStream _inner;
+
+        private SilentFirstStream(ISocketStream inner)
+        {
+            _inner = inner;
+            Plugin.Log("[Test] This connection gets nothing the host sends");
+        }
+
+        public bool Connected => _inner.Connected;
+        public string Name => _inner.Name;
+        public int MaxChunkSize => _inner.MaxChunkSize;
+        public int MaxBytesPerSecond => _inner.MaxBytesPerSecond;
+        public int ConnectTimeoutMs => _inner.ConnectTimeoutMs;
+        public string Route => _inner.Route;
+        public int Read(byte[] buffer, int offset, int count) => _inner.Read(buffer, offset, count);
+        public void Write(byte[] buffer, int offset, int count) { }
+        public void Flush(int milliseconds) { }
+        public void Close() => _inner.Close();
+        public Task ConnectAsync() => _inner.ConnectAsync();
+    }
 }

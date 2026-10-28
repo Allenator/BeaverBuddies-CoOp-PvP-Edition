@@ -109,6 +109,7 @@ BeaverBuddies.JoinCoopGame.Error.Incompatible,"Хост играет с друг
 BeaverBuddies.JoinCoopGame.Error.Full,"Игра заполнена.",""
 BeaverBuddies.Host.RefusedBuild,"{0} не может подключиться: у этого игрока BeaverBuddies {1}, а вы хостите {2}. Всем нужна точно такая же сборка.",""
 BeaverBuddies.JoinCoopGame.Error.Silent,"Хост не получил ответа от вашей игры вовремя. Подключитесь снова.",""
+BeaverBuddies.JoinCoopGame.Error.NoMap,"От хоста ничего не приходило 30 секунд, поэтому игра не загрузилась. Присоединитесь снова.",""
 BeaverBuddies.Host.RefusedSilent,"{0} не пущен: его игра так и не сообщила, какая у неё сборка BeaverBuddies.",""
 BeaverBuddies.JoinCoopGame.Error.CouldNotConnect,"Не удалось подключиться к хосту. Проверьте адрес и порт, убедитесь, что хост запущен и, при необходимости, настроена переадресация порта. Подробности ошибки:",""
 BeaverBuddies.KeyBindings.Group,"BeaverBuddies",""

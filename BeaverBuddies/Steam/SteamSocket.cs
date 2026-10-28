@@ -49,11 +49,27 @@ namespace BeaverBuddies.Steam
 
         private SteamPacketListener packetListener;
 
+        // Each player's connection in use, for a failed session to end it (see SessionFailed)
+        private static readonly ConcurrentDictionary<CSteamID, SteamSocket> Live = new ConcurrentDictionary<CSteamID, SteamSocket>();
+
         public SteamSocket(CSteamID friendID, bool autoconnect = false)
         {
             this.friendID = friendID;
             Name = SteamFriends.GetFriendPersonaName(friendID);
             Connected = autoconnect;
+            Live[friendID] = this;
+        }
+
+        /**
+         * Steam says the session with a player failed: what was on its way is lost, and what comes after can't be read
+         * as the stream it was. The connection ends, as a dropped one does; a player can join again. Sessions failed only
+         * as players left or dropped in the October 25 and 26 logs, never during a game.
+         */
+        public static void SessionFailed(CSteamID player)
+        {
+            if (!Live.TryGetValue(player, out SteamSocket socket) || !socket.Connected) return;
+            Plugin.LogWarning($"The connection with {socket.Name} ends with its Steam session");
+            socket.Close();
         }
 
         public void RegisterSteamPacketListener(SteamPacketListener listener)
@@ -80,6 +96,7 @@ namespace BeaverBuddies.Steam
         public void Close()
         {
             Connected = false;
+            Live.TryRemove(new KeyValuePair<CSteamID, SteamSocket>(friendID, this));
             packetListener?.UnregisterSocket(this);
             try
             {

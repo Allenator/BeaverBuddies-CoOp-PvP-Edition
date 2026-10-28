@@ -109,6 +109,7 @@ BeaverBuddies.JoinCoopGame.Error.Incompatible,"O anfitrião joga com outros mods
 BeaverBuddies.JoinCoopGame.Error.Full,"A partida está cheia.",""
 BeaverBuddies.Host.RefusedBuild,"{0} não pôde entrar: tem BeaverBuddies {1}, e você hospeda {2}. Todos precisam exatamente da mesma build.",""
 BeaverBuddies.JoinCoopGame.Error.Silent,"O anfitrião não recebeu notícias do seu jogo a tempo. Entre de novo.",""
+BeaverBuddies.JoinCoopGame.Error.NoMap,"Nada veio do anfitrião por 30 segundos, então o jogo não chegou. Entre de novo.",""
 BeaverBuddies.Host.RefusedSilent,"{0} foi recusado: o jogo dele nunca disse qual build do BeaverBuddies usa.",""
 BeaverBuddies.JoinCoopGame.Error.CouldNotConnect,"Não foi possível conectar ao host. Verifique o endereço e a porta, e certifique-se de que o host esteja hospedando e com o redirecionamento de porta configurado, se necessário. Detalhes do erro:",""
 BeaverBuddies.KeyBindings.Group,"BeaverBuddies",""

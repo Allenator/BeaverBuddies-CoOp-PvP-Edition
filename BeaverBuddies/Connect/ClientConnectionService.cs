@@ -108,6 +108,12 @@ namespace BeaverBuddies.Connect
                     ShowError("BeaverBuddies.JoinCoopGame.Error.Full");
                     return;
                 }
+                // Nothing came at all: joining again works (see ClientEventIO.CheckMapComing)
+                if (error == ClientEventIO.NoMapError)
+                {
+                    ShowError("BeaverBuddies.JoinCoopGame.Error.NoMap");
+                    return;
+                }
                 // Gone from its lobby before the game started
                 if (error == TimberNet.TimberNetBase.HostLeftError)
                 {

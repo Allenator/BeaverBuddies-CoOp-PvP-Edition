@@ -109,6 +109,7 @@ BeaverBuddies.JoinCoopGame.Error.Incompatible,"ホストは別のMOD、または
 BeaverBuddies.JoinCoopGame.Error.Full,"ゲームは満員です。",""
 BeaverBuddies.Host.RefusedBuild,"{0} は参加できませんでした: 相手は BeaverBuddies {1}、あなたのホストは {2} です。全員が完全に同じビルドである必要があります。",""
 BeaverBuddies.JoinCoopGame.Error.Silent,"ホストがあなたのゲームからの応答を時間内に受け取れませんでした。もう一度参加してください。",""
+BeaverBuddies.JoinCoopGame.Error.NoMap,"ホストから30秒間何も届かなかったため、ゲームを受け取れませんでした。もう一度参加してください。",""
 BeaverBuddies.Host.RefusedSilent,"{0} は拒否されました: そのゲームは使っているBeaverBuddiesのビルドを最後まで伝えませんでした。",""
 BeaverBuddies.JoinCoopGame.Error.CouldNotConnect,"ホストに接続できませんでした。アドレスとポートを確認し、ホストが実際にホスティングしており、必要に応じてポート転送が設定されていることを確認してください。エラー詳細:",""
 BeaverBuddies.KeyBindings.Group,"BeaverBuddies",""

@@ -109,6 +109,7 @@ BeaverBuddies.JoinCoopGame.Error.Incompatible,"Sunucu başka modlarla ya da Beav
 BeaverBuddies.JoinCoopGame.Error.Full,"Oyun dolu.",""
 BeaverBuddies.Host.RefusedBuild,"{0} katılamadı: BeaverBuddies {1} kullanıyor, sen ise {2} ile sunuyorsun. Herkesin birebir aynı derlemeye ihtiyacı var.",""
 BeaverBuddies.JoinCoopGame.Error.Silent,"Sunucu oyunundan zamanında haber alamadı. Tekrar katıl.",""
+BeaverBuddies.JoinCoopGame.Error.NoMap,"Kurucudan 30 saniye boyunca hiçbir şey gelmedi, bu yüzden oyun ulaşmadı. Yeniden katıl.",""
 BeaverBuddies.Host.RefusedSilent,"{0} reddedildi: oyunu hangi BeaverBuddies derlemesini kullandığını hiç söylemedi.",""
 BeaverBuddies.JoinCoopGame.Error.CouldNotConnect,"Ana bilgisayara bağlanılamadı. Adresi ve portu kontrol edin ve ana bilgisayarın gerçekten sunucuyu barındırdığından ve gerekiyorsa port yönlendirmesinin etkin olduğundan emin olun. Hata ayrıntıları:",""
 BeaverBuddies.KeyBindings.Group,"BeaverBuddies",""

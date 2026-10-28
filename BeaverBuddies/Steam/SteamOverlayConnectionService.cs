@@ -138,12 +138,12 @@ namespace BeaverBuddies.Steam
             SteamNetworking.AcceptP2PSessionWithUser(clientId);
         }
 
-        // Steam may set the session up again on the next packet, so it's
-        // only logged: a guest that stops hearing the host is told (see HostSilence)
+        // What was on its way is lost with it: the connection ends (see SteamSocket.SessionFailed)
         private void OnP2PSessionConnectFail(P2PSessionConnectFail_t callback)
         {
             string name = SteamFriends.GetFriendPersonaName(callback.m_steamIDRemote);
             Plugin.LogWarning($"The Steam session with {name} failed: {(EP2PSessionError)callback.m_eP2PSessionError}");
+            SteamSocket.SessionFailed(callback.m_steamIDRemote);
         }
 
         // This should only be called if the SteamOverlayInputBlocker is on top,

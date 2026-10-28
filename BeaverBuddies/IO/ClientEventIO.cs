@@ -34,7 +34,38 @@ namespace BeaverBuddies.IO
         protected override void Updated()
         {
             CheckHostHeard();
+            CheckMapComing();
             SayHello();
+        }
+
+        private readonly Action<string> _onError;
+
+        private void Fail(string error)
+        {
+            Plugin.LogError(error);
+            CleanUp();
+            FailedToConnect = true;
+            // A dead connection mustn't stay the game's IO, or the next
+            // game started here loads as a client with no host
+            if (EventIO.Get() == this) EventIO.Reset();
+            _onError(error);
+        }
+
+        /** Nothing came from the host, and no game: the join ends saying so (see CheckMapComing). */
+        public const string NoMapError = "NoMap";
+        private const double NoMapSeconds = 30;
+        private bool _gaveUp;
+
+        // The host sends its game first of all, as a player connects or once it's saved for them: nothing at all from it
+        // for this long, the game not in, and it isn't coming. A rejoin over a stuck Steam session waited 88 s on
+        // October 25, 2026, until the player cancelled; joining again works
+        private void CheckMapComing()
+        {
+            if (_mapReceived || _gaveUp || FailedToConnect || NetBase == null || !_socket.Connected) return;
+            if (NetBase.SecondsSinceHeard < NoMapSeconds) return;
+            _gaveUp = true;
+            Plugin.LogWarning($"Nothing from the host in {NoMapSeconds:0} s, and no game: not waiting any longer");
+            Fail(NoMapError);
         }
 
         private void CheckHostHeard()
@@ -122,16 +153,8 @@ namespace BeaverBuddies.IO
             NetBase.OnTransientMessage += EventIO.RaiseTransientMessageReceived;
             NetBase.OnTransientMessage += OnTransientMessage;
             NetBase.OnDisconnected += () => HostLeft = true;
-            NetBase.OnError += (error) =>
-            {
-                Plugin.LogError(error);
-                CleanUp();
-                FailedToConnect = true;
-                // A dead connection mustn't stay the game's IO, or the next
-                // game started here loads as a client with no host
-                if (EventIO.Get() == this) EventIO.Reset();
-                onError(error);
-            };
+            _onError = onError;
+            NetBase.OnError += Fail;
             try
             {
                 NetBase.Start();

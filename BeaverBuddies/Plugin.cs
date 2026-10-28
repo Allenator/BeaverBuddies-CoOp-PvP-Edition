@@ -210,7 +210,7 @@ namespace BeaverBuddies
             Harmony harmony = new Harmony(ID);
             PatchAll(harmony);
             // A test copy's host connections too (see DevTools.LossyCloseStream)
-            TimberNet.TCPListenerWrapper.Wrap = DevTools.LossyCloseStream.Wrap;
+            TimberNet.TCPListenerWrapper.Wrap = stream => DevTools.LossyCloseStream.Wrap(DevTools.SilentFirstStream.Wrap(stream));
             AutomationEvent.ApplyAutomationPatches(harmony);
 
             // apply each advanced monomod patch manually.

@@ -109,6 +109,7 @@ BeaverBuddies.JoinCoopGame.Error.Incompatible,"โฮสต์ใช้ม็อ
 BeaverBuddies.JoinCoopGame.Error.Full,"เกมเต็มแล้ว",""
 BeaverBuddies.Host.RefusedBuild,"{0} เข้าร่วมไม่ได้: ผู้เล่นใช้ BeaverBuddies {1} แต่คุณโฮสต์ {2} ทุกคนต้องใช้บิลด์เดียวกันทุกประการ",""
 BeaverBuddies.JoinCoopGame.Error.Silent,"โฮสต์ไม่ได้รับการตอบกลับจากเกมของคุณทันเวลา โปรดเข้าร่วมอีกครั้ง",""
+BeaverBuddies.JoinCoopGame.Error.NoMap,"ไม่มีอะไรมาจากโฮสต์เลยเป็นเวลา 30 วินาที เกมจึงมาไม่ถึง เข้าร่วมอีกครั้ง",""
 BeaverBuddies.Host.RefusedSilent,"{0} ถูกปฏิเสธ: เกมของผู้เล่นไม่เคยบอกว่าใช้บิลด์ใดของ BeaverBuddies",""
 BeaverBuddies.JoinCoopGame.Error.CouldNotConnect,"ไม่สามารถเชื่อมต่อกับโฮสต์ได้ โปรดตรวจสอบที่อยู่และพอร์ต และตรวจสอบให้แน่ใจว่าโฮสต์กำลังโฮสต์อยู่และมีการส่งต่อพอร์ตหากจำเป็น รายละเอียดข้อผิดพลาด:",""
 BeaverBuddies.KeyBindings.Group,"BeaverBuddies",""

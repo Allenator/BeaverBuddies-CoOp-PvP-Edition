@@ -109,6 +109,7 @@ BeaverBuddies.JoinCoopGame.Error.Incompatible,"Der Host spielt mit anderen Mods 
 BeaverBuddies.JoinCoopGame.Error.Full,"Das Spiel ist voll.",""
 BeaverBuddies.Host.RefusedBuild,"{0} konnte nicht beitreten: BeaverBuddies {1} dort, {2} bei dir. Alle brauchen genau denselben Build.",""
 BeaverBuddies.JoinCoopGame.Error.Silent,"Der Host hat nicht rechtzeitig von deinem Spiel gehört. Tritt erneut bei.",""
+BeaverBuddies.JoinCoopGame.Error.NoMap,"30 Sekunden lang kam nichts vom Host, das Spiel ist also nicht angekommen. Tritt erneut bei.",""
 BeaverBuddies.Host.RefusedSilent,"{0} wurde abgewiesen: Das Spiel hat nie gesagt, welchen Build von BeaverBuddies es nutzt.",""
 BeaverBuddies.JoinCoopGame.Error.CouldNotConnect,"Verbindung zum Host konnte nicht hergestellt werden. Bitte überprüfen Sie die Adresse und den Port und stellen Sie sicher, dass der Host das Spiel hostet und die Portweiterleitung aktiviert ist, falls erforderlich. Fehlerinformationen:",""
 BeaverBuddies.KeyBindings.Group,"BeaverBuddies",""
