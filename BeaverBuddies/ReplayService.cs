@@ -412,7 +412,6 @@ namespace BeaverBuddies
             }
 
             int currentTick = ticksSinceLoad;
-            if (eventsToReplay.Count > 0) DeterminismService.ReseedIfWaitingForStart();
             IsReplayingEvents = true;
             // Reset however the loop ends, so a failure can't leave every later
             // local action looking like a replay
@@ -445,6 +444,12 @@ namespace BeaverBuddies
                         continue;
                     }
                 
+                    // The first events after a lobby's start find the random state set to the start's (see
+                    // DeterminismService.ReseedAtFirstEvents): checked event by event, as the host's welcome, which
+                    // marks a guest waiting in its lobby, can come in the same batch as the host's first events, when
+                    // the host started as the guest was loading
+                    DeterminismService.ReseedIfWaitingForStart();
+
                     // If this event was played (e.g. on the server) and recorded a 
                     // random state, make sure we're in the same state.
                     // Skip if we're in Debug mode, since we'll get more details
