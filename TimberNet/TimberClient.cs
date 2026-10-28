@@ -87,7 +87,7 @@ namespace TimberNet
         public override void Close()
         {
             // The host told this player is leaving, before what's queued goes out and the connection closes
-            if (client.Connected && !hostGone) QueueLength(client, CLOSE_MARKER);
+            if (client.Connected && !hostGone) QueueGoodbye(client);
             base.Close();
             client.Close();
         }

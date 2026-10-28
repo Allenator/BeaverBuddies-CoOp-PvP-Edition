@@ -39,6 +39,8 @@ namespace TimberNet
         // session ends without the other side hearing of it, and a dropped
         // connection looks the same as one closed
         public const int CLOSE_MARKER = -2;
+        // The answer to CLOSE_MARKER: the goodbye was heard, and the connection can close (see Close)
+        public const int CLOSE_ACK = -3;
         // The error a guest gets for a host that left before sending its game
         public const string HostLeftError = "HostLeft";
         // How long closing waits for what's queued to go out, the host's goodbye among it
@@ -133,6 +135,18 @@ namespace TimberNet
 
         public bool IsStopped { get; private set; } = false;
 
+        // The connections told goodbye, and when each answered (0 not yet): see Close
+        private readonly ConcurrentDictionary<ISocketStream, long> goodbyes = new ConcurrentDictionary<ISocketStream, long>();
+        // Closing, and waiting for those answers: the listeners read on until they come
+        private volatile bool awaitingGoodbyes;
+
+        /** Says goodbye on a connection, after what's queued for it: it answers once it's heard it (CLOSE_ACK). */
+        protected void QueueGoodbye(ISocketStream stream)
+        {
+            goodbyes[stream] = 0;
+            QueueLength(stream, CLOSE_MARKER);
+        }
+
         public int Hash { get; private set; } = 17;
 
         public int TickCount { get; private set; }
@@ -162,6 +176,9 @@ namespace TimberNet
 
         public virtual void Close()
         {
+            long startedClosing = Stopwatch.GetTimestamp();
+            // First, so no listener stops reading between the two
+            awaitingGoodbyes = true;
             IsStopped = true;
             var stopping = new List<(ISocketStream stream, StreamSender sender)>();
             foreach (ISocketStream stream in senders.Keys)
@@ -178,6 +195,18 @@ namespace TimberNet
             foreach (var (_, sender) in stopping)
             {
                 sender.WaitStopped(left());
+            }
+            // Handed out isn't heard: a connection that keeps what's written and drops it as it closes (a Steam session)
+            // lost the goodbye when it closed at once (October 25, 2026). Each one told answers once it has it
+            var told = goodbyes.Keys.ToList();
+            while (left() > 0 && told.Any(s => s.Connected && goodbyes[s] == 0)) Thread.Sleep(5);
+            awaitingGoodbyes = false;
+            foreach (ISocketStream stream in told)
+            {
+                long heard = goodbyes[stream];
+                string name = stream.Name ?? stream.GetType().Name;
+                Log(heard != 0 ? $"{name} heard the goodbye in {(heard - startedClosing) * 1000 / Stopwatch.Frequency} ms"
+                    : stream.Connected ? $"{name} didn't confirm the goodbye in {CloseWaitMs / 1000} s" : $"{name}'s connection ended before it confirmed the goodbye");
             }
             foreach (var (stream, _) in stopping)
             {
@@ -355,14 +384,23 @@ namespace TimberNet
             //Log("Client connected");
             int messageCount = 0;
             bool saidGoodbye = false;
-            while (client.Connected && !IsStopped)
+            // Closing, it reads on while answers to its goodbye are awaited (see Close)
+            while (client.Connected && (!IsStopped || awaitingGoodbyes))
             {
                 if (!TryReadLength(client, out int messageLength)) break;
 
                 if (messageLength == CLOSE_MARKER)
                 {
                     if (isClient) Log("The host is leaving the game");
+                    // Heard: the other end closes once it knows, not before (see Close)
+                    if (!IsStopped) QueueLength(client, CLOSE_ACK);
                     saidGoodbye = true;
+                    break;
+                }
+
+                if (messageLength == CLOSE_ACK)
+                {
+                    if (goodbyes.ContainsKey(client)) goodbyes[client] = Stopwatch.GetTimestamp();
                     break;
                 }
 

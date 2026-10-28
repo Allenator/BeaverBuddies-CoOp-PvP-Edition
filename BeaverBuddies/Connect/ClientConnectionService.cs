@@ -93,7 +93,8 @@ namespace BeaverBuddies.Connect
                 }
             }
 
-            return TryToConnect(new TCPClientWrapper(address, port));
+            // A test copy's can behave as a Steam session does as it closes (see DevTools.LossyCloseStream)
+            return TryToConnect(DevTools.LossyCloseStream.Wrap(new TCPClientWrapper(address, port)));
         }
 
         private bool TryToConnect(ISocketStream socket)

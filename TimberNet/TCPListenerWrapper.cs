@@ -23,9 +23,12 @@ namespace TimberNet
             listener.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
         }
 
+        // Tests can put each connection accepted in something that behaves as another transport does
+        public static Func<ISocketStream, ISocketStream> Wrap = stream => stream;
+
         public ISocketStream AcceptClient()
         {
-            return new TCPClientWrapper(listener.AcceptTcpClient());
+            return Wrap(new TCPClientWrapper(listener.AcceptTcpClient()));
         }
 
         public void Start()

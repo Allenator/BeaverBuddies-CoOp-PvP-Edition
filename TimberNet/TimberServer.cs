@@ -501,7 +501,7 @@ namespace TimberNet
             // Each player told the host is leaving, before what's queued for them goes out and their connection closes
             foreach (ISocketStream client in clients.Where(c => c != null && c.Connected).ToList())
             {
-                QueueLength(client, CLOSE_MARKER);
+                QueueGoodbye(client);
             }
             base.Close();
             try
