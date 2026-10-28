@@ -297,10 +297,14 @@ namespace BeaverBuddies
             _determinismService.UnityThread = Thread.CurrentThread;
             // Tracing carried into this game, always on or turned on before a reload: said on screen, as it stutters
             if (Settings.Debug && (io is ServerEventIO || io is ClientEventIO)) DesyncDetecterService.SayTracingIsOn(this);
-            // A saved game hosted by loading it twice is in: its guests' lobbies close (see Connect.SavedGameHosting)
+            // A saved game hosted by loading it twice is in: its guests' lobbies close (see Connect.SavedGameHosting).
+            // The guests waiting there set their random state to the start's again as the first events play, which
+            // this load has drawn from since (a host that starts its game where it is, a new game's, sets it as it
+            // starts): this host does as they do, at the same events, so all start alike
             if (io is ServerEventIO server && server.Stage == ServerEventIO.HostingStage.Loading)
             {
                 server.Stage = ServerEventIO.HostingStage.Running;
+                DeterminismService.ReseedAtFirstEvents();
             }
         }
 
@@ -407,7 +411,7 @@ namespace BeaverBuddies
             }
 
             int currentTick = ticksSinceLoad;
-            if (eventsToReplay.Count > 0 && io is ClientEventIO) DeterminismService.ReseedIfWaitingForStart();
+            if (eventsToReplay.Count > 0) DeterminismService.ReseedIfWaitingForStart();
             IsReplayingEvents = true;
             // Reset however the loop ends, so a failure can't leave every later
             // local action looking like a replay
