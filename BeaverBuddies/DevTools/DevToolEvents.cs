@@ -28,6 +28,8 @@ using Timberborn.MechanicalSystem;
 using Timberborn.MechanicalSystemUI;
 using Timberborn.PowerGeneration;
 using Timberborn.PowerGenerationUI;
+using Timberborn.WaterSourceSystem;
+using Timberborn.WaterSourceSystemUI;
 using Timberborn.Reproduction;
 using Timberborn.Stockpiles;
 using Timberborn.StockpilesUI;
@@ -298,6 +300,8 @@ namespace BeaverBuddies.DevTools
         public const string SetBatteryCharge = "SetBatteryCharge";
         public const string SetGeneratorStrength = "SetGeneratorStrength";
         public const string FlipGeneratorRotation = "FlipGeneratorRotation";
+        public const string SetWaterSourceStrength = "SetWaterSourceStrength";
+        public const string SetWaterSourceContamination = "SetWaterSourceContamination";
 
         public string entityID;
         public string action;
@@ -395,6 +399,14 @@ namespace BeaverBuddies.DevTools
                     }
                 case FlipGeneratorRotation:
                     entity.GetComponent<AdjustableStrengthPowerGenerator>()?.FlipRotation();
+                    break;
+                case SetWaterSourceStrength:
+                    // Same as WaterSourceFragment.SetWaterSourceStrength
+                    entity.GetComponent<WaterSource>()?.SetSpecifiedStrength(value);
+                    break;
+                case SetWaterSourceContamination:
+                    // Same as the Contamination box's setter (see WaterSourceFragmentAddSettingsPatcher)
+                    entity.GetComponent<WaterSourceContamination>()?.SetContamination(value / 100f);
                     break;
                 default:
                     Plugin.LogWarning($"Unknown dev entity action: {action}");
@@ -508,6 +520,59 @@ namespace BeaverBuddies.DevTools
         {
             return DevEntityActionEvent.DoPrefix(
                 __instance._generator, DevEntityActionEvent.SetGeneratorStrength, value: newValue);
+        }
+    }
+
+    // A water source's Strength box, shown in dev mode (and the map editor)
+    [HarmonyPatch(typeof(WaterSourceFragment), nameof(WaterSourceFragment.SetWaterSourceStrength))]
+    class WaterSourceFragmentSetWaterSourceStrengthPatcher
+    {
+        static bool Prefix(WaterSourceFragment __instance, float value)
+        {
+            return DevEntityActionEvent.DoPrefix(__instance._waterSource, DevEntityActionEvent.SetWaterSourceStrength, value: value);
+        }
+    }
+
+    /**
+     * A water source's Contamination box, shown in dev mode: its setter is an anonymous function, so the settings
+     * are added again with one that sends it. Not a patch on SetContamination, which a badtide calls every tick.
+     * Outside a badtide, the box changed the water's contamination on the machine of the player who typed in it
+     * alone, until the next badtide or load.
+     */
+    [ManualMethodOverwrite]
+    /*
+        10/28/2026 (1.1.2.8)
+        private void AddSettings()
+        {
+            AddSetting(_loc.T(StrengthLocKey), SetWaterSourceStrength, () => _waterSource.SpecifiedStrength, devModeOnly: false);
+            AddSetting("Current strength", delegate
+            {
+            }, () => _waterSource.CurrentStrength, devModeOnly: true);
+            AddSetting("Contamination", delegate(float value)
+            {
+                _waterSourceContamination.SetContamination(value / 100f);
+            }, () => _waterSourceContamination.Contamination * 100f, devModeOnly: true);
+        }
+     */
+    [HarmonyPatch(typeof(WaterSourceFragment), nameof(WaterSourceFragment.AddSettings))]
+    class WaterSourceFragmentAddSettingsPatcher
+    {
+        static bool Prefix(WaterSourceFragment __instance)
+        {
+            var fragment = __instance;
+            fragment.AddSetting(fragment._loc.T(WaterSourceFragment.StrengthLocKey), fragment.SetWaterSourceStrength,
+                () => fragment._waterSource.SpecifiedStrength, devModeOnly: false);
+            fragment.AddSetting("Current strength", delegate
+            {
+            }, () => fragment._waterSource.CurrentStrength, devModeOnly: true);
+            fragment.AddSetting("Contamination", delegate (float value)
+            {
+                if (DevEntityActionEvent.DoPrefix(fragment._waterSourceContamination, DevEntityActionEvent.SetWaterSourceContamination, value: value))
+                {
+                    fragment._waterSourceContamination.SetContamination(value / 100f);
+                }
+            }, () => fragment._waterSourceContamination.Contamination * 100f, devModeOnly: true);
+            return false;
         }
     }
 

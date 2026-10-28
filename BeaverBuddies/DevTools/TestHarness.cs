@@ -1124,6 +1124,27 @@ namespace BeaverBuddies.DevTools
                     Plugin.Log($"[Test] loadorder: {string.Join("; ", parts)}");
                     break;
                 }
+                case "watersource":
+                {
+                    // watersource list: every water source, its strength and contamination; watersource x y z strength|contamination
+                    // value: that box of its panel typed in, as a player in dev mode does
+                    if (a[1] == "list")
+                    {
+                        var sources = Get<Timberborn.EntitySystem.EntityRegistry>().Entities
+                            .Select(e => e.GetComponent<Timberborn.WaterSourceSystem.WaterSource>()).Where(w => w)
+                            .Select(w => (c: w.GetComponent<BlockObject>().Coordinates, w))
+                            .OrderBy(e => e.c.x).ThenBy(e => e.c.y).ThenBy(e => e.c.z)
+                            .Select(e => $"({e.c.x},{e.c.y},{e.c.z}) {e.w.SpecifiedStrength:F2} {(e.w.GetComponent<Timberborn.WaterSourceSystem.WaterSourceContamination>()?.Contamination ?? -1):F2}");
+                        Plugin.Log($"[Test] watersource list: {string.Join(" ", sources)}");
+                        break;
+                    }
+                    var fragment = Get<Timberborn.WaterSourceSystemUI.WaterSourceFragment>();
+                    fragment.ShowFragment(ComponentAt<Timberborn.WaterSourceSystem.WaterSource>(a));
+                    var field = fragment._waterSettings[a[4] == "strength" ? 0 : 2]._inputField;
+                    field.value = float.Parse(a[5], CultureInfo.InvariantCulture);
+                    fragment.ClearFragment();
+                    break;
+                }
                 case "ziplines":
                 {
                     // Every zipline tower by where it is: its connections and the towers they go to
