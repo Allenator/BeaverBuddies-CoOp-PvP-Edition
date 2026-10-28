@@ -152,8 +152,8 @@ namespace BeaverBuddies.Modding
         // Whether a player may build on these tiles; any false refuses the building
         public static void AddCanPlaceOn(Func<IEnumerable<Vector3Int>, string, bool> hook) => PlacementHooks.CanPlaceOn.Add(hook);
 
-        // The blueprint name of the building a CanPlaceOn hook is being asked about, if known
-        public static string CheckingBuilding() => PlacementHooks.Checking;
+        // The building a CanPlaceOn hook is being asked about, if known
+        public static BuildingSpec CheckingBuilding() => PlacementHooks.Checking;
 
         // Whether a player may build on these tiles, by every mod's rules
         public static bool CanPlace(IEnumerable<Vector3Int> tiles, string playerID) => PlacementHooks.AllowOn(tiles, playerID);

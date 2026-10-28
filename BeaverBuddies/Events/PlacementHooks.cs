@@ -29,12 +29,12 @@ namespace BeaverBuddies.Events
         public static event Action<BuildingSpec, Placement, string> Refused;
 
         // The building whose tiles are being checked, for hooks that treat some buildings their own way
-        public static string Checking;
+        public static BuildingSpec Checking;
 
         public static bool AllowOn(IEnumerable<Vector3Int> tiles, string playerID, BuildingSpec spec = null)
         {
             var list = tiles.ToList();
-            Checking = spec?.Blueprint?.Name;
+            Checking = spec;
             try
             {
                 return CanPlaceOn.All(hook => hook(list, playerID));
