@@ -362,7 +362,6 @@ namespace BeaverBuddies
             }
 
             int currentTick = ticksSinceLoad;
-            if (eventsToReplay.Count > 0 && io is ClientEventIO) DeterminismService.ReseedIfWaitingForStart();
             IsReplayingEvents = true;
             // Reset however the loop ends, so a failure can't leave every later
             // local action looking like a replay
