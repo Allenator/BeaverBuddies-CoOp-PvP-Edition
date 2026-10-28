@@ -12,7 +12,8 @@ pass "a match starts"
 # Each player's District Center first, so nothing a mod asks of a player without one covers the
 # dialog the resync ends with
 place_starts Folktails Folktails
-send host "speed 1"; sleep 6
+run_ticks 10
+send host "speed $BB_SPEED"
 send client "desync traced"
 wait_for host "Resyncing everyone after the desync of" 30 && wait_for host "Reloading everyone \([0-9]+ players?\) from a save of [0-9]+ bytes" 30 \
     && pass "the host resyncs" || fail "the host resyncs" "it never sent its save"
@@ -36,8 +37,8 @@ expect_log "it plays on the guest too" client "Playing TracingEnabledEvent by .*
 for copy in host client; do expect_log "the screen says tracing is on ($copy)" $copy "Desync tracing is on: told the player"; done
 trace=$(grep -aoE "Desync trace saved to .*" "$(bb_log client)" | head -1 | sed 's/^Desync trace saved to //')
 if [ -n "$trace" ] && [ -f "$trace" ]; then pass "the trace file is there"; rm -f "$trace"; else fail "the trace file is there" "no file at '$trace'"; fi
-send host dismiss; send client dismiss; sleep 2
-send host "speed 1"; sleep 15
+send host dismiss; send client dismiss; sleep 1
+run_ticks 25
 expect_in_sync "the game carries on in sync"
 expect_eq "...with no second desync once logging's on for both, turned on at different moments" "$(grep -ac "Resyncing everyone after the desync" "$(bb_log host)")" "1"
 expect_no_log "nothing posted" host "api.airtable.com"

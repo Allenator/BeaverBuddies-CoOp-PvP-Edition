@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using BeaverBuddies.Modding;
 using Timberborn.CameraSystem;
 using UnityEngine;
 using static BeaverBuddies.Util.OverlayDrawing;
@@ -41,7 +42,7 @@ namespace BeaverBuddies.Ping
                 Color color = ping.Color;
                 color.a = Mathf.Clamp01(life);
 
-                Vector3 sp = cam.WorldToScreenPoint(ping.WorldPosition);
+                Vector3 sp = cam.WorldToScreenPoint(ArchipelagoBridge.IsDrawnApart ? ArchipelagoBridge.ToDrawn(ping.WorldPosition) : ping.WorldPosition);
                 bool behind = sp.z < 0f;
                 Vector2 guiPos = new Vector2(sp.x, screenH - sp.y);
 

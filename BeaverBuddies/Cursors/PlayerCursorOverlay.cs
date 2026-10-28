@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using BeaverBuddies.Modding;
 using Timberborn.CameraSystem;
 using Timberborn.Coordinates;
 using Timberborn.PlatformUtilities;
@@ -43,7 +44,9 @@ namespace BeaverBuddies.Cursors
                 if (!cursor.Visible) continue;
                 if (!ShowAt.TrueForAll(show => show(cursor.DisplayedPosition))) continue;
 
-                Vector3 sp = cam.WorldToScreenPoint(cursor.DisplayedPosition);
+                // Where the map is drawn apart (Archipelago's islands) the cursor shows where its island is drawn
+                Vector3 shown = ArchipelagoBridge.IsDrawnApart ? ArchipelagoBridge.ToDrawn(cursor.DisplayedPosition) : cursor.DisplayedPosition;
+                Vector3 sp = cam.WorldToScreenPoint(shown);
                 if (sp.z < 0f) continue;
                 Vector2 guiPos = new Vector2(sp.x, screenH - sp.y);
 
@@ -51,7 +54,7 @@ namespace BeaverBuddies.Cursors
                 if (guiPos.x < -texture.width || guiPos.x > Screen.width
                     || guiPos.y < -texture.height || guiPos.y > screenH) continue;
 
-                float targetAlpha = IsOccluded(cam, cursor.DisplayedPosition, sp) ? HiddenAlpha : 1f;
+                float targetAlpha = IsOccluded(cam, cursor.DisplayedPosition, shown, sp) ? HiddenAlpha : 1f;
                 cursor.Alpha = Mathf.MoveTowards(cursor.Alpha, targetAlpha, FadeSpeed * Time.unscaledDeltaTime);
 
                 // The arrow's tip is the texture's top left corner
@@ -66,7 +69,7 @@ namespace BeaverBuddies.Cursors
          * Whether something stands between the camera and the point: the
          * terrain, or a building, tree or anything else with a collider.
          */
-        private bool IsOccluded(Camera cam, Vector3 worldPos, Vector3 screenPos)
+        private bool IsOccluded(Camera cam, Vector3 worldPos, Vector3 shownPos, Vector3 screenPos)
         {
             Vector2 screenPoint = new Vector2(screenPos.x, screenPos.y);
 
@@ -83,7 +86,7 @@ namespace BeaverBuddies.Cursors
             }
 
             Ray worldRay = cam.ScreenPointToRay(screenPos);
-            float distance = Vector3.Distance(worldRay.origin, worldPos) - OcclusionMargin;
+            float distance = Vector3.Distance(worldRay.origin, shownPos) - OcclusionMargin;
             return distance > 0f
                 && Physics.Raycast(worldRay, distance, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
         }

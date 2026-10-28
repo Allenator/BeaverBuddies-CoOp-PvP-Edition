@@ -43,6 +43,7 @@ namespace BeaverBuddies.Connect
             if (_box != null || EventIO.Get() is not ClientEventIO) return;
             Plugin.Log("The host hasn't started the game: waiting in its lobby");
             _lobby = new HostLobby(_dialogBoxShower, null, mapName);
+            DeterminismService.ReseedAtFirstEvents();
             HostingCover.Show();
             // The host said it was waiting when this opened, so the next thing it says that isn't is the start
             _heardWaiting = true;
