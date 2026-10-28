@@ -89,9 +89,20 @@ namespace BeaverBuddies.Connect
         /** On the host: from now on nothing plays, until the reload's save has loaded. */
         public void BeginHostReload()
         {
+            LastReloadReason = _hostPending ? ReloadReason.Resync : ReloadReason.Join;
+            SpeedBeforeReload = SingletonManager.GetSingleton<ReplayService>()?.TargetSpeed ?? 0;
+            Plugin.Log($"Why everyone reloads: {LastReloadReason}, from speed {SpeedBeforeReload}");
             _hostPending = false;
             _loading = true;
         }
+
+        /** Why the host reloads everyone: a player joining a game in progress, or a desync. */
+        public enum ReloadReason { Join, Resync }
+
+        // On the host, why everyone last reloaded and the speed the game was at then, for what the game does once it's
+        // back. Kept past the reload, which replaces this service with the scene
+        public static ReloadReason? LastReloadReason { get; private set; }
+        public static float SpeedBeforeReload { get; private set; }
 
         /**
          * On the host, at the end of a tick: saves the game, sends the save

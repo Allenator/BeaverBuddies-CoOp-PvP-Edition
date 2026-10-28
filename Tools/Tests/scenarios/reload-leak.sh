@@ -25,6 +25,8 @@ for ((n = 1; n <= ${BB_RELOADS:-3}; n++)); do
     echo "  after reload $n: client $heap"
     heaps="$heaps $(echo "$heap" | sed -E 's/^collected ([0-9]+) MB.*/\1/')"
 done
+# Each reload is said why, a desync here, and from which speed
+expect_log "the host says why everyone reloads" host "Why everyone reloads: Resync, from speed"
 counts=$(census | tr '\n' ' ')
 echo "  objects after each load: $counts"
 # The load routers stay on in a Co-op game, delivering in the order handlers registered (see EventOrderFix), and say
