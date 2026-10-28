@@ -1,6 +1,7 @@
 using HarmonyLib;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using Timberborn.SingletonSystem;
 
@@ -65,6 +66,18 @@ namespace BeaverBuddies.Fixes
                 || !__instance._subscriptions.TryGetValue(eventType, out Dictionary<object, Action<object>> actions)) return true;
             __result = InOrder(list, actions);
             return false;
+        }
+
+        /**
+         * An event's handlers in the order they registered, as GetSubscriptions gives them in a Co-op game, for the
+         * load routers, which build their own lists of them (see Performance.LoadEventRouter). Null where the game's
+         * own order stands.
+         */
+        internal static Subscription[] Ordered(SubscriptionRegistry registry, Type eventType, Dictionary<object, Action<object>> actions)
+        {
+            if (IO.EventIO.IsNull || !Orders.TryGetValue(registry, out Order order)
+                || !order.ByType.TryGetValue(eventType, out LinkedList<object> list)) return null;
+            return InOrder(list, actions).ToArray();
         }
 
         // Lazily, as the game's own: the bus holds back registrations while it's posting

@@ -1,8 +1,9 @@
 // Ported from T3MP (More More More Performance!) by toropippi,
 // https://github.com/toropippi/Timberborn-More-More-More-Performance-Mod
 // Licensed under the Apache License 2.0 (see LICENSE-T3MP.txt).
-// Changed for BeaverBuddies: namespace, settings and logging; the
-// optimizations themselves are unchanged.
+// Changed for BeaverBuddies: namespace, settings and logging, and in a
+// Co-op game delivery in the order handlers registered (Fixes.EventOrderFix);
+// the optimizations themselves are unchanged.
 
 using System;
 using System.Collections.Generic;
@@ -155,13 +156,14 @@ internal static class BlockLoadRouting
         var session = (Session)context;
         if (!session.Registry._subscriptions.TryGetValue(type, out var source)) return null;
         if (!session.Plans.TryGetValue(type, out var plan) || !ReferenceEquals(plan.Dictionary, source) || plan.Version != _version(source))
-        { session.Plans[type] = plan = Build(source); session.Rebuilds++; }
+        { session.Plans[type] = plan = Build(session.Registry, type, source); session.Rebuilds++; }
         session.Events++;
         return Enumerate(session, plan, eventObject);
     }
-    private static Plan Build(Dictionary<object, Action<object>> source)
+    private static Plan Build(SubscriptionRegistry registry, Type type, Dictionary<object, Action<object>> source)
     {
-        var items = source.Select(p => new Subscription(p.Key, p.Value)).ToArray();
+        // In a Co-op game in the order they registered, as every other delivery is (see EventOrderFix)
+        var items = Fixes.EventOrderFix.Ordered(registry, type, source) ?? source.Select(p => new Subscription(p.Key, p.Value)).ToArray();
         var plan = new Plan { Dictionary = source, Version = _version(source), Items = items, Kinds = new byte[items.Length], Runs = new Run?[items.Length] };
         for (var i = 0; i < items.Length; i++)
             if (Markers.TryGetValue(items[i].Action, out var marker) && ReferenceEquals(marker.Subscriber, items[i].Subscriber)) plan.Kinds[i] = marker.Kind;

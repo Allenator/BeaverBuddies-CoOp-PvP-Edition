@@ -27,6 +27,13 @@ for ((n = 1; n <= ${BB_RELOADS:-3}; n++)); do
 done
 counts=$(census | tr '\n' ' ')
 echo "  objects after each load: $counts"
+# The load routers stay on in a Co-op game, delivering in the order handlers registered (see EventOrderFix), and say
+# where the game's own order has drifted from it
+for inst in host client; do
+    expect_log "load routing is on ($inst)" $inst "Load event routing: events="
+    expect_no_log "no other patch turns it off ($inst)" $inst "another patch changes delivery"
+    echo "  $inst: $(said $inst loadorder)"
+done
 # With BB_HITCH_MS (profiling), each copy's heap after each load, collected, and whether an earlier game is still alive
 # (Util/LeakFinder.cs; BB_LEAK_WALK for the path that keeps one)
 if [ -n "${BB_HITCH_MS:-}" ]; then

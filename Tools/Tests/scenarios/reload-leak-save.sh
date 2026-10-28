@@ -1,12 +1,20 @@
 # BB_EXPECT_DESYNC: this scenario resyncs the copies on purpose
-# reload-leak on a game the size of a real one: a copy of a saved game (BB_LEAK_SAVE, the newest in Multiplayer by
-# default) hosted from a settlement of the harness's own, joined, and reloaded for everyone BB_RELOADS times (3), with
-# both copies' heap after a full collection (heap) after each. The heap a game keeps alive is about the game's size, so
-# an earlier game left behind shows here as a heap that climbs by a whole game every reload; a small new game's can hide
-# in the noise.
+# reload-leak on a game the size of a real one: a copy of a saved game (BB_LEAK_SAVE, the newest in Multiplayer from
+# before the run by default) hosted from a settlement of the harness's own, joined, and reloaded for everyone
+# BB_RELOADS times (3), with both copies' heap after a full collection (heap) after each. The heap a game keeps alive is
+# about the game's size, so an earlier game left behind shows here as a heap that climbs by a whole game every reload;
+# a small new game's can hide in the noise.
 # These read the logging, so it is on, whatever this Mac has it at
 pref_set ModSetting.beaverbuddies.Settings.AlwaysTrace 1
-src=${BB_LEAK_SAVE:-$(ls -t "$HOME/Documents/Timberborn/Saves/Multiplayer"/*.timber 2>/dev/null | head -1)}
+# The newest from before this run: a guest's copy saved by a scenario before this one is newer, and a small test game
+newest_save() {
+    local f
+    ls -t "$HOME/Documents/Timberborn/Saves/Multiplayer"/*.timber 2>/dev/null | while read -r f; do
+        [ -n "${RUN_START:-}" ] && [ "$f" -nt "$RUN_START" ] && continue
+        echo "$f"; break
+    done
+}
+src=${BB_LEAK_SAVE:-$(newest_save)}
 [ -f "$src" ] || { fail "a saved game to load" "none in Multiplayer, and no BB_LEAK_SAVE"; return; }
 # A settlement named as the harness names them, so the run takes it away as it ends
 settlement="Harness Leak $(date +%Hh%M%S)"

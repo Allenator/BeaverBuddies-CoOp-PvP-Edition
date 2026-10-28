@@ -1011,6 +1011,29 @@ namespace BeaverBuddies.DevTools
                     Plugin.Log($"[Test] eventorder: {string.Join(" ", order)}");
                     break;
                 }
+                case "loadorder":
+                {
+                    // For the events the load routers deliver: whether the game's order of their handlers (a Dictionary's)
+                    // is still the order they registered in, and where it first isn't. Loads that delete entities free
+                    // slots that later handlers take (see EventOrderFix and Performance.LoadEventRouter)
+                    var registry = Get<EventBus>()._subscriptions;
+                    var parts = new List<string>();
+                    foreach (Type type in new[] { typeof(Timberborn.EntitySystem.EntityInitializedEvent), typeof(BlockObjectSetEvent), typeof(BlockObjectUnsetEvent) })
+                    {
+                        if (!registry._subscriptions.TryGetValue(type, out var actions)) { parts.Add($"{type.Name} none"); continue; }
+                        var ordered = Fixes.EventOrderFix.Ordered(registry, type, actions);
+                        if (ordered == null) { parts.Add($"{type.Name} unordered"); continue; }
+                        var game = actions.Keys.ToList();
+                        int at = -1;
+                        for (int i = 0; i < Math.Min(game.Count, ordered.Length) && at < 0; i++)
+                        {
+                            if (!ReferenceEquals(game[i], ordered[i].Subscriber)) at = i;
+                        }
+                        parts.Add(at < 0 && game.Count == ordered.Length ? $"{type.Name} same ({game.Count})" : $"{type.Name} differs at {at} of {game.Count}");
+                    }
+                    Plugin.Log($"[Test] loadorder: {string.Join("; ", parts)}");
+                    break;
+                }
                 case "defaulttool":
                     // The build tool put away, as a player's right click does: its previews go
                     Get<Timberborn.ToolSystem.ToolService>().SwitchToDefaultTool();

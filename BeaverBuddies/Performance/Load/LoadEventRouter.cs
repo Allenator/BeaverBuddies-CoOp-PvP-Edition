@@ -1,8 +1,9 @@
 // Ported from T3MP (More More More Performance!) by toropippi,
 // https://github.com/toropippi/Timberborn-More-More-More-Performance-Mod
 // Licensed under the Apache License 2.0 (see LICENSE-T3MP.txt).
-// Changed for BeaverBuddies: namespace, settings and logging; the
-// optimizations themselves are unchanged.
+// Changed for BeaverBuddies: namespace, settings and logging, and in a
+// Co-op game delivery in the order handlers registered (Fixes.EventOrderFix);
+// the optimizations themselves are unchanged.
 
 using System;
 using System.Collections.Generic;
@@ -147,11 +148,14 @@ internal static class LoadEventRouter
             // RegisterMethod replacement (same registry call, same order).
             // The tick frontier only observes EnableComponent/DisableComponent and
             // ComponentCache.OnDestroy (counts, no change to Enabled or lookups).
+            // The event order keeps a list beside the registry and delivers in
+            // it; the plans here are built from that same list (EventOrderFix.Ordered).
             if (owners.Any(owner => owner != Owner &&
                 !(owner == "beaverbuddies.perf.load.progress" && method.DeclaringType == typeof(EventBus) && method.Name == "PostLoad") &&
                 !(owner == "beaverbuddies.perf.runtime.events" && method.DeclaringType == typeof(EventBus) && method.Name == "RegisterMethod") &&
                 !(owner == "beaverbuddies.perf.runtime.frontier" && (method.DeclaringType == typeof(BaseComponent) && method.Name is "EnableComponent" or "DisableComponent" ||
-                                                        method.DeclaringType == typeof(ComponentCache) && method.Name is "OnDestroy" or "Initialize"))))
+                                                        method.DeclaringType == typeof(ComponentCache) && method.Name is "OnDestroy" or "Initialize")) &&
+                !(owner == Plugin.ID && method.DeclaringType == typeof(SubscriptionRegistry) && method.Name is "Add" or "RemoveAll" or "GetSubscriptions")))
                 return false;
         }
         return true;
@@ -258,7 +262,9 @@ internal static class LoadEventRouter
         if (!__instance._subscriptions.TryGetValue(eventType, out var subscriptions)) return true;
         if (session.Plan == null || session.Plan.Version != session.Version.Value)
         {
-            var items = subscriptions.Select(pair => new Subscription(pair.Key, pair.Value)).ToArray();
+            // In a Co-op game in the order they registered, as every other delivery is (see EventOrderFix)
+            var items = Fixes.EventOrderFix.Ordered(__instance, eventType, subscriptions)
+                ?? subscriptions.Select(pair => new Subscription(pair.Key, pair.Value)).ToArray();
             var ends = new int[items.Length];
             for (var i = items.Length - 1; i >= 0; --i)
                 if (KnownHandlers.TryGetValue(items[i].Action, out _))
