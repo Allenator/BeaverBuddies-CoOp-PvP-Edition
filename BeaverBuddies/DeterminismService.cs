@@ -152,6 +152,9 @@ namespace BeaverBuddies
 
         public static void ReseedAfterLoad()
         {
+            // A lobby left before its host started is over: a game's lobby opens after its load (GuestLobby.Show), so
+            // the mark it left would otherwise reseed the next game this player joins, at its first events
+            reseedAtFirstEvent = false;
             if (!seedAfterLoad.HasValue) return;
             UnityEngine.Random.InitState(seedAfterLoad.Value);
             seedAfterLoad = null;
