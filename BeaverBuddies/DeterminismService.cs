@@ -353,18 +353,15 @@ namespace BeaverBuddies
         }
 
         private static int lastStartState;
-        private static bool reseedAtFirstEvent;
 
-        // A guest waiting in the host's lobby: the host seeds when it starts, however long
-        // that is after this load, and whatever random the game used up while waiting is
-        // not the same here. The first events to play are the host's, from its start
-        public static void ReseedAtFirstEvents() => reseedAtFirstEvent = true;
-
-        public static void ReseedIfWaitingForStart()
+        // A guest waiting in the host's lobby: whatever random the game used up while loading is not the
+        // same here as on the host, which seeded when it hosted. The host's first events (its start taken
+        // and founded, played in the same batch that opens this lobby) draw from its seed on, so the guest
+        // starts again from the seed as the lobby opens, before the rest of that batch plays, and not again
+        // when the host starts: that would wipe what those events drew
+        public static void ReseedAtFirstEvents()
         {
-            if (!reseedAtFirstEvent) return;
-            reseedAtFirstEvent = false;
-            Plugin.Log($"The host started: setting the random state to {lastStartState:X8}");
+            Plugin.Log($"In the host's lobby: setting the random state to {lastStartState:X8}");
             UnityEngine.Random.InitState(lastStartState);
         }
     }
