@@ -37,6 +37,12 @@ namespace BeaverBuddies.Players
         /** The host's game hasn't been started: it's still in its box. Null until we've heard from the host. */
         public static bool? HostWaiting => _instance?._hostWaiting;
 
+        // Whether the host said it's loading the saved game it hosts, started (see Connect.SavedGameHosting)
+        private bool _hostStarting;
+
+        /** The host pressed Start on the saved game it hosts and is loading it again: a while yet, and silent meanwhile. */
+        public static bool HostStarting => _instance?._hostStarting ?? false;
+
         /**
          * What a mod says about this player to the others, with their name: the
          * faction they play, say. The host's box lists it.
@@ -111,17 +117,26 @@ namespace BeaverBuddies.Players
             _infos.Clear();
             _hosts.Clear();
             _hostWaiting = null;
+            _hostStarting = false;
             if (_instance == this) _instance = null;
         }
 
         public void UpdateSingleton()
         {
+            if (Time.unscaledTime - _lastSendTime < SendIntervalSeconds) return;
+            Send();
+        }
+
+        /** Says it now, not at the next interval: what it says has just changed, and a load is about to stop the frames. */
+        public static void SendNow() => _instance?.Send();
+
+        private void Send()
+        {
             EventIO io = EventIO.Get();
-            float now = Time.unscaledTime;
-            if (io == null || now - _lastSendTime < SendIntervalSeconds) return;
+            if (io == null) return;
             string local = PlayerIdentity.LocalID;
             if (local == null) return;
-            _lastSendTime = now;
+            _lastSendTime = Time.unscaledTime;
             var presence = new JObject
             {
                 [TimberNet.TimberNetBase.TYPE_KEY] = MessageType,
@@ -131,6 +146,7 @@ namespace BeaverBuddies.Players
                 ["info"] = Info(),
                 ["host"] = io is ServerEventIO,
                 ["waiting"] = Connect.NewGameHosting.SettingUp || io is ServerEventIO { Waiting: true },
+                ["starting"] = io is ServerEventIO { Stage: ServerEventIO.HostingStage.Loading },
                 // For a host that missed the hello: who's on which build (see ServerEventIO)
                 ["compat"] = Connect.BuildIdentity.CompatValue,
                 ["build"] = Connect.BuildIdentity.Describe,
@@ -160,6 +176,7 @@ namespace BeaverBuddies.Players
             {
                 _hosts.Add(playerID);
                 _hostWaiting = message.Value<bool?>("waiting") ?? false;
+                _hostStarting = message.Value<bool?>("starting") ?? false;
             }
         }
     }

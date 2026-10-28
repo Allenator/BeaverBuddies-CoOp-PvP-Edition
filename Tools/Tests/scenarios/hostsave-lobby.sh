@@ -1,5 +1,6 @@
 # A saved game hosted with the Load game box's Host: the host waits over the save loaded once, the guest waits in the lobby, named in the
-# host's box, and what it does there isn't sent; Start loads the save again and they play it in sync. BB_FROM=game hosts it from inside the
+# host's box, and what it does there isn't sent; Start loads the save again, the guest's lobby saying the host is starting meanwhile
+# rather than taking the host's silence for a connection gone quiet, and they play it in sync. BB_FROM=game hosts it from inside the
 # game that saved it, not from the main menu; BB_JOIN=code joins by join code over WebRTC with Steam networking off, not at 127.0.0.1
 if [ "${BB_JOIN:-ip}" == code ]; then
     pref_set ModSetting.beaverbuddies.Settings.EnableSteamConnection 0
@@ -49,6 +50,10 @@ for ((i = 0; i < 180; i++)); do
 done
 [ "$(grep -ac "Load time" "$(bb_log host)")" -gt "$loads" ] && pass "Start loads the save again" || { bail "Start loads the save again" "no second load"; return; }
 wait_for client "leaving its lobby" 60 && pass "the guest's lobby closes" || fail "the guest's lobby closes" "still up"
+# The host says it's starting before its load, which keeps it silent a while: the lobby says so, and it isn't taken
+# for a connection gone quiet
+expect_log "the guest's lobby says the host is starting" client "The host is starting the game"
+expect_no_log "the host's load isn't taken for silence" client "Nothing from the host"
 expect_no_log "the guest sent nothing while it waited" host "Discarded [0-9]+ events"
 send host "speed 1"; sleep 15
 expect_in_sync "they play the same game"

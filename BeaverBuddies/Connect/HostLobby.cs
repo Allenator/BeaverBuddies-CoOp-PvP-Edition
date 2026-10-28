@@ -76,6 +76,9 @@ namespace BeaverBuddies.Connect
         private readonly string _fallbackMap;
         private VisualElement _players;
         private Label _playersTitle;
+        // A guest's: what the host is doing, and whether it said it's starting
+        private Label _waitingForHost;
+        private bool _hostStarting;
         private Label _code;
         private Button _copy;
         private VisualElement _copyIcon;
@@ -117,11 +120,11 @@ namespace BeaverBuddies.Connect
             if (_io != null) root.Add(InviteRow());
             else
             {
-                var waiting = new Label(_loc.T("BeaverBuddies.Lobby.WaitingForHost"));
-                waiting.AddToClassList("game-text-normal");
-                waiting.style.marginTop = 12;
-                waiting.style.unityTextAlign = TextAnchor.MiddleCenter;
-                root.Add(waiting);
+                _waitingForHost = new Label(_loc.T("BeaverBuddies.Lobby.WaitingForHost"));
+                _waitingForHost.AddToClassList("game-text-normal");
+                _waitingForHost.style.marginTop = 12;
+                _waitingForHost.style.unityTextAlign = TextAnchor.MiddleCenter;
+                root.Add(_waitingForHost);
             }
             return root;
         }
@@ -446,7 +449,16 @@ namespace BeaverBuddies.Connect
                 _layoutKey = key;
                 Rebuild(members);
             }
-            if (_io == null) return;
+            if (_io == null)
+            {
+                if (_waitingForHost != null && Players.PlayerPresence.HostStarting && !_hostStarting)
+                {
+                    _hostStarting = true;
+                    Plugin.Log("The host is starting the game: waiting for its load");
+                    _waitingForHost.text = _loc.T("BeaverBuddies.Lobby.HostStarting");
+                }
+                return;
+            }
             string code = WebRtc.JoinCode.Current;
             _code.text = code == null ? "..." : WebRtc.JoinCode.Display(code);
             // The check goes back to the sheets after a moment

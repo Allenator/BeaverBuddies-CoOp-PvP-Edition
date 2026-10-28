@@ -40,6 +40,13 @@ namespace BeaverBuddies.IO
         private void CheckHostHeard()
         {
             if (!_mapReceived || HostLeft || NetBase == null) return;
+            // The host's lobby is quiet on purpose, and the host is silent while it loads the game it starts (see
+            // Connect.GuestLobby): not a connection gone quiet
+            if (Connect.GuestLobby.IsOpen)
+            {
+                _silentSince = null;
+                return;
+            }
             DateTime heard = DateTime.UtcNow.AddSeconds(-NetBase.SecondsSinceHeard);
             double silent = (DateTime.UtcNow - heard).TotalSeconds;
             if (_silentSince == null && silent > SilentSeconds)

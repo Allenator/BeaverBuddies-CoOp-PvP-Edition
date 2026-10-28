@@ -276,8 +276,10 @@ namespace BeaverBuddies.Connect
                 BoxUp = false;
                 NewGameHosting.SettingUp = false;
                 if (coroutine != null) behavior.StopCoroutine(coroutine);
-                // The guests' lobbies stay up until the game this loads is in (see ReplayService.PostLoad)
+                // The guests' lobbies stay up until the game this loads is in (see ReplayService.PostLoad), and say
+                // the host is starting: the load takes a while, and nothing comes from the host until it's done
                 io.Stage = ServerEventIO.HostingStage.Loading;
+                Players.PlayerPresence.SendNow();
                 // What the guests did meanwhile was for no game: not played at its first tick
                 io.DiscardPendingClientEvents();
                 // Loaded again from its file, which has to be what the guests were sent
