@@ -186,7 +186,15 @@ internal static class LoadBodies
         "Timberborn.BlockObjectModelSystem.GameObjectExtensions::ToggleModelVisibility",
     }, "9057FA189B64147547A49F1D8E9BAEE1603FFEB2AF65C8E0746EC4238CE9BB55");
 
-    internal static readonly Set[] All = { Construction, ComponentConstruction, EventRouting, BlockRouting, InitialNavigation,
+    // Util.LoadProfiler runs a copy of the load: LoadAll and the four steps it calls, bypassed. Accepted: 1.1.2.8
+    private const string Lifecycle = "Timberborn.SingletonSystem.SingletonLifecycleService::";
+    internal static readonly Set LoadProfile = new Set("load-profiler", new[]
+    {
+        Lifecycle + "LoadAll", Lifecycle + "LoadSingletons", Lifecycle + "LoadNonSingletons",
+        Lifecycle + "PostLoadSingletons", Lifecycle + "PostLoadNonSingletons",
+    }, "00D6489FAD7CAD63E96257888AF520A9BBB021ED0B6F9DD4366C9B189A82C93B");
+
+    internal static readonly Set[] All = { Construction, ComponentConstruction, EventRouting, BlockRouting, InitialNavigation, LoadProfile,
         EmptyFlowField, TerrainSurface, NavigationShapes, Transput, AtlasPixels, GcBudget, GoodStacks, EntityVisuals };
 
     // Combined fingerprint of a set; `missing` lists entries that did not resolve.

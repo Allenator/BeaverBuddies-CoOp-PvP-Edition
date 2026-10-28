@@ -11,7 +11,8 @@ namespace BeaverBuddies.Util
      * In a Co-op game and in the test harness, times each singleton's Load and
      * PostLoad as a game loads and logs the slow ones, and the total of each
      * step: where a load spends its time, the mods' share included. A player's
-     * load that takes half a minute says why in their log.
+     * load that takes half a minute says why in their log. Only while the
+     * game's load is the one copied here (LoadBodies.LoadProfile).
      */
     [ManualMethodOverwrite]
     /*
@@ -42,6 +43,9 @@ namespace BeaverBuddies.Util
         static bool Prefix(SingletonLifecycleService __instance)
         {
             if (!DevTools.TestHarness.Active && IO.EventIO.IsNull) return true;
+            // Only while the game loads as the copy below does: a game update that changes it has the game's own
+            // load run, and the log say so, not this copy of the old one
+            if (!Performance.LoadCompatibility.Reviewed(Performance.LoadBodies.LoadProfile)) return true;
             var s = __instance;
             s._loadableSingletons = s._singletonRepository.GetSingletons<ILoadableSingleton>().ToImmutableArray();
             s._nonSingletonLoaders = s._singletonRepository.GetSingletons<INonSingletonLoader>().ToImmutableArray();
