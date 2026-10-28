@@ -142,6 +142,15 @@ namespace BeaverBuddies
         // A save the host makes itself is written with the game paused, as a save made alone is (see GameSaverSavePatcher)
         public readonly ModSetting<bool> PauseForHostSaves = new(true, Described(nameof(PauseForHostSaves)));
 
+        // How much of the game's slowing of fast speeds in big colonies is lifted, for every player (see
+        // Connect.SpeedThrottle): none of it by default, the game's own
+        public readonly LimitedStringModSetting SpeedThrottle =
+            new(0, new[] {
+                new LimitedStringModSettingValue("0", "BeaverBuddies.Settings.SpeedThrottle.Game"),
+                new LimitedStringModSettingValue("1", "BeaverBuddies.Settings.SpeedThrottle.Half"),
+                new LimitedStringModSettingValue("2", "BeaverBuddies.Settings.SpeedThrottle.None")
+            }, Described(nameof(SpeedThrottle)));
+
         // On, after everyone reloads for a desync or a player joining, the game plays on at its speed once they're back
         // (see Connect.PlayOn); off, it waits paused for the host, as it always did
         public readonly ModSetting<bool> PlayOnAfterReload = new(false, Described(nameof(PlayOnAfterReload)));
@@ -161,6 +170,7 @@ namespace BeaverBuddies
             AddNonPersistentModSetting(Note);
             Add(PauseReduction, nameof(PauseReduction));
             Add(PauseForHostSaves, nameof(PauseForHostSaves));
+            Add(SpeedThrottle, nameof(SpeedThrottle));
             Add(PlayOnAfterReload, nameof(PlayOnAfterReload));
             Add(FriendsCanJoinSteamGame, nameof(FriendsCanJoinSteamGame));
         }

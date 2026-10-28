@@ -89,6 +89,11 @@ BeaverBuddies.Settings.PauseForHostSaves,"หยุดเกมชั่วค�
 BeaverBuddies.Settings.PauseForHostSaves.Tooltip,"การบันทึกที่คุณทำเองจะถูกเขียนขณะเกมหยุดชั่วคราว เหมือนในเกมผู้เล่นคนเดียว แล้วเกมจะเล่นต่อด้วยความเร็วเดิม การบันทึกอัตโนมัติจะไม่หยุดเกม ไม่ว่าแบบใด แขกจะรออยู่ ณ จุดเดียวกันขณะที่คุณบันทึก",""
 BeaverBuddies.Settings.PlayOnAfterReload,"เล่นต่อหลังซิงก์ใหม่หรือมีผู้เล่นเข้าร่วม",""
 BeaverBuddies.Settings.PlayOnAfterReload.Tooltip,"เมื่อเกมโหลดใหม่สำหรับทุกคน หลังจากไม่ซิงก์กันหรือมีผู้เล่นเข้าร่วม เกมจะเล่นต่อที่ความเร็วเดิมเมื่อทุกคนกลับมา หรือหลังจากหนึ่งนาที แทนที่จะหยุดรอให้คุณกดเล่น การตั้งความเร็วระหว่างนั้นจะยกเลิกการเล่นต่อ",""
+BeaverBuddies.Settings.SpeedThrottle,"ความเร็วสูงในอาณานิคมใหญ่",""
+BeaverBuddies.Settings.SpeedThrottle.Tooltip,"เกมจะเล่นความเร็วสูงช้าลงเมื่ออาณานิคมใหญ่ขึ้น เมื่อมีบีเวอร์และบอท 200 ตัว ความเร็ว 7 จะเล่นที่ 3.4 เท่าของปกติ ในเกมที่คุณเป็นโฮสต์ สำหรับผู้เล่นทุกคน คุณเลือกคงไว้ ลดการชะลอลงครึ่งหนึ่ง (ความเร็ว 7 ที่ 5.2 เท่า) หรือยกเลิก (7 เท่า) ได้ คอมพิวเตอร์ของผู้เล่นทุกคนต้องตามทัน",""
+BeaverBuddies.Settings.SpeedThrottle.Game,"ตามเกม",""
+BeaverBuddies.Settings.SpeedThrottle.Half,"ช้าลงครึ่งหนึ่ง",""
+BeaverBuddies.Settings.SpeedThrottle.None,"ไม่ชะลอ",""
 BeaverBuddies.Host.ConnectedClients,"กำลังรอลูกค้าเชื่อมต่อ…
 ลูกค้าที่เชื่อมต่อขณะนี้:",""
 BeaverBuddies.Host.DirectConnectClient,"ไคลเอนต์เชื่อมต่อโดยตรง",""

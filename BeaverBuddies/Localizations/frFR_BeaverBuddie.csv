@@ -89,6 +89,11 @@ BeaverBuddies.Settings.PauseForHostSaves,"Mettre la partie en pause pendant que 
 BeaverBuddies.Settings.PauseForHostSaves.Tooltip,"Une sauvegarde que tu fais toi-même est écrite partie en pause, comme en solo, puis la partie reprend à sa vitesse. Les sauvegardes automatiques ne sont pas mises en pause. Dans tous les cas, les invités attendent au même moment pendant que tu sauvegardes.",""
 BeaverBuddies.Settings.PlayOnAfterReload,"Reprendre après une resynchronisation ou une arrivée",""
 BeaverBuddies.Settings.PlayOnAfterReload.Tooltip,"Quand la partie se recharge pour tout le monde, après une désynchronisation ou à l'arrivée d'un joueur, elle reprend à sa vitesse d'avant dès que tout le monde est revenu, ou au bout d'une minute, au lieu d'attendre en pause que vous appuyiez sur lecture. Choisir une vitesse entre-temps l'annule.",""
+BeaverBuddies.Settings.SpeedThrottle,"Vitesses rapides dans les grandes colonies",""
+BeaverBuddies.Settings.SpeedThrottle.Tooltip,"Le jeu ralentit ses vitesses rapides à mesure qu'une colonie grandit : à 200 castors et robots, la vitesse 7 va à 3,4 fois la vitesse normale. Dans une partie que vous hébergez, pour tous les joueurs, vous pouvez garder cela, réduire le ralentissement de moitié (vitesse 7 à 5,2 fois) ou le supprimer (7 fois). L'ordinateur de chaque joueur doit suivre.",""
+BeaverBuddies.Settings.SpeedThrottle.Game,"Celle du jeu",""
+BeaverBuddies.Settings.SpeedThrottle.Half,"Moitié moins lent",""
+BeaverBuddies.Settings.SpeedThrottle.None,"Sans ralentissement",""
 BeaverBuddies.Host.ConnectedClients,"En attente des clients…
 Clients actuellement connectés :",""
 BeaverBuddies.Host.DirectConnectClient,"Client de connexion directe",""

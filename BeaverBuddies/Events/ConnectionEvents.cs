@@ -33,12 +33,16 @@ namespace BeaverBuddies.Events
         public string serverBuild;
         // What pauses everyone, as the host chose it for every player (see Settings.PauseReductionSetting); null from hosts that don't send it
         public int? pauses;
+        // How much of the game's slowing of fast speeds in big colonies is lifted, as the host chose it for every player
+        // (see Settings.SpeedThrottleSetting); null from hosts that don't send it
+        public int? throttle;
 
         public override void Replay(IReplayContext context)
         {
             //context.GetSingleton<ReplayService>().SetServerMapName(mapName);
             DevToolsPolicy.HostAllowsDevTools = allowDevTools;
             if (pauses is int hostPauses && EventIO.Get() is ClientEventIO client) client.HostPauses = hostPauses;
+            if (throttle is int hostThrottle && EventIO.Get() is ClientEventIO guest) guest.HostThrottle = hostThrottle;
             if (hostWaiting) Connect.GuestLobby.Open(hostMapName);
             Plugin.Log($"Host allows dev tools: {allowDevTools}");
             string warningMessage = null;
@@ -99,6 +103,7 @@ namespace BeaverBuddies.Events
                 serverCompat = Connect.BuildIdentity.CompatValue,
                 serverBuild = Connect.BuildIdentity.Build,
                 pauses = (int)Settings.PauseReductionSetting,
+                throttle = Settings.SpeedThrottleSetting,
             };
             return message;
         }

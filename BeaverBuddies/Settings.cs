@@ -60,6 +60,19 @@ namespace BeaverBuddies
         public static bool KeepAwake => Multiplayer?.KeepComputerAwake.Value ?? true;
         public static bool PlayOnAfterReload => Hosting?.PlayOnAfterReload.Value ?? false;
 
+        // How much of the game's slowing of fast speeds in big colonies is lifted, 0 none to 2 all: in another's game the
+        // host's choice (see IO.ClientEventIO.HostThrottle), as every machine has to play the ticks at the same pace
+        public static int SpeedThrottleSetting =>
+            IO.EventIO.Get() is IO.ClientEventIO { HostThrottle: int host } ? host : OwnSpeedThrottle;
+
+        // This player's own choice. Test copies share these settings: each can be told otherwise (BB_THROTTLE), and
+        // the harness can change it in the running copy without saving it over the player's (DevTools.TestHarness)
+        public static int OwnSpeedThrottle =>
+            DevTools.TestHarness.Active && SpeedThrottleForTests is int set ? set
+            : DevTools.TestHarness.Active && int.TryParse(System.Environment.GetEnvironmentVariable("BB_THROTTLE"), out int told) ? told
+            : int.TryParse(Hosting?.SpeedThrottle?.Value, out int level) ? level : 0;
+        internal static int? SpeedThrottleForTests;
+
         // A game hosted or joined, or of the Multiplayer settlement: autosaved every so many minutes, keeping so many, and
         // not while paused (see Connect.Autosaves)
         public static float AutosaveMinutes =>

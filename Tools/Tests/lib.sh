@@ -393,17 +393,19 @@ bb_open() {
     prefs_windowed
     # One copy told it's another build, or strict about builds or not, or its own choice of what pauses everyone, where
     # both share the player's settings: BB_FAKE_BUILD_HOST, BB_STRICT_CLIENT, BB_PAUSES_HOST and so on, by the copy's name.
-    # BB_HIDE_CUSTOM_CLIENT=1 has that copy see none of the custom sounds and images both share (DevTools/HideCustomFiles.cs)
-    local upper fake strict pauses hide
+    # BB_HIDE_CUSTOM_CLIENT=1 has that copy see none of the custom sounds and images both share (DevTools/HideCustomFiles.cs),
+    # and BB_THROTTLE_HOST its own lift of the slowing of fast speeds (Connect/SpeedThrottle.cs)
+    local upper fake strict pauses hide throttle
     upper=$(echo "$inst" | tr '[:lower:]' '[:upper:]')
     fake="BB_FAKE_BUILD_$upper"; fake=${!fake:-}
     strict="BB_STRICT_$upper"; strict=${!strict:-}
     pauses="BB_PAUSES_$upper"; pauses=${!pauses:-}
     hide="BB_HIDE_CUSTOM_$upper"; hide=${!hide:-}
+    throttle="BB_THROTTLE_$upper"; throttle=${!throttle:-}
     bb_home_prepare
     open -g -n -a "$BB_GAME" --env SteamAppId=1062090 --env SteamGameId=1062090 --env BB_INSTANCE="$inst" --env HOME="$BB_HOME" \
         ${BB_RTC_CODE:+--env BB_RTC_CODE="$BB_RTC_CODE"} \
-        ${fake:+--env BB_FAKE_BUILD="$fake"} ${strict:+--env BB_STRICT="$strict"} ${pauses:+--env BB_PAUSES="$pauses"} \
+        ${fake:+--env BB_FAKE_BUILD="$fake"} ${strict:+--env BB_STRICT="$strict"} ${pauses:+--env BB_PAUSES="$pauses"} ${throttle:+--env BB_THROTTLE="$throttle"} \
         ${hide:+--env BB_HIDE_CUSTOM_FILES="$hide"} \
         ${BB_HITCH_MS:+--env BB_HITCH_MS="$BB_HITCH_MS"} ${BB_PACE_SECONDS:+--env BB_PACE_SECONDS="$BB_PACE_SECONDS"} \
         ${BB_LEAK_ROOTS:+--env BB_LEAK_ROOTS="$BB_LEAK_ROOTS"} ${BB_LEAK_SIZES:+--env BB_LEAK_SIZES=1} ${BB_LEAK_WALK:+--env BB_LEAK_WALK=1} \

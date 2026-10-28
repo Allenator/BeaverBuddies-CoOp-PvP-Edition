@@ -89,6 +89,11 @@ BeaverBuddies.Settings.PauseForHostSaves,"Spiel pausieren, während du speichers
 BeaverBuddies.Settings.PauseForHostSaves.Tooltip,"Ein Spielstand, den du selbst speicherst, wird bei pausiertem Spiel geschrieben, wie im Einzelspielermodus, und danach läuft das Spiel mit seiner Geschwindigkeit weiter. Automatische Speicherungen werden nicht pausiert. So oder so warten die Gäste im selben Moment, während du speicherst.",""
 BeaverBuddies.Settings.PlayOnAfterReload,"Nach einer Resynchronisation oder einem Beitritt weiterspielen",""
 BeaverBuddies.Settings.PlayOnAfterReload.Tooltip,"Wenn das Spiel für alle neu geladen wird, nach einer Desynchronisation oder wenn ein Spieler beitritt, läuft es mit seiner vorherigen Geschwindigkeit weiter, sobald alle zurück sind, spätestens nach einer Minute, statt pausiert zu warten, bis du auf Abspielen drückst. Wenn du in der Zwischenzeit eine Geschwindigkeit wählst, entfällt das.",""
+BeaverBuddies.Settings.SpeedThrottle,"Hohe Geschwindigkeiten in großen Kolonien",""
+BeaverBuddies.Settings.SpeedThrottle.Tooltip,"Das Spiel spielt seine höheren Geschwindigkeiten langsamer, je größer eine Kolonie wird: Bei 200 Bibern und Bots läuft Geschwindigkeit 7 mit 3,4-facher Normalgeschwindigkeit. In einem Spiel, das du hostest, kannst du das für alle Spieler beibehalten, die Verlangsamung halbieren (Geschwindigkeit 7 mit 5,2-fach) oder aufheben (7-fach). Die Computer aller Spieler müssen mithalten.",""
+BeaverBuddies.Settings.SpeedThrottle.Game,"Wie im Spiel",""
+BeaverBuddies.Settings.SpeedThrottle.Half,"Halb so langsam",""
+BeaverBuddies.Settings.SpeedThrottle.None,"Nicht verlangsamt",""
 BeaverBuddies.Host.ConnectedClients,"Warte auf Clients…
 Derzeit verbundene Clients:",""
 BeaverBuddies.Host.DirectConnectClient,"Direkt‑Connect‑Client",""

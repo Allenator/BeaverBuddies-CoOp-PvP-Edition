@@ -82,14 +82,17 @@ namespace BeaverBuddies.IO
         // What pauses everyone, as the host chose it for every player in its game (see Settings.PauseReductionSetting);
         // null until the host's welcome or presence says, or from a host that doesn't
         public int? HostPauses { get; set; }
+        // How much of the game's slowing of fast speeds the host lifts for every player (see Settings.SpeedThrottleSetting)
+        public int? HostThrottle { get; set; }
 
         private void OnTransientMessage(Newtonsoft.Json.Linq.JObject message)
         {
             string type = message[TYPE_KEY]?.ToString();
             // The host says it again with its presence, should it change its mind mid-game
-            if (type == Players.PlayerPresence.MessageType && message.Value<bool?>("host") == true && message.Value<int?>("pauses") is int pauses)
+            if (type == Players.PlayerPresence.MessageType && message.Value<bool?>("host") == true)
             {
-                HostPauses = pauses;
+                if (message.Value<int?>("pauses") is int pauses) HostPauses = pauses;
+                if (message.Value<int?>("throttle") is int throttle) HostThrottle = throttle;
                 return;
             }
             if (type != Connect.BuildIdentity.RefusedType) return;
