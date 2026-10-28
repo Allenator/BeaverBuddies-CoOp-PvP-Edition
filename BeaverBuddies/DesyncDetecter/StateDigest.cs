@@ -9,18 +9,22 @@ namespace BeaverBuddies.DesyncDetecter
 {
     /**
      * What a desync leaves out of the traces: which entities and which water
-     * tiles differ. Each tick (with logging on) every machine keeps a record
-     * of the entities that ticked and where the walkers were, and of the
-     * water map, for the last few ticks, and the host sends a hash of each
-     * bucket of entities and each square of water along with its traces. The
-     * machine that finds a difference lists what's in the buckets and
-     * squares that differ, the host compares that with its own record of the
-     * same tick, and says in its log which entity or tile it is.
+     * tiles differ. Each tick of a co-op game every machine keeps a record
+     * of the entities that ticked and where the walkers were, for the last
+     * few ticks, nothing allocated as it goes; with tracing, of the water map
+     * too, and the host sends a hash of each bucket of entities and each
+     * square of water along with its traces. The machine that finds a
+     * difference lists what's in the buckets and squares that differ, the host
+     * compares that with its own record of the same tick, and says in its log
+     * which entity or tile it is. Without tracing, a guest whose hashes part
+     * from the host's sends its buckets and walkers of that tick and the one
+     * before (Snapshot), and the host names the walkers that differ
+     * (AnalyzeSnapshot).
      */
     public static class StateDigest
     {
         public const int Buckets = 256;
-        private const int KeepTicks = 16;
+        private const int KeepTicks = 24;
         private const int KeepWaterTicks = 8;
         // Water columns copied for the ring, up to this many a tick
         private const int MaxWaterColumns = 600000;
@@ -34,10 +38,15 @@ namespace BeaverBuddies.DesyncDetecter
             public float X, Y, Z;
         }
 
+        // A tick's entities in the ring, its arrays kept from tick to tick
         private class TickRecord
         {
-            public Record[] Records;
-            public int[] Buckets;
+            public int Tick = int.MinValue;
+            public Record[] Records = new Record[1024];
+            public int Count;
+            public readonly int[] Buckets = new int[StateDigest.Buckets];
+            public readonly int[] Counts = new int[StateDigest.Buckets];
+            public IEnumerable<Record> All => new ArraySegment<Record>(Records, 0, Count);
         }
 
         private class WaterRecord
@@ -48,31 +57,78 @@ namespace BeaverBuddies.DesyncDetecter
             public byte[] Counts;
         }
 
-        private static readonly SortedDictionary<int, TickRecord> ticks = new();
+        private static readonly TickRecord[] ring = Enumerable.Range(0, KeepTicks).Select(_ => new TickRecord()).ToArray();
         private static readonly SortedDictionary<int, WaterRecord> waters = new();
         // What the entities are called, for the report: kept for the ones that go too
         private static readonly Dictionary<Guid, string> names = new();
 
+        // The tick being played, and its record, filled as its buckets tick
+        private static int tickNow = int.MinValue;
         private static int currentTick = int.MinValue;
-        private static List<Record> current = new();
+        private static TickRecord current;
+        private static int nextSlot;
 
         public static void Reset()
         {
-            ticks.Clear();
+            foreach (TickRecord r in ring)
+            {
+                r.Tick = int.MinValue;
+                r.Count = 0;
+            }
             waters.Clear();
             names.Clear();
-            current = new List<Record>();
+            current = null;
             currentTick = int.MinValue;
+            tickNow = int.MinValue;
+        }
+
+        // The ticks kept, oldest first
+        private static IEnumerable<TickRecord> Ticks()
+        {
+            if (current != null) Finish();
+            return ring.Where(r => r.Tick != int.MinValue).OrderBy(r => r.Tick);
+        }
+
+        private static bool TryGetTick(int tick, out TickRecord record)
+        {
+            if (tick == currentTick && current != null) Finish();
+            foreach (TickRecord r in ring)
+            {
+                if (r.Tick == tick && r != current)
+                {
+                    record = r;
+                    return true;
+                }
+            }
+            record = null;
+            return false;
         }
 
         // ---- Entities: called for each entity as the tick runs its bucket ----
 
-        public static void Add(int tick, Guid id, string name, bool hasPosition, Vector3 position)
+        /** The tick about to be played, which the entities it ticks are kept under. */
+        public static void StartTick(int tick) => tickNow = tick;
+
+        // Tests measuring what the record costs turn it off (BB_DIGEST_OFF)
+        private static readonly bool OffForTests = DevTools.TestHarness.Active && Environment.GetEnvironmentVariable("BB_DIGEST_OFF") == "1";
+
+        public static void Add(Guid id, Timberborn.EntitySystem.EntityComponent entity, bool hasPosition, Vector3 position)
         {
-            if (tick != currentTick) Finish();
-            currentTick = tick;
-            current.Add(new Record { Id = id, HasPosition = hasPosition, X = position.x, Y = position.y, Z = position.z });
-            if (!names.ContainsKey(id)) names[id] = name;
+            if (OffForTests) return;
+            if (tickNow != currentTick)
+            {
+                if (current != null) Finish();
+                current = ring[nextSlot];
+                nextSlot = (nextSlot + 1) % KeepTicks;
+                current.Tick = currentTick = tickNow;
+                current.Count = 0;
+            }
+            // Summed already for a look at it before the tick was over: taken up again, and summed again at the end
+            else if (current == null) current = ring[(nextSlot + KeepTicks - 1) % KeepTicks];
+            if (current.Count == current.Records.Length) Array.Resize(ref current.Records, current.Records.Length * 2);
+            current.Records[current.Count++] = new Record { Id = id, HasPosition = hasPosition, X = position.x, Y = position.y, Z = position.z };
+            // The name read once, for the report
+            if (!names.ContainsKey(id)) names[id] = entity.GameObject.name;
         }
 
         private static int Hash(Record r)
@@ -88,23 +144,101 @@ namespace BeaverBuddies.DesyncDetecter
             return unchecked((int)((uint)h * 2654435761u));
         }
 
-        private static int BucketOf(Guid id) => id.ToByteArray()[0];
+        // Guid's hash is plain arithmetic on its fields, the same on every machine, and allocates nothing
+        private static int BucketOf(Guid id) => id.GetHashCode() & (Buckets - 1);
 
+        // The tick being filled is over: its buckets summed, and it's kept as it is
         private static void Finish()
         {
-            if (currentTick == int.MinValue || current.Count == 0) return;
-            var buckets = new int[Buckets];
-            foreach (Record r in current) buckets[BucketOf(r.Id)] = unchecked(buckets[BucketOf(r.Id)] + Hash(r));
-            ticks[currentTick] = new TickRecord { Records = current.ToArray(), Buckets = buckets };
-            while (ticks.Count > KeepTicks) ticks.Remove(ticks.Keys.First());
-            current = new List<Record>();
+            TickRecord r = current;
+            current = null;
+            if (r == null) return;
+            Array.Clear(r.Buckets, 0, Buckets);
+            Array.Clear(r.Counts, 0, Buckets);
+            for (int i = 0; i < r.Count; i++)
+            {
+                int bucket = BucketOf(r.Records[i].Id);
+                r.Buckets[bucket] = unchecked(r.Buckets[bucket] + Hash(r.Records[i]));
+                r.Counts[bucket]++;
+            }
         }
 
         // The buckets of a tick that's over, to send with its traces
-        public static int[] EntityBucketsOf(int tick)
+        public static int[] EntityBucketsOf(int tick) => TryGetTick(tick, out TickRecord r) ? (int[])r.Buckets.Clone() : null;
+
+        // ---- Without tracing: a guest's side of a tick its hashes parted at, and the host's reading of it ----
+
+        /** This machine's buckets, their counts, and its walkers' positions ("tick|id|x|y|z") at that tick and the one before. */
+        public static (int[] buckets, int[] counts, string[] walkers) Snapshot(int tick)
         {
-            if (tick == currentTick) Finish();
-            return ticks.TryGetValue(tick, out TickRecord r) ? r.Buckets : null;
+            if (!TryGetTick(tick, out TickRecord record)) return (null, null, null);
+            var walkers = new List<string>();
+            foreach (int t in new[] { tick - 1, tick })
+            {
+                if (!TryGetTick(t, out TickRecord r)) continue;
+                foreach (Record w in r.All)
+                {
+                    if (w.HasPosition) walkers.Add($"{t}|{w.Id}|{w.X:R}|{w.Y:R}|{w.Z:R}");
+                }
+            }
+            return ((int[])record.Buckets.Clone(), (int[])record.Counts.Clone(), walkers.ToArray());
+        }
+
+        /**
+         * On the host: what a guest's snapshot of a tick says differs from ours, without tracing. The walkers whose
+         * positions differ, by name, and the entities in the buckets that differ otherwise (one that ticked on one
+         * machine and not the other).
+         */
+        public static string AnalyzeSnapshot(int tick, string who, int[] theirBuckets, int[] theirCounts, string[] theirWalkers)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine($"========== What differs at tick {tick}, {who}'s walkers and entities against ours ==========");
+            if (!TryGetTick(tick, out TickRecord mine))
+            {
+                sb.AppendLine($"  tick {tick} isn't kept here any more: the ticks kept are {string.Join(", ", Ticks().Select(r => r.Tick))}");
+                sb.AppendLine("========== End of what differs ==========");
+                return sb.ToString();
+            }
+            var buckets = Enumerable.Range(0, Buckets)
+                .Where(b => theirBuckets != null && b < theirBuckets.Length && mine.Buckets[b] != theirBuckets[b]).ToList();
+            sb.AppendLine($"  {buckets.Count} of {Buckets} buckets of entities differ" + (buckets.Count == 0 ? "" : $": {string.Join(" ", buckets.Take(40))}"));
+            // The walkers, by position, at both ticks
+            var theirs = new Dictionary<(int, Guid), string>();
+            foreach (string line in theirWalkers ?? new string[0])
+            {
+                string[] p = line.Split('|');
+                if (p.Length == 5 && int.TryParse(p[0], out int t) && Guid.TryParse(p[1], out Guid id)) theirs[(t, id)] = $"{p[2]} {p[3]} {p[4]}";
+            }
+            int shown = 0;
+            var ours = new HashSet<(int, Guid)>();
+            foreach (int t in new[] { tick - 1, tick })
+            {
+                if (!TryGetTick(t, out TickRecord r)) continue;
+                foreach (Record w in r.All)
+                {
+                    if (!w.HasPosition) continue;
+                    ours.Add((t, w.Id));
+                    string here = $"{w.X:R} {w.Y:R} {w.Z:R}";
+                    if (!theirs.TryGetValue((t, w.Id), out string there))
+                    {
+                        if (theirs.Count > 0 && shown++ < 40) sb.AppendLine($"  walker only here at tick {t}: {w.Id} {Describe(w.Id)} at {here}");
+                    }
+                    else if (there != here && shown++ < 40) sb.AppendLine($"  walker {w.Id} {Describe(w.Id)} at tick {t}: here {here}, there {there}");
+                }
+            }
+            foreach (var pair in theirs)
+            {
+                if (!ours.Contains(pair.Key) && shown++ < 60) sb.AppendLine($"  walker only there at tick {pair.Key.Item1}: {pair.Key.Item2} {Describe(pair.Key.Item2)} at {pair.Value}");
+            }
+            if (shown == 0) sb.AppendLine("  the walkers agree at both ticks");
+            // Which entities ticked differently: ours in the buckets whose counts differ, which are the candidates
+            foreach (int b in buckets.Where(b => theirCounts != null && b < theirCounts.Length && mine.Counts[b] != theirCounts[b]).Take(8))
+            {
+                sb.AppendLine($"  bucket {b}: {mine.Counts[b]} entities here, {theirCounts[b]} there; here: " +
+                    string.Join(", ", mine.All.Where(r => BucketOf(r.Id) == b).Take(30).Select(r => $"{r.Id.ToString().Substring(0, 8)} {Describe(r.Id)}")));
+            }
+            sb.AppendLine("========== End of what differs ==========");
+            return sb.ToString();
         }
 
         // ---- Water: after the map updates ----
@@ -165,9 +299,7 @@ namespace BeaverBuddies.DesyncDetecter
         public static Difference Compare(int tick, int[] otherBuckets, int[] otherAreas)
         {
             var diff = new Difference { Tick = tick };
-            // The tick that's just over is the one being collected still
-            if (tick == currentTick) Finish();
-            if (otherBuckets != null && ticks.TryGetValue(tick, out TickRecord mine))
+            if (otherBuckets != null && TryGetTick(tick, out TickRecord mine))
             {
                 for (int i = 0; i < Buckets && i < otherBuckets.Length; i++)
                 {
@@ -196,11 +328,11 @@ namespace BeaverBuddies.DesyncDetecter
         {
             var lines = new List<string>();
             var wanted = new HashSet<int>(diff.EntityBuckets);
-            foreach (var pair in ticks)
+            foreach (TickRecord tick in Ticks())
             {
-                foreach (Record r in pair.Value.Records)
+                foreach (Record r in tick.All)
                 {
-                    if (r.HasPosition && wanted.Contains(BucketOf(r.Id))) lines.Add($"{r.Id}|{pair.Key}|{r.X:R}|{r.Y:R}|{r.Z:R}");
+                    if (r.HasPosition && wanted.Contains(BucketOf(r.Id))) lines.Add($"{r.Id}|{tick.Tick}|{r.X:R}|{r.Y:R}|{r.Z:R}");
                 }
                 if (lines.Count > 12000) break;
             }
@@ -211,10 +343,10 @@ namespace BeaverBuddies.DesyncDetecter
         public static (string[] entities, string[] water) Detail(Difference diff)
         {
             var entities = new List<string>();
-            if (ticks.TryGetValue(diff.Tick, out TickRecord mine))
+            if (TryGetTick(diff.Tick, out TickRecord mine))
             {
                 var wanted = new HashSet<int>(diff.EntityBuckets);
-                foreach (Record r in mine.Records)
+                foreach (Record r in mine.All)
                 {
                     if (wanted.Contains(BucketOf(r.Id))) entities.Add(Line(r));
                     if (entities.Count >= MaxDetailLines) break;
@@ -249,14 +381,14 @@ namespace BeaverBuddies.DesyncDetecter
         // The first few entities that differ, tick by tick: where each was on both machines, and what each logged about it
         private static void AppendHistories(StringBuilder sb, int tick, int[] entityBuckets, string[] theirEntities, string[] theirHistory, string[] theirTraces)
         {
-            if (entityBuckets == null || entityBuckets.Length == 0 || !ticks.TryGetValue(tick, out TickRecord mine)) return;
+            if (entityBuckets == null || entityBuckets.Length == 0 || !TryGetTick(tick, out TickRecord mine)) return;
             var wanted = new HashSet<int>(entityBuckets);
             var theirs = new Dictionary<Guid, string>();
             foreach (string line in theirEntities ?? new string[0])
             {
                 if (Guid.TryParse(line.Split('|')[0], out Guid id)) theirs[id] = line;
             }
-            var differing = mine.Records.Where(r => wanted.Contains(BucketOf(r.Id)) && theirs.TryGetValue(r.Id, out string l) && l != Line(r))
+            var differing = mine.All.Where(r => wanted.Contains(BucketOf(r.Id)) && theirs.TryGetValue(r.Id, out string l) && l != Line(r))
                 .Select(r => r.Id).Take(3).ToList();
             foreach (Guid id in differing)
             {
@@ -268,14 +400,14 @@ namespace BeaverBuddies.DesyncDetecter
                     if (p.Length == 5 && p[0] == id.ToString() && int.TryParse(p[1], out int t)) there[t] = $"{p[2]} {p[3]} {p[4]}";
                 }
                 bool split = false;
-                foreach (var pair in ticks)
+                foreach (TickRecord tickRecord in Ticks())
                 {
-                    Record r = pair.Value.Records.FirstOrDefault(x => x.Id == id);
+                    Record r = tickRecord.All.FirstOrDefault(x => x.Id == id);
                     if (!r.HasPosition) continue;
                     string here = $"{r.X:R} {r.Y:R} {r.Z:R}";
-                    there.TryGetValue(pair.Key, out string other);
+                    there.TryGetValue(tickRecord.Tick, out string other);
                     bool differs = other != null && other != here;
-                    sb.AppendLine($"    tick {pair.Key}: {here} | {other ?? "-"}{(differs && !split ? "   <- first difference" : "")}");
+                    sb.AppendLine($"    tick {tickRecord.Tick}: {here} | {other ?? "-"}{(differs && !split ? "   <- first difference" : "")}");
                     if (differs) split = true;
                 }
                 string key = id.ToString();
@@ -298,10 +430,10 @@ namespace BeaverBuddies.DesyncDetecter
         {
             var sb = new StringBuilder();
             sb.AppendLine($"========== What differs at tick {tick}, {who}'s state against ours ==========");
-            if (entityBuckets != null && entityBuckets.Length > 0 && ticks.TryGetValue(tick, out TickRecord mine))
+            if (entityBuckets != null && entityBuckets.Length > 0 && TryGetTick(tick, out TickRecord mine))
             {
                 var wanted = new HashSet<int>(entityBuckets);
-                var ours = mine.Records.Where(r => wanted.Contains(BucketOf(r.Id))).ToDictionary(r => r.Id);
+                var ours = mine.All.Where(r => wanted.Contains(BucketOf(r.Id))).ToDictionary(r => r.Id);
                 var theirs = new Dictionary<Guid, string>();
                 foreach (string line in theirEntities ?? new string[0])
                 {

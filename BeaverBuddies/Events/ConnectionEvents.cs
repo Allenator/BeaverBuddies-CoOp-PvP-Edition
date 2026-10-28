@@ -124,6 +124,12 @@ namespace BeaverBuddies.Events
         // Where those entities were over the last ticks, and what the traces said about them
         public string[] detailHistory;
         public string[] detailTraces;
+        // Without tracing: this machine's buckets, their counts and its walkers at the tick its hashes parted from the
+        // host's, and the one before, for the host to say which walker it was (see StateDigest.Snapshot)
+        public int snapshotTick;
+        public int[] snapshotBuckets;
+        public int[] snapshotCounts;
+        public string[] snapshotWalkers;
         // Only for the host to say what differs, in the test harness, which keeps a desync as it is
         public bool analyzeOnly;
         // What the player's machine found apart from the host's, when it knew (see ReplayService.HandleDesync)
@@ -203,6 +209,13 @@ namespace BeaverBuddies.Events
                 if (detailTick > 0)
                 {
                     string analysis = DesyncDetecter.StateDigest.Analyze(detailTick, playerID, detailEntityBuckets, detailEntities, detailWaterAreas, detailWater, detailHistory, detailTraces);
+                    Plugin.LogError(analysis);
+                    desyncTrace = (desyncTrace ?? "") + analysis;
+                }
+                // ...and without tracing, which walkers
+                if (snapshotBuckets != null)
+                {
+                    string analysis = DesyncDetecter.StateDigest.AnalyzeSnapshot(snapshotTick, playerID, snapshotBuckets, snapshotCounts, snapshotWalkers);
                     Plugin.LogError(analysis);
                     desyncTrace = (desyncTrace ?? "") + analysis;
                 }

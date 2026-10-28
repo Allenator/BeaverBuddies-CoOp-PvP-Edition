@@ -1033,11 +1033,8 @@ namespace BeaverBuddies
                     var targetPos = pathFollower._transform.position;
                     animatedPathFollower.CurrentPosition = targetPos;
                     PositionHash = TimberNetBase.CombineHash(PositionHash, targetPos.GetHashCode());
-                    if (Settings.Debug)
-                    {
-                        DesyncDetecter.StateDigest.Add(DesyncDetecter.DesyncDetecterService.CurrentTick, entity.EntityId, entityComponent.GameObject.name, true, targetPos);
-                        recorded = true;
-                    }
+                    DesyncDetecter.StateDigest.Add(entity.EntityId, entityComponent, true, targetPos);
+                    recorded = true;
 
                     // Between ticks, MovementAnimator.Update() runs every
                     // frame and may change the group ID at different times
@@ -1054,10 +1051,8 @@ namespace BeaverBuddies
                         }
                     }
                 }
-                if (!recorded && Settings.Debug)
-                {
-                    DesyncDetecter.StateDigest.Add(DesyncDetecter.DesyncDetecterService.CurrentTick, entity.EntityId, entityComponent.GameObject.name, false, default);
-                }
+                // Every entity, in a co-op game, for a desync's report to say which (see StateDigest)
+                if (!recorded) DesyncDetecter.StateDigest.Add(entity.EntityId, entityComponent, false, default);
                 // Make sure it updates the model's position as well
                 try
                 {

@@ -196,8 +196,9 @@ namespace BeaverBuddies.DesyncDetecter
         private static int hostSplitStart = -1;
         private static int hostSplitTicks;
 
-        /** What differed when this machine last found its state apart from the host's, for its report. */
+        /** What differed when this machine last found its state apart from the host's, for its report, and from which tick. */
         public static string LastSplit { get; private set; }
+        public static int LastSplitTick { get; private set; } = -1;
 
         public static void ReceiveHostHashes(int tick, int[] hashes)
         {
@@ -222,11 +223,13 @@ namespace BeaverBuddies.DesyncDetecter
             {
                 hostSplitStart = -1;
                 hostSplitTicks = 0;
+                LastSplitTick = -1;
                 return false;
             }
             if (hostSplitStart < 0)
             {
                 hostSplitStart = tick;
+                LastSplitTick = tick;
                 LastSplit = $"{string.Join(" and ", differing)} differ from the host's since tick {tick}";
                 Plugin.LogWarning($"State differs from the host's at tick {tick}: {string.Join(" and ", differing)}");
             }
@@ -261,6 +264,7 @@ namespace BeaverBuddies.DesyncDetecter
         public void Reset()
         {
             currentTick = -1;
+            LastSplitTick = -1;
             lastDesyncTrace = null;
             traces.Clear();
             traces.Add(new List<Trace>());
@@ -346,6 +350,7 @@ namespace BeaverBuddies.DesyncDetecter
 
         public static void StartTick(int tick)
         {
+            StateDigest.StartTick(tick);
             if (!Settings.Debug)
             {
                 tracing = false;

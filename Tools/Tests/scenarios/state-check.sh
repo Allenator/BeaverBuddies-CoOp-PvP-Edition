@@ -23,6 +23,9 @@ else
 fi
 wait_for host "Resyncing everyone after the desync of" 30 && pass "the host resyncs everyone" || fail "the host resyncs everyone" "it never did"
 expect_log "the host's log says what differed" host "Playing ClientDesyncedEvent by .*: Out of sync: walker positions differ from the host's since tick"
+# ...and which walker, from the guest's record of that tick, without tracing
+who=$(grep -aoE "Nudged [0-9a-f]{8}" "$(bb_log client)" | tail -1 | cut -d' ' -f2)
+expect_log "the host names the walker nudged" host "walker ${who:-x}[0-9a-f-]* .* at tick [0-9]+: here .*, there "
 wait_for host "Back in sync after a resync" 120 && wait_for client "Back in sync after a resync" 120 \
     && pass "both copies load the host's save" || fail "both copies load the host's save" "one never finished loading"
 sleep 3

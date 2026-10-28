@@ -609,8 +609,15 @@ namespace BeaverBuddies
             }
 
             var detail = DesyncDetecterService.TakeDetail();
+            // Without tracing, this machine's side of the tick its hashes parted from the host's at
+            int splitTick = Settings.Debug ? -1 : DesyncDetecterService.LastSplitTick;
+            var snapshot = splitTick >= 0 ? DesyncDetecter.StateDigest.Snapshot(splitTick) : (null, null, null);
             ClientDesyncedEvent e = new ClientDesyncedEvent()
             {
+                snapshotTick = splitTick,
+                snapshotBuckets = snapshot.buckets,
+                snapshotCounts = snapshot.counts,
+                snapshotWalkers = snapshot.walkers,
                 desyncID = DesyncDetecterService.GetLastDesyncID(),
                 desyncTrace = DesyncDetecterService.GetLastDesyncTrace(),
                 playerID = Players.PlayerIdentity.LocalID,
