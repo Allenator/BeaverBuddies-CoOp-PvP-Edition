@@ -166,6 +166,13 @@ if [ -z "${BB_BUILD:-}" ]; then
     export BB_BUILD_SOURCES="$ROOT/BeaverBuddies:$ROOT/TimberNet"
     export BB_BUILD="(cd '$ROOT/BeaverBuddies' && dotnet build -c Release -nologo -v q 2>&1 | tail -3)"
 fi
+# The files the build is made from, by name: one taken out, or put back with its
+# old date (moved aside and back), changes the build as much as an edit
+build_files() {
+    local d
+    IFS=: read -ra dirs <<< "$BB_BUILD_SOURCES"
+    for d in "${dirs[@]}"; do find "$d" \( -name bin -o -name obj \) -prune -o -type f -print; done | sort | shasum | cut -d' ' -f1
+}
 # The build is skipped when nothing it's made from changed since this checkout's
 # last one, and nothing else has installed into the Mods folder since (another
 # checkout's run, a package): BB_BUILD_SOURCES lists the folders it's made from
@@ -173,6 +180,7 @@ build_current() {
     local stamp="$BB_TEST_DIR/.build-stamp"
     [ -n "${BB_BUILD_SOURCES:-}" ] && [ -f "$stamp" ] || return 1
     [ "$(head -1 "$stamp")" == "$BB_BUILD_SOURCES" ] || return 1
+    [ "$(sed -n 2p "$stamp")" == "$(build_files)" ] || return 1
     local d
     IFS=: read -ra dirs <<< "$BB_BUILD_SOURCES"
     for d in "${dirs[@]}"; do
@@ -191,7 +199,7 @@ if [ $BUILD -eq 1 ] && [ -n "${BB_BUILD:-}" ]; then
     else
         echo "Building..."
         ( export BB_HOLDS_LOCK=1; set -o pipefail; eval "$BB_BUILD" ) || { echo "The build failed."; :; exit 1; }
-        [ -n "${BB_BUILD_SOURCES:-}" ] && echo "$BB_BUILD_SOURCES" > "$BB_TEST_DIR/.build-stamp"
+        [ -n "${BB_BUILD_SOURCES:-}" ] && { echo "$BB_BUILD_SOURCES"; build_files; } > "$BB_TEST_DIR/.build-stamp"
     fi
 fi
 # Whatever built it: the copies must play the code as it is now, not an install older than it.

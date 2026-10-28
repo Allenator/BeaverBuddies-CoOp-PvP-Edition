@@ -464,7 +464,8 @@ expect_in_sync() {
 # expect_no_errors <name>: no exception in either log
 expect_no_errors() {
     local e
-    e=$(grep -aE "NullReferenceException|Exception:|desync|Desync" "$(bb_log host)" "$(bb_log client)" 2>/dev/null | grep -v "gpath.c" | head -2 | cut -c1-200)
+    # Not the notice that tracing is on, which a scenario that traces has as it loads
+    e=$(grep -aE "NullReferenceException|Exception:|desync|Desync" "$(bb_log host)" "$(bb_log client)" 2>/dev/null | grep -v "gpath.c" | grep -v "Desync tracing is on: told the player" | head -2 | cut -c1-200)
     if [ -z "$e" ]; then pass "$1"; else fail "$1" "$e"; fi
 }
 
