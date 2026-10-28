@@ -62,6 +62,8 @@ namespace BeaverBuddies.Trading
             _tolls.Clear();
             foreach (EntityComponent entity in entities)
             {
+                // Deleted since the panel last looked
+                if (!entity) continue;
                 // One group per pair: the Trading Post's side A, and the
                 // Power Exchange half with the lower entity ID
                 DistrictTrade trade = entity.GetComponent<DistrictTrade>();
