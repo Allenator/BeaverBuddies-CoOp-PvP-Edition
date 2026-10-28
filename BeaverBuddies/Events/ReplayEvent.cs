@@ -57,6 +57,11 @@ namespace BeaverBuddies.Events
 
         public static EntityComponent GetEntityComponent(IReplayContext context, string entityID)
         {
+            if (string.IsNullOrEmpty(entityID))
+            {
+                Plugin.LogWarning("No entity: it was gone before the action was sent");
+                return null;
+            }
             if (!Guid.TryParse(entityID, out Guid guid))
             {
                 Plugin.LogWarning($"Could not parse guid: {entityID}");

@@ -317,12 +317,21 @@ namespace BeaverBuddies.Events
             // BlockObjectDeletionTool's code is shared by all its reference type
             // instances, so this also runs for the dev mode EntityBlockObjectDeletionTool
             bool isDevTool = (object)__instance is EntityBlockObjectDeletionTool;
+            // What was picked and is gone since (another player's demolition a moment before) isn't sent: every
+            // machine would only say it found nothing. With nothing left, nothing is: the game's own deletion
+            // mustn't run here alone either
+            List<string> entityIDs = __instance._temporaryBlockObjects
+                    .Select(ReplayEvent.GetEntityID)
+                    .Where(id => id != null)
+                    .ToList();
+            if (!IO.EventIO.IsNull && !ReplayService.IsReplayingEvents && entityIDs.Count == 0
+                && __instance._temporaryBlockObjects.Count > 0 && __instance._temporaryTerrainCoords.Count == 0)
+            {
+                __instance._temporaryBlockObjects.Clear();
+                return false;
+            }
             bool result = (!isDevTool || DevTools.DevToolsPolicy.CheckAllowed()) && ReplayEvent.DoPrefix(() =>
             {
-                List<string> entityIDs = __instance._temporaryBlockObjects
-                        .Select(ReplayEvent.GetEntityID)
-                        .ToList();
-
                 return new BuildingsDeconstructedEvent()
                 {
                     entityIDs = entityIDs,
