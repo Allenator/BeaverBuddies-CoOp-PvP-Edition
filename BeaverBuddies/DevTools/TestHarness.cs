@@ -928,6 +928,80 @@ namespace BeaverBuddies.DevTools
                     Plugin.Log($"[Test] eventchurn {a[1]}: done");
                     break;
                 }
+                case "heap":
+                {
+                    // The managed heap after a full collection: what's alive, and what Mono holds for it
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
+                    GC.Collect();
+                    Plugin.Log($"[Test] heap: collected {GC.GetTotalMemory(true) >> 20} MB, Mono used {UnityEngine.Profiling.Profiler.GetMonoUsedSizeLong() >> 20} MB of {UnityEngine.Profiling.Profiler.GetMonoHeapSizeLong() >> 20} MB, {GC.CollectionCount(0)} collections, GC mode {UnityEngine.Scripting.GarbageCollector.GCMode}, incremental {UnityEngine.Scripting.GarbageCollector.isIncremental}");
+                    break;
+                }
+                case "scenes":
+                {
+                    // Whether the games before this one are gone: a weak reference to each game's event bus, kept as it's first
+                    // asked about, and how many of the earlier ones a full collection leaves alive
+                    var bus = Get<EventBus>();
+                    if (!SceneBuses.Any(w => ReferenceEquals(w.Target, bus))) SceneBuses.Add(new WeakReference(bus));
+                    bus = null;
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
+                    GC.Collect();
+                    var current = Get<EventBus>();
+                    int earlier = SceneBuses.Count(w => !ReferenceEquals(w.Target, current));
+                    int alive = SceneBuses.Count(w => w.IsAlive && !ReferenceEquals(w.Target, current));
+                    Plugin.Log($"[Test] scenes: {alive} of {earlier} earlier games alive");
+                    break;
+                }
+                case "roots":
+                {
+                    // What keeps the earliest earlier game "scenes" saw alive: the shortest chain of fields to its event bus from
+                    // a static field of any assembly or from a live behaviour, not through this game's singletons. A walk of the
+                    // heap, off the main thread, said when it ends. Of a ConditionalWeakTable it follows only the values, as the
+                    // collector holds the keys weakly, and it holds nothing once it ends
+                    var current = Get<EventBus>();
+                    object old = SceneBuses.Select(w => w.Target).FirstOrDefault(t => t != null && !ReferenceEquals(t, current));
+                    if (old == null)
+                    {
+                        Plugin.Log("[Test] roots: no earlier game alive");
+                        break;
+                    }
+                    var target = new WeakReference(old);
+                    old = null;
+                    var walk = new HeapWalk(target, WalkRoots(), Get<SingletonLifecycleService>()._singletonRepository.GetSingletons<object>().Append(current));
+                    new System.Threading.Thread(walk.Run) { IsBackground = true, Priority = System.Threading.ThreadPriority.BelowNormal }.Start();
+                    Plugin.Log("[Test] roots: walking");
+                    break;
+                }
+                case "leakclear":
+                {
+                    // Lets go of what a static field keeps of a scene that's gone, to see whether that's what keeps it alive:
+                    // Game Modes' Customize dialog, made in the main menu and kept in a static property it never clears
+                    var field = HarmonyLib.AccessTools.TypeByName("GameModes.CustomizeDialog")?
+                        .GetField("<Instance>k__BackingField", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+                    bool had = field?.GetValue(null) != null;
+                    field?.SetValue(null, null);
+                    Plugin.Log($"[Test] leakclear: Game Modes' Customize dialog {(field == null ? "not found" : had ? "let go" : "was already gone")}");
+                    break;
+                }
+                case "cwtcheck":
+                {
+                    // Whether this runtime's ConditionalWeakTable lets a key go once nothing else holds it, as .NET's does:
+                    // keys in a table, keys in a table whose values point back at them, and keys held by nothing, after a
+                    // full collection
+                    var (inTable, pointingBack, alone) = CwtProbe(1000);
+                    // And as BlockLoadRouting's markers are: a handler's delegate the key, its subscriber in the value, and the
+                    // delegate in a list the subscriber holds, as an event bus's registry does
+                    var looped = CwtLoopProbe(1000);
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
+                    GC.Collect();
+                    Plugin.Log($"[Test] cwtcheck: alive after a collection: {inTable.Count(w => w.IsAlive)} of 1000 keys in a table, " +
+                        $"{pointingBack.Count(w => w.IsAlive)} of 1000 whose values point back, " +
+                        $"{looped.Count(w => w.IsAlive)} of 1000 delegate keys whose values reach them through their subscriber, " +
+                        $"{alone.Count(w => w.IsAlive)} of 1000 held by nothing");
+                    break;
+                }
                 case "eventorder":
                 {
                     // The goods piles' handlers of an entity's deletion, in the order the event bus calls them
@@ -1484,6 +1558,219 @@ namespace BeaverBuddies.DevTools
         {
             var terrain = Get<Timberborn.TerrainSystem.ITerrainService>();
             return terrain.GetTerrainHeightBelow(terrain.Clamp(new Vector3Int(x, y, 999)));
+        }
+
+        // The roots of a walk of the heap, read on the main thread: off it, a static constructor that calls Unity hangs.
+        // Every static field of every assembly (but Unity's types with a static constructor, which some crash), and the
+        // live behaviours and scriptable objects Unity holds
+        private static List<(string, object)> WalkRoots()
+        {
+            var roots = new List<(string, object)>();
+            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                bool unity = assembly.GetName().Name.StartsWith("Unity");
+                Type[] types;
+                try { types = assembly.GetTypes(); } catch (System.Reflection.ReflectionTypeLoadException e) { types = e.Types.Where(t => t != null).ToArray(); }
+                foreach (var type in types)
+                {
+                    if (type.ContainsGenericParameters || (unity && type.TypeInitializer != null) || type == typeof(TestHarness)) continue;
+                    System.Reflection.FieldInfo[] fields;
+                    try { fields = type.GetFields(System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic); } catch { continue; }
+                    foreach (var field in fields)
+                    {
+                        if (field.FieldType.IsPrimitive || field.IsLiteral) continue;
+                        try { roots.Add(($"{type.FullName}.{field.Name}", field.GetValue(null))); } catch { }
+                    }
+                }
+            }
+            foreach (var live in UnityEngine.Resources.FindObjectsOfTypeAll<MonoBehaviour>().Cast<UnityEngine.Object>().Concat(UnityEngine.Resources.FindObjectsOfTypeAll<ScriptableObject>()))
+            {
+                string name;
+                try { name = live is Component c ? c.gameObject.name : live.name; } catch { name = "?"; }
+                roots.Add(($"(live {live.GetType().FullName} on {name})", live));
+            }
+            return roots;
+        }
+
+        // roots' walk: breadth first, so the chain it finds is a shortest one
+        private class HeapWalk
+        {
+            private readonly WeakReference _target;
+            private List<(string Name, object Value)> _roots;
+            private List<object> _skip;
+
+            public HeapWalk(WeakReference target, List<(string, object)> roots, IEnumerable<object> skip)
+            {
+                _target = target;
+                _roots = roots;
+                _skip = skip.ToList();
+            }
+
+            private class Node
+            {
+                public object Value;
+                public Node Parent;
+                public string Name;
+            }
+
+            private class ByReference : IEqualityComparer<object>
+            {
+                public new bool Equals(object a, object b) => ReferenceEquals(a, b);
+                public int GetHashCode(object o) => System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(o);
+            }
+
+            private readonly Dictionary<Type, System.Reflection.FieldInfo[]> _fields = new Dictionary<Type, System.Reflection.FieldInfo[]>();
+
+            public void Run()
+            {
+                var clock = System.Diagnostics.Stopwatch.StartNew();
+                string path;
+                try { path = Walk(); }
+                catch (Exception e) { path = $"the walk failed: {e.Message}"; }
+                _roots = null;
+                _skip = null;
+                _fields.Clear();
+                Plugin.Log($"[Test] roots ({clock.Elapsed.TotalSeconds:F0} s): {path ?? "no chain from a static field or a live behaviour"}");
+            }
+
+            private string Walk()
+            {
+                object goal = _target.Target;
+                if (goal == null) return "it was collected after all";
+                var seen = new HashSet<object>(new ByReference());
+                foreach (var skip in _skip) seen.Add(skip);
+                var queue = new Queue<Node>();
+                foreach (var (name, value) in _roots) Enqueue(queue, seen, value, null, name);
+                long visited = 0;
+                while (queue.Count > 0)
+                {
+                    var node = queue.Dequeue();
+                    if (ReferenceEquals(node.Value, goal)) return Describe(node, visited);
+                    if (++visited % 5000000 == 0) Plugin.Log($"[Test] roots: walked {visited} objects, {queue.Count} queued");
+                    object value = node.Value;
+                    var type = value.GetType();
+                    if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Runtime.CompilerServices.ConditionalWeakTable<,>))
+                    {
+                        // After a full collection an entry left has a live key, so its value is alive because of it: the
+                        // values are followed, named by their keys, and the keys aren't (the collector holds them weakly)
+                        if (type.GetField("data", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)?.GetValue(value) is Array entries)
+                        {
+                            var element = entries.GetType().GetElementType();
+                            var keyField = element.GetField("key", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public);
+                            var valueField = element.GetField("value", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public);
+                            foreach (var entry in entries)
+                            {
+                                object key = keyField?.GetValue(entry);
+                                if (key == null || key.GetType() == typeof(object)) continue;
+                                Enqueue(queue, seen, valueField?.GetValue(entry), node, $"[value for a {key.GetType().Name} key]");
+                            }
+                        }
+                        continue;
+                    }
+                    if (value is Array array)
+                    {
+                        var element = type.GetElementType();
+                        if (element.IsPrimitive || element.IsEnum || element.IsPointer) continue;
+                        int i = 0;
+                        foreach (var item in array) Enqueue(queue, seen, item, node, $"[{i++}]");
+                        continue;
+                    }
+                    if (value is Delegate d)
+                    {
+                        Enqueue(queue, seen, d.Target, node, $"(delegate {d.Method.DeclaringType?.Name}.{d.Method.Name})");
+                        foreach (var inner in d.GetInvocationList()) if (inner != d) Enqueue(queue, seen, inner, node, "(invocation)");
+                        continue;
+                    }
+                    foreach (var field in Fields(type))
+                    {
+                        object child;
+                        try { child = field.GetValue(value); } catch { continue; }
+                        Enqueue(queue, seen, child, node, $".{field.Name}");
+                    }
+                }
+                return null;
+            }
+
+            private System.Reflection.FieldInfo[] Fields(Type type)
+            {
+                if (_fields.TryGetValue(type, out var fields)) return fields;
+                var all = new List<System.Reflection.FieldInfo>();
+                for (var t = type; t != null; t = t.BaseType)
+                    all.AddRange(t.GetFields(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.DeclaredOnly)
+                        .Where(f => !f.FieldType.IsPrimitive && !f.FieldType.IsEnum && !f.FieldType.IsPointer));
+                return _fields[type] = all.ToArray();
+            }
+
+            private static void Enqueue(Queue<Node> queue, HashSet<object> seen, object value, Node parent, string name)
+            {
+                if (value == null || value is string || value is System.Reflection.Pointer) return;
+                var type = value.GetType();
+                if (type.IsPrimitive || type.IsEnum || type.IsPointer) return;
+                if (!seen.Add(value)) return;
+                queue.Enqueue(new Node { Value = value, Parent = parent, Name = name });
+            }
+
+            private static string Describe(Node node, long visited)
+            {
+                var parts = new List<string>();
+                for (var n = node; n != null; n = n.Parent) parts.Add($"{n.Name} ({n.Value.GetType().Name})");
+                parts.Reverse();
+                return $"after {visited} objects: " + string.Join(" -> ", parts);
+            }
+        }
+
+        private class LoopSubscriber
+        {
+            public readonly List<Action<object>> Handlers = new List<Action<object>>();
+            public void Handle(object _) { }
+        }
+
+        private class LoopMarker
+        {
+            public object Subscriber;
+        }
+
+        private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<Action<object>, LoopMarker> ProbeLoopTable = new();
+
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+        private static List<WeakReference> CwtLoopProbe(int n)
+        {
+            var subscribers = new List<WeakReference>();
+            for (int i = 0; i < n; i++)
+            {
+                var subscriber = new LoopSubscriber();
+                Action<object> handler = subscriber.Handle;
+                subscriber.Handlers.Add(handler);
+                ProbeLoopTable.Add(handler, new LoopMarker { Subscriber = subscriber });
+                subscribers.Add(new WeakReference(subscriber));
+            }
+            return subscribers;
+        }
+
+        // Each game's event bus as "scenes" first saw it
+        private static readonly List<WeakReference> SceneBuses = new List<WeakReference>();
+
+        // cwtcheck's keys, made in a method of their own so no local of the caller's frame holds one
+        private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<object, object> ProbeTable = new();
+        private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<object, object> ProbeBackTable = new();
+
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+        private static (List<WeakReference>, List<WeakReference>, List<WeakReference>) CwtProbe(int n)
+        {
+            var inTable = new List<WeakReference>();
+            var pointingBack = new List<WeakReference>();
+            var alone = new List<WeakReference>();
+            for (int i = 0; i < n; i++)
+            {
+                var key = new byte[64];
+                ProbeTable.Add(key, new byte[64]);
+                inTable.Add(new WeakReference(key));
+                var backKey = new byte[64];
+                ProbeBackTable.Add(backKey, new object[] { backKey });
+                pointingBack.Add(new WeakReference(backKey));
+                alone.Add(new WeakReference(new byte[64]));
+            }
+            return (inTable, pointingBack, alone);
         }
 
         // Each district map's centers; in the preview map, one that isn't the game's district there (a preview's own)
