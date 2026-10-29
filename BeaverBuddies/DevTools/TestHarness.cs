@@ -1027,6 +1027,34 @@ namespace BeaverBuddies.DevTools
                     Plugin.Log($"[Test] heap: collected {GC.GetTotalMemory(true) >> 20} MB, Mono used {UnityEngine.Profiling.Profiler.GetMonoUsedSizeLong() >> 20} MB of {UnityEngine.Profiling.Profiler.GetMonoHeapSizeLong() >> 20} MB, {GC.CollectionCount(0)} collections, GC mode {UnityEngine.Scripting.GarbageCollector.GCMode}, incremental {UnityEngine.Scripting.GarbageCollector.isIncremental}");
                     break;
                 }
+                case "stall":
+                    // stall ms: this frame takes that much longer, between the parts of a tick, as a long collection's does
+                    System.Threading.Thread.Sleep(I(a[1]));
+                    Plugin.Log($"[Test] stalled {a[1]} ms");
+                    break;
+                case "arch":
+                    // What this copy plays as: an Intel Mac's game under Rosetta says X64, and a processor of Rosetta's
+                    Plugin.Log($"[Test] arch: process {System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture}, processor {UnityEngine.SystemInfo.processorType}");
+                    break;
+                case "mem":
+                    // The managed heap as it is, uncollected: Mono's used and reserved sizes and the collections so far
+                    Plugin.Log($"[Test] mem: Mono used {UnityEngine.Profiling.Profiler.GetMonoUsedSizeLong() >> 20} MB of {UnityEngine.Profiling.Profiler.GetMonoHeapSizeLong() >> 20} MB, {GC.CollectionCount(0)} collections, GC mode {UnityEngine.Scripting.GarbageCollector.GCMode}");
+                    break;
+                case "gcmode":
+                    // gcmode Enabled|Disabled|Manual: what runs the garbage collector (Manual: only GC.Collect does)
+                    UnityEngine.Scripting.GarbageCollector.GCMode = (UnityEngine.Scripting.GarbageCollector.Mode)Enum.Parse(typeof(UnityEngine.Scripting.GarbageCollector.Mode), a[1]);
+                    Plugin.Log($"[Test] gcmode: {UnityEngine.Scripting.GarbageCollector.GCMode}");
+                    break;
+                case "gctime":
+                {
+                    // One full collection, timed, as one at each autosave would be
+                    long before = UnityEngine.Profiling.Profiler.GetMonoUsedSizeLong();
+                    var watch = System.Diagnostics.Stopwatch.StartNew();
+                    GC.Collect();
+                    watch.Stop();
+                    Plugin.Log($"[Test] gctime: {watch.ElapsedMilliseconds} ms, Mono used {before >> 20} MB before and {UnityEngine.Profiling.Profiler.GetMonoUsedSizeLong() >> 20} MB after, of {UnityEngine.Profiling.Profiler.GetMonoHeapSizeLong() >> 20} MB, {GC.CollectionCount(0)} collections, GC mode {UnityEngine.Scripting.GarbageCollector.GCMode}");
+                    break;
+                }
                 case "scenes":
                 {
                     // Whether the games before this one are gone: a weak reference to each game's event bus, kept as it's first
@@ -1061,17 +1089,6 @@ namespace BeaverBuddies.DevTools
                     var walk = new HeapWalk(target, WalkRoots(), Get<SingletonLifecycleService>()._singletonRepository.GetSingletons<object>().Append(current));
                     new System.Threading.Thread(walk.Run) { IsBackground = true, Priority = System.Threading.ThreadPriority.BelowNormal }.Start();
                     Plugin.Log("[Test] roots: walking");
-                    break;
-                }
-                case "leakclear":
-                {
-                    // Lets go of what a static field keeps of a scene that's gone, to see whether that's what keeps it alive:
-                    // Game Modes' Customize dialog, made in the main menu and kept in a static property it never clears
-                    var field = HarmonyLib.AccessTools.TypeByName("GameModes.CustomizeDialog")?
-                        .GetField("<Instance>k__BackingField", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
-                    bool had = field?.GetValue(null) != null;
-                    field?.SetValue(null, null);
-                    Plugin.Log($"[Test] leakclear: Game Modes' Customize dialog {(field == null ? "not found" : had ? "let go" : "was already gone")}");
                     break;
                 }
                 case "cwtcheck":

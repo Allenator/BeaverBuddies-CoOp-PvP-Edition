@@ -2,24 +2,16 @@
 # saved game from before the run (BB_LEAK_SAVE) hosted and joined, played at speed 3 for BB_COST_SECONDS (60) with
 # profiling (BB_HITCH_MS), and each copy's pace lines printed: the memory allocated in each 10 s with no collection,
 # and the ticking time. BB_DIGEST_OFF=1 turns the record off to compare. A measurement, not a check
-newest_save() {
-    local f
-    ls -t "$HOME/Documents/Timberborn/Saves/Multiplayer"/*.timber 2>/dev/null | while read -r f; do
-        [ -n "${RUN_START:-}" ] && [ "$f" -nt "$RUN_START" ] && continue
-        echo "$f"; break
-    done
-}
-src=${BB_LEAK_SAVE:-$(newest_save)}
-[ -f "$src" ] || { fail "a saved game to load" "none in Multiplayer, and no BB_LEAK_SAVE"; return; }
 settlement="Harness Cost $(date +%Hh%M%S)"
-mkdir -p "$HOME/Documents/Timberborn/Saves/$settlement"
-cp "$src" "$HOME/Documents/Timberborn/Saves/$settlement/Cost.timber"
+src=$(copy_save "$settlement" Cost) || { fail "a saved game to load" "none in Multiplayer, and no BB_LEAK_SAVE"; return; }
 echo "  the save: $src; the record $([ -n "${BB_DIGEST_OFF:-}" ] && echo off || echo on)"
 export BB_HITCH_MS=${BB_HITCH_MS:-1000}
 bb_close
 bb_launch host || { fail "the host starts" "no main menu"; return; }
 bb_launch client || { fail "the guest starts" "no main menu"; return; }
 bb_stack_windows
+# In place, on purpose: hosted with the double load, the host would keep its first load alive the whole run and its
+# memory figures would count it. A start in place now and then splits at tick 3 (experiments of October 28): run again
 send host "hostsave $settlement|Cost"
 wait_for_watch host "Server started listening" 180 || { fail "the host hosts the save" "no server"; return; }
 send client "joinmatch Folktails"

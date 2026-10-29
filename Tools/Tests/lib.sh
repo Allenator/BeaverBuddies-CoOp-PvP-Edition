@@ -393,19 +393,21 @@ bb_open() {
     prefs_windowed
     # One copy told it's another build, or strict about builds or not, or its own choice of what pauses everyone, where
     # both share the player's settings: BB_FAKE_BUILD_HOST, BB_STRICT_CLIENT, BB_PAUSES_HOST and so on, by the copy's name.
-    # BB_HIDE_CUSTOM_CLIENT=1 has that copy see none of the custom sounds and images both share (DevTools/HideCustomFiles.cs)
-    local upper fake strict pauses hide
+    # BB_HIDE_CUSTOM_CLIENT=1 has that copy see none of the custom sounds and images both share (DevTools/HideCustomFiles.cs),
+    # and BB_ARCH_CLIENT=x86_64 has that copy play as an Intel Mac's does, under Rosetta (the game is built for both)
+    local upper fake strict pauses hide arch
     upper=$(echo "$inst" | tr '[:lower:]' '[:upper:]')
     fake="BB_FAKE_BUILD_$upper"; fake=${!fake:-}
     strict="BB_STRICT_$upper"; strict=${!strict:-}
     pauses="BB_PAUSES_$upper"; pauses=${!pauses:-}
     hide="BB_HIDE_CUSTOM_$upper"; hide=${!hide:-}
+    arch="BB_ARCH_$upper"; arch=${!arch:-}
     bb_home_prepare
-    open -g -n -a "$BB_GAME" --env SteamAppId=1062090 --env SteamGameId=1062090 --env BB_INSTANCE="$inst" --env HOME="$BB_HOME" \
+    open -g -n ${arch:+--arch "$arch"} -a "$BB_GAME" --env SteamAppId=1062090 --env SteamGameId=1062090 --env BB_INSTANCE="$inst" --env HOME="$BB_HOME" \
         ${BB_RTC_CODE:+--env BB_RTC_CODE="$BB_RTC_CODE"} \
         ${fake:+--env BB_FAKE_BUILD="$fake"} ${strict:+--env BB_STRICT="$strict"} ${pauses:+--env BB_PAUSES="$pauses"} \
         ${hide:+--env BB_HIDE_CUSTOM_FILES="$hide"} \
-        ${BB_HITCH_MS:+--env BB_HITCH_MS="$BB_HITCH_MS"} ${BB_PACE_SECONDS:+--env BB_PACE_SECONDS="$BB_PACE_SECONDS"} ${BB_TICKLOG_LIVE:+--env BB_TICKLOG_LIVE=1} ${BB_DIGEST_OFF:+--env BB_DIGEST_OFF=1} ${BB_SIM_STEAM_CLOSE:+--env BB_SIM_STEAM_CLOSE=1} ${BB_SILENT_FIRST:+--env BB_SILENT_FIRST=1} ${BB_SLOW_JOIN_SAVE:+--env BB_SLOW_JOIN_SAVE="$BB_SLOW_JOIN_SAVE"} \
+        ${BB_HITCH_MS:+--env BB_HITCH_MS="$BB_HITCH_MS"} ${BB_PACE_SECONDS:+--env BB_PACE_SECONDS="$BB_PACE_SECONDS"} ${BB_TICKLOG_LIVE:+--env BB_TICKLOG_LIVE=1} ${BB_DIGEST_OFF:+--env BB_DIGEST_OFF=1} ${BB_SIM_STEAM_CLOSE:+--env BB_SIM_STEAM_CLOSE=1} ${BB_SILENT_FIRST:+--env BB_SILENT_FIRST=1} ${BB_SLOW_JOIN_SAVE:+--env BB_SLOW_JOIN_SAVE="$BB_SLOW_JOIN_SAVE"} ${BB_SAVE_TIMING:+--env BB_SAVE_TIMING=1} ${BB_NAV_AUDIT:+--env BB_NAV_AUDIT=1} \
         ${BB_LEAK_ROOTS:+--env BB_LEAK_ROOTS="$BB_LEAK_ROOTS"} ${BB_LEAK_SIZES:+--env BB_LEAK_SIZES=1} ${BB_LEAK_WALK:+--env BB_LEAK_WALK=1} \
         --args -skipModManager -logFile "$(bb_log "$inst")" -screen-fullscreen 0 -screen-width ${BB_RES_W:-1400} -screen-height ${BB_RES_H:-880}
 }
@@ -514,6 +516,57 @@ place_starts() {
     standing client "$client_at" "DistrictCenter.$2"
     send host dismiss; send client dismiss
     sleep 1
+}
+
+# ---- A game the size of a real one -------------------------------------------------
+
+# newest_save: BB_LEAK_SAVE, or the newest saved game in Multiplayer from before this run (the group's, usually: a
+# guest's copy saved by a scenario before this one is newer, and a small test game)
+newest_save() {
+    local f
+    [ -n "${BB_LEAK_SAVE:-}" ] && { echo "$BB_LEAK_SAVE"; return; }
+    ls -t "$HOME/Documents/Timberborn/Saves/Multiplayer"/*.timber 2>/dev/null | while read -r f; do
+        [ -n "${RUN_START:-}" ] && [ "$f" -nt "$RUN_START" ] && continue
+        echo "$f"; break
+    done
+}
+
+# copy_save <settlement> <save name>: that save copied into a settlement of its own, named "Harness ..." so the run
+# takes it away as it ends. Prints the save it copied; returns 1 if there's none
+copy_save() {
+    local src; src=$(newest_save)
+    [ -f "$src" ] || return 1
+    mkdir -p "$HOME/Documents/Timberborn/Saves/$1"
+    cp "$src" "$HOME/Documents/Timberborn/Saves/$1/$2.timber"
+    echo "$src"
+}
+
+# host_saved_game <settlement> <save name> [guest's faction] [command]: the save hosted as the Load game box's Host
+# does, from the main menu, and joined: the host waits over it, loaded once (and is sent the command then, if one is
+# given), the guest waits in its lobby, and Start loads it again for the host, as for its guests. A saved game started
+# in place instead starts its guests from another state than the host's, and now and then splits at tick 3 (see the
+# experiments of October 28). What the game asks about the save first is confirmed. Returns 1, saying why in
+# HOSTED_WHY, if it doesn't get that far
+host_saved_game() {
+    local loads i
+    HOSTED_WHY=
+    send host "hostsaveflow $1|$2"
+    # Hosting waits on what the game asks about the save first (its mods' versions, say): confirmed after 20 s
+    for ((i = 0; i < 20; i++)); do grep -aq "Server started listening" "$(bb_log host)" && break; sleep 1; done
+    grep -aq "Server started listening" "$(bb_log host)" || send host "click ConfirmButton"
+    wait_for_watch host "Server started listening" 180 || { HOSTED_WHY="the host never hosted the save"; return 1; }
+    if [ -n "${4:-}" ]; then
+        wait_for host "Load time" 180 || { HOSTED_WHY="the host's first load never ended"; return 1; }
+        sleep 3
+        send host "$4"
+    fi
+    send client "joinmatch ${3:-Folktails}"
+    wait_for client "waiting in its lobby" 400 || { HOSTED_WHY="the guest never waited in the lobby"; return 1; }
+    loads=$(grep -ac "Load time" "$(bb_log host)")
+    send host "click ConfirmButton"
+    for ((i = 0; i < 300; i++)); do [ "$(grep -ac "Load time" "$(bb_log host)")" -gt "$loads" ] && break; sleep 1; done
+    [ "$(grep -ac "Load time" "$(bb_log host)")" -gt "$loads" ] || { HOSTED_WHY="Start never loaded the save again"; return 1; }
+    wait_for client "leaving its lobby" 120 || { HOSTED_WHY="the guest's lobby never closed"; return 1; }
 }
 
 # ---- Asking the game ------------------------------------------------------------

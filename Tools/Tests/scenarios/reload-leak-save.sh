@@ -6,25 +6,16 @@
 # a small new game's can hide in the noise.
 # These read the logging, so it is on, whatever this Mac has it at
 pref_set ModSetting.beaverbuddies.Settings.AlwaysTrace 1
-# The newest from before this run: a guest's copy saved by a scenario before this one is newer, and a small test game
-newest_save() {
-    local f
-    ls -t "$HOME/Documents/Timberborn/Saves/Multiplayer"/*.timber 2>/dev/null | while read -r f; do
-        [ -n "${RUN_START:-}" ] && [ "$f" -nt "$RUN_START" ] && continue
-        echo "$f"; break
-    done
-}
-src=${BB_LEAK_SAVE:-$(newest_save)}
-[ -f "$src" ] || { fail "a saved game to load" "none in Multiplayer, and no BB_LEAK_SAVE"; return; }
-# A settlement named as the harness names them, so the run takes it away as it ends
 settlement="Harness Leak $(date +%Hh%M%S)"
-mkdir -p "$HOME/Documents/Timberborn/Saves/$settlement"
-cp "$src" "$HOME/Documents/Timberborn/Saves/$settlement/Leak.timber"
+src=$(copy_save "$settlement" Leak) || { fail "a saved game to load" "none in Multiplayer, and no BB_LEAK_SAVE"; return; }
 echo "  the save: $src"
 bb_close
 bb_launch host || { fail "the host starts" "no main menu"; return; }
 bb_launch client || { fail "the guest starts" "no main menu"; return; }
 bb_stack_windows
+# In place, on purpose: the double load keeps the host's first game alive every time, which would leave nothing for
+# this to measure but that. A start in place now and then splits at tick 3 (experiments of October 28), an extra
+# reload before the first one counted: run again
 send host "hostsave $settlement|Leak"
 wait_for_watch host "Server started listening" 180 || { fail "the host hosts the save" "no server"; return; }
 send client "joinmatch Folktails"
@@ -51,8 +42,6 @@ for ((n = 1; n <= ${BB_RELOADS:-3}; n++)); do
     send client "desync traced"
     wait_for client "Received the host's reload save" 120 || { fail "reload $n reaches the client" "no save"; return; }
     for ((i = 0; i < 360; i++)); do [ "$(loads)" -gt "$before" ] && break; sleep 0.5; done
-    # BB_LEAK_CLEAR: what's known to keep a scene that's gone is let go of (leakclear), before the leak finder looks
-    if [ -n "${BB_LEAK_CLEAR:-}" ]; then echo "  host: $(said host leakclear)"; echo "  client: $(said client leakclear)"; fi
     sleep 5
     send host "dismiss"; send client "dismiss"; sleep 3
     # BB_RELOAD_GAP: seconds to play each game before the next reload; 35 or more lets the leak finder's check 30 s into a
