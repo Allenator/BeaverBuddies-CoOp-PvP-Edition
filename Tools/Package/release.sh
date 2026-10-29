@@ -3,7 +3,10 @@
 #
 #   Tools/Package/release.sh patch|minor|major [--dry-run] [--no-push]
 #
-# Bumps the version in the manifest and the csproj, drafts the changelog
+# Bumps the version in the csproj (the real one, also written to version.txt in
+# the mod folder) and the manifest (only its x.y.0 part: the game warns on a save
+# whose mod version differs from the manifest's by anything, so a patch release
+# leaves the manifest alone), drafts the changelog
 # entry from the commit subjects since the last release tag and opens it in
 # $VISUAL or $EDITOR (nano without either; used as drafted when there's no
 # terminal; RELEASE_NOTES=<file> uses that file as the entry instead), then builds, installs into Mods and zips through package.sh,
@@ -45,8 +48,10 @@ git fetch -q "$remote"
 
 # The version is the mod's own semver, after the Timberborn version and a
 # dash where there is one (1.1.0-1.2.0)
-old=$(sed -nE 's/.*"Version": *"([^"]+)".*/\1/p' "$manifest" | head -1)
-[ -n "$old" ] || die "no Version in $manifest"
+# The real version lives in the csproj; the manifest holds <game>-<major>.<minor>.0
+old=$(sed -nE 's|.*<Version>([^<]+)</Version>.*|\1|p' "$csproj" | head -1)
+[ -n "$old" ] || die "no Version in $csproj"
+oldmanifest=$(sed -nE 's/.*"Version": *"([^"]+)".*/\1/p' "$manifest" | head -1)
 if [[ "$old" == *-* ]]; then prefix="${old%-*}-"; semver="${old##*-}"; else prefix=""; semver="$old"; fi
 IFS=. read -r ma mi pa <<< "$semver"
 case "$part" in
@@ -55,6 +60,7 @@ case "$part" in
     patch) pa=$((pa + 1)) ;;
 esac
 new="$prefix$ma.$mi.$pa"
+newmanifest="$oldmanifest"; [ "$part" = patch ] || newmanifest="$prefix$ma.$mi.0"
 git rev-parse -q --verify "refs/tags/v$new" >/dev/null && die "v$new is already tagged"
 
 # What went in since the last release
@@ -89,11 +95,11 @@ undo() {
 trap 'rm -f "$notes"; [ "${done:-0}" = 1 ] || undo' EXIT
 
 # -i with a suffix works on BSD and GNU sed alike ('' alone is BSD-only)
-sed -i.bak -E "s/(\"Version\": *\")$old\"/\1$new\"/" "$manifest" && rm -f "$manifest.bak"
+sed -i.bak -E "s/(\"Version\": *\")$oldmanifest\"/\1$newmanifest\"/" "$manifest" && rm -f "$manifest.bak"
 sed -i.bak "s|<Version>$old</Version>|<Version>$new</Version>|" "$csproj" && rm -f "$csproj.bak"
 { printf 'v%s\n%s\n\n' "$new" "$entry"; cat "$changelog" 2>/dev/null || true; } > "$changelog.new"
 mv "$changelog.new" "$changelog"
-grep -q "\"Version\": *\"$new\"" "$manifest" || die "couldn't set the version in $manifest"
+grep -q "\"Version\": *\"$newmanifest\"" "$manifest" || die "couldn't set the version in $manifest"
 grep -q "<Version>$new</Version>" "$csproj" || die "couldn't set the version in $csproj"
 
 zip=$("$repo/Tools/Package/package.sh" | tail -1)
