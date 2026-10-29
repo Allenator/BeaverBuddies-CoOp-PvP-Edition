@@ -131,8 +131,12 @@ namespace BeaverBuddies.Connect
         {
             bool saving = _rehostingService.SaveRehostFile(saveReference =>
             {
-                // Stopped hosting in the meantime
-                if (EventIO.Get() != server) return;
+                // Stopped hosting in the meantime: no reload, so no reason for a later load to take (see PlayOn)
+                if (EventIO.Get() != server)
+                {
+                    TakeReloadReason();
+                    return;
+                }
                 // For tests (BB_SLOW_JOIN_SAVE, in ms): a join's save that takes a while, for the player joining to
                 // leave as it's made
                 if (joinOnly && DevTools.TestHarness.Active && int.TryParse(Environment.GetEnvironmentVariable("BB_SLOW_JOIN_SAVE"), out int slow))
@@ -191,6 +195,9 @@ namespace BeaverBuddies.Connect
             _loading = false;
             _reloading = false;
             _resyncedFrom = null;
+            // No reload came of it: nothing of it for a later one (see PlayOn)
+            TakeReloadReason();
+            _speedBeforeResync = null;
             string messageKey = resyncing ? "BeaverBuddies.ClientDesynced.ResyncFailed"
                 : server != null ? "BeaverBuddies.JoinInProgress.FailedToReload"
                 : null;
@@ -204,6 +211,9 @@ namespace BeaverBuddies.Connect
         {
             // What arrived after the save is for this game
             if (EventIO.Get() is ClientEventIO client) client.NetBase?.EndReload();
+            // Every machine notes the speed as a desync's report pauses it, and only the host's reload uses it: a guest
+            // that hosts later in this run mustn't take its own from a resync it only joined in
+            _speedBeforeResync = null;
 
             ClientDesyncedEvent desync = _resyncedFrom;
             bool reloaded = _reloading;

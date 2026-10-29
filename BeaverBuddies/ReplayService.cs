@@ -781,9 +781,10 @@ namespace BeaverBuddies
         private void ReloadForEveryone(ServerEventIO server)
         {
             Plugin.Log("Reloading the game for everyone");
-            bool joinOnly = !_resyncService.HostPending;
-            float speedBefore = TargetSpeed;
             _resyncService.BeginHostReload();
+            // As it recorded them: whether it's for a player joining alone, and the speed to go back to if they leave
+            bool joinOnly = ResyncService.LastReloadReason == ResyncService.ReloadReason.Join;
+            float speedBefore = ResyncService.SpeedBeforeReload;
             FinishFullTickIfNeededAndThen(() =>
             {
                 SetTargetSpeed(0);
