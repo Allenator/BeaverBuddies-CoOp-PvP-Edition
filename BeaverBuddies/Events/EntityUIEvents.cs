@@ -1140,7 +1140,11 @@ namespace BeaverBuddies.Events
 
         [HarmonyPatch(nameof(ZiplineTowerFragment.ShowFragment))]
         [HarmonyPostfix]
-        static void ShowFragment(ZiplineTowerFragment __instance) => Remember(__instance);
+        static void ShowFragment(ZiplineTowerFragment __instance)
+        {
+            // Only read in a Co-op game (UpdateFragment)
+            if (!IO.EventIO.IsNull) Remember(__instance);
+        }
 
         [HarmonyPatch(nameof(ZiplineTowerFragment.UpdateFragment))]
         [HarmonyPostfix]

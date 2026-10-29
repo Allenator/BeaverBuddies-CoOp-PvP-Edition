@@ -31,12 +31,27 @@ namespace BeaverBuddies.Fixes
 
         private static readonly ConditionalWeakTable<SubscriptionRegistry, Order> Orders = new ConditionalWeakTable<SubscriptionRegistry, Order>();
 
+        // The registries whose first handler came outside a Co-op game: a game alone, or the main menu. They keep the
+        // game's own order for good, as such a game only becomes a Co-op game through a load, with a registry of its
+        // own, and an order begun partway would leave out the handlers before it
+        private static readonly ConditionalWeakTable<SubscriptionRegistry, object> Unordered = new ConditionalWeakTable<SubscriptionRegistry, object>();
+        private static readonly object Alone = new object();
+
         // Only once the game's own Add has taken it: it throws for a handler there already
         [HarmonyPatch(typeof(SubscriptionRegistry), nameof(SubscriptionRegistry.Add))]
         [HarmonyPostfix]
         static void AfterAdd(SubscriptionRegistry __instance, Type eventType, object subscriber)
         {
-            Order order = Orders.GetOrCreateValue(__instance);
+            if (!Orders.TryGetValue(__instance, out Order order))
+            {
+                if (Unordered.TryGetValue(__instance, out _)) return;
+                if (IO.EventIO.IsNull)
+                {
+                    Unordered.Add(__instance, Alone);
+                    return;
+                }
+                order = Orders.GetOrCreateValue(__instance);
+            }
             if (!order.ByType.TryGetValue(eventType, out LinkedList<object> list))
             {
                 order.ByType[eventType] = list = new LinkedList<object>();
