@@ -1127,7 +1127,9 @@ namespace BeaverBuddies.DevTools
                 case "modsetting":
                 {
                     // modsetting Name 0|1: one of BeaverBuddies' on/off settings set in this running copy, as the
-                    // settings screen does (a preference set from outside only counts at the next start)
+                    // settings screen does (a preference set from outside only counts at the next start). It's saved
+                    // over the player's own, as the screen saves it: only for settings the runner pins
+                    // (BB_PINNED_SETTINGS), which it puts back after the run
                     var setting = new object[] { Settings.You, Settings.Multiplayer, Settings.Hosting, Settings.Autosaves, Settings.Developer }
                         .Where(section => section != null)
                         .Select(section => section.GetType().GetField(a[1])?.GetValue(section))

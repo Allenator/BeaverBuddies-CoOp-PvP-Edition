@@ -2,9 +2,9 @@
 # (slowly here, BB_SLOW_JOIN_SAVE ms), they press Cancel meanwhile, and once it's saved the host sees they're gone,
 # skips the reload and plays on at the speed it was at, its guest with it (upstream's fe74d66). The host only looks
 # as the save is done, so a player who leaves later still has everyone reload. Over WebRTC join codes, which mark a
-# connection closed as the other side closes it: Steam marks a failed session, while TCP says a connection is open
-# until a read fails, and nothing reads from a player waiting for the map. They join again after it: that reload is
-# for them, and the game plays on in sync
+# connection closed as the other side closes it: a Steam joiner counts as gone once they leave the host's Steam lobby
+# or their session fails, while TCP says a connection is open until a read fails, and nothing reads from a player
+# waiting for the map. They join again after it: that reload is for them, and the game plays on in sync
 pref_set ModSetting.beaverbuddies.Settings.EnableSteamConnection 0
 export BB_RTC_CODE=TEST$(LC_ALL=C tr -dc 'A-Z0-9' </dev/urandom | head -c 6)
 export BB_JOIN_ADDRESS="rtc:$BB_RTC_CODE"
