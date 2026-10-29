@@ -152,7 +152,13 @@ trap 'exit 130' INT TERM
 RUN_TIMEOUT=${BB_RUN_TIMEOUT:-1800}
 if [ "$RUN_TIMEOUT" -gt 0 ]; then
     RUN_PID=$$
-    ( sleep "$RUN_TIMEOUT"
+    # In sleeps of a second, watching the run: killing this leaves its sleep behind, which holds the run's output
+    # open (a pipe into tail, say, until it ends), for a second at most; and a run gone without its cleanup (kill -9)
+    # takes this with it, never killing whatever has its pid by the time limit
+    ( for ((t = 0; t < RUN_TIMEOUT; t++)); do
+          sleep 1
+          kill -0 $RUN_PID 2>/dev/null || exit 0
+      done
       echo; echo "STOPPED: the run passed its $RUN_TIMEOUT s limit (BB_RUN_TIMEOUT)."
       pkill -9 -P $RUN_PID 2>/dev/null; kill -TERM $RUN_PID 2>/dev/null ) &
     WATCHDOG=$!
