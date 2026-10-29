@@ -165,9 +165,9 @@ namespace BeaverBuddies.Performance
 
         // Every Co-op game, focused or not: how its frames and ticks went over the last ten minutes, and its memory,
         // so a session's logs say what each player's game did (a guest's frame rate, collections, the speed it got)
-        // Tests take it shorter, with BB_PACE_SECONDS
+        // Tests take it shorter, with BB_PACE_SECONDS (in the harness's copies only: a stray 0 would log every frame)
         private static readonly double LivePaceSeconds =
-            double.TryParse(Environment.GetEnvironmentVariable("BB_PACE_SECONDS"), out double paceSeconds) ? paceSeconds : 600;
+            DevTools.TestHarness.Active && double.TryParse(Environment.GetEnvironmentVariable("BB_PACE_SECONDS"), out double paceSeconds) ? paceSeconds : 600;
         private static long _liveStart;
         private static int _liveFrames, _liveUnfocused, _liveGcs, _liveTicks;
         private static double _liveSum, _liveMax;

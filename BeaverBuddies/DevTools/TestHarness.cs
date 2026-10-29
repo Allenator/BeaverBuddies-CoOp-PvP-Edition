@@ -2045,6 +2045,9 @@ namespace BeaverBuddies.DevTools
     {
         internal static (Timberborn.BlockObjectTools.BlockObjectTool Tool, Placement Placement)? Held;
 
+        // Only in the harness's copies: a player's game doesn't get a patch on the build tool's every frame
+        static bool Prepare() => TestHarness.Active;
+
         static bool Prefix(Timberborn.BlockObjectTools.BlockObjectTool __instance, ref bool __result)
         {
             if (Held is not { } held || held.Tool != __instance) return true;
@@ -2057,16 +2060,22 @@ namespace BeaverBuddies.DevTools
     [HarmonyLib.HarmonyPatch(typeof(Timberborn.BlockObjectTools.BlockObjectTool), nameof(Timberborn.BlockObjectTools.BlockObjectTool.Exit))]
     static class ToolHoverEndPatcher
     {
+        static bool Prepare() => TestHarness.Active;
+
         static void Prefix() => ToolHoverPatcher.Held = null;
     }
 
-    // A harness command played on every machine, like a player's action
+    // A harness command played on every machine, like a player's action: on the harness's copies only. A player's game
+    // that gets one from a test copy plays nothing (making goods piles from nothing, say), and the two fall out of sync
     [Serializable]
     class HarnessEvent : ReplayEvent
     {
         public string command;
 
-        public override void Replay(IReplayContext context) => TestHarness.RunReplayed(context, command);
+        public override void Replay(IReplayContext context)
+        {
+            if (TestHarness.Active) TestHarness.RunReplayed(context, command);
+        }
 
         public override string ToActionString() => $"Harness: {command}";
     }

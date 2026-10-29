@@ -1,9 +1,10 @@
 // Ported from T3MP (More More More Performance!) by toropippi,
 // https://github.com/toropippi/Timberborn-More-More-More-Performance-Mod
 // Licensed under the Apache License 2.0 (see LICENSE-T3MP.txt).
-// Changed for BeaverBuddies: namespace, settings and logging, and in a
-// Co-op game delivery in the order handlers registered (Fixes.EventOrderFix);
-// the optimizations themselves are unchanged.
+// Changed for BeaverBuddies: namespace, settings and logging, in a Co-op
+// game delivery in the order handlers registered (Fixes.EventOrderFix), and
+// its handler markers holding their subscriber weakly, so a finished game
+// isn't kept by them; the optimizations themselves are unchanged.
 
 using System;
 using System.Collections.Generic;
