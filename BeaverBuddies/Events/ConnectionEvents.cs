@@ -27,11 +27,14 @@ namespace BeaverBuddies.Events
         // The host's game hasn't been started yet: the host is in the box, and the map is of this name
         public bool hostWaiting;
         public string hostMapName;
+        // What makes the host's world one with its own loading picture (see GameModes.Backgrounds.WorldKey)
+        public string hostWorld;
 
         public override void Replay(IReplayContext context)
         {
             //context.GetSingleton<ReplayService>().SetServerMapName(mapName);
             DevToolsPolicy.HostAllowsDevTools = allowDevTools;
+            if (hostWaiting) GameModes.Backgrounds.WorldFromHost(hostWorld);
             if (hostWaiting) Connect.GuestLobby.Open(hostMapName);
             Plugin.Log($"Host allows dev tools: {allowDevTools}");
             string warningMessage = null;
@@ -85,6 +88,7 @@ namespace BeaverBuddies.Events
                 serverFactions = ReplayHooks.FactionList,
                 hostWaiting = Connect.NewGameHosting.SettingUp,
                 hostMapName = Connect.HostLobby.MapName,
+                hostWorld = GameModes.Backgrounds.WorldKey,
             };
             return message;
         }
