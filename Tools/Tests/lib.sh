@@ -45,8 +45,8 @@ prefs_windowed() {
     defaults write $BB_PREFS_DOMAIN "Screenmanager Resolution Use Native" -int 0
     defaults write $BB_PREFS_DOMAIN "Screenmanager Resolution Width" -int ${BB_RES_W:-1400}
     defaults write $BB_PREFS_DOMAIN "Screenmanager Resolution Height" -int ${BB_RES_H:-880}
-    # The copies run silent
-    defaults write $BB_PREFS_DOMAIN MasterVolume -float 0
+    # The copies run silent; BB_SOUND=1 leaves the player's volume, with the music off
+    if [ -z "${BB_SOUND:-}" ]; then defaults write $BB_PREFS_DOMAIN MasterVolume -float 0; fi
     defaults write $BB_PREFS_DOMAIN MusicVolume -float 0
 }
 
