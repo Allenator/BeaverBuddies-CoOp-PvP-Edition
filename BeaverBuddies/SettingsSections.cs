@@ -82,9 +82,6 @@ namespace BeaverBuddies
         // "Run in background" says (see Connect.BackgroundPlay); off, the game's own setting applies
         public readonly ModSetting<bool> KeepPlayingInBackground = new(true, Described(nameof(KeepPlayingInBackground)));
 
-        // On, the computer doesn't go to sleep while hosted or joined (see Connect.KeepAwake); off, it sleeps as it's set to
-        public readonly ModSetting<bool> KeepComputerAwake = new(true, Described(nameof(KeepComputerAwake)));
-
         // On, a player on another build (see Connect.BuildIdentity) can't join this player's game, nor
         // this player theirs, however they join; off, they're warned and play on, maybe out of sync
         public readonly ModSetting<bool> StrictBuildMatch = new(true, Described(nameof(StrictBuildMatch)));
@@ -108,7 +105,6 @@ namespace BeaverBuddies
         {
             Add(ShowPlayerCursors, nameof(ShowPlayerCursors));
             Add(KeepPlayingInBackground, nameof(KeepPlayingInBackground));
-            Add(KeepComputerAwake, nameof(KeepComputerAwake));
             Add(StrictBuildMatch, nameof(StrictBuildMatch));
             Add(EnableSteamConnection, nameof(EnableSteamConnection));
             Add(ClientConnectionAddress, nameof(ClientConnectionAddress));
@@ -142,15 +138,6 @@ namespace BeaverBuddies
         // A save the host makes itself is written with the game paused, as a save made alone is (see GameSaverSavePatcher)
         public readonly ModSetting<bool> PauseForHostSaves = new(true, Described(nameof(PauseForHostSaves)));
 
-        // How much of the game's slowing of fast speeds in big colonies is lifted, for every player (see
-        // Connect.SpeedThrottle): none of it by default, the game's own
-        public readonly LimitedStringModSetting SpeedThrottle =
-            new(0, new[] {
-                new LimitedStringModSettingValue("0", "BeaverBuddies.Settings.SpeedThrottle.Game"),
-                new LimitedStringModSettingValue("1", "BeaverBuddies.Settings.SpeedThrottle.Half"),
-                new LimitedStringModSettingValue("2", "BeaverBuddies.Settings.SpeedThrottle.None")
-            }, Described(nameof(SpeedThrottle)));
-
         // On, after everyone reloads for a desync or a player joining, the game plays on at its speed once they're back
         // (see Connect.PlayOn); off, it waits paused for the host, as it always did
         public readonly ModSetting<bool> PlayOnAfterReload = new(false, Described(nameof(PlayOnAfterReload)));
@@ -170,7 +157,6 @@ namespace BeaverBuddies
             AddNonPersistentModSetting(Note);
             Add(PauseReduction, nameof(PauseReduction));
             Add(PauseForHostSaves, nameof(PauseForHostSaves));
-            Add(SpeedThrottle, nameof(SpeedThrottle));
             Add(PlayOnAfterReload, nameof(PlayOnAfterReload));
             Add(FriendsCanJoinSteamGame, nameof(FriendsCanJoinSteamGame));
         }

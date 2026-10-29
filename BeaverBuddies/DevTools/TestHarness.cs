@@ -1127,9 +1127,7 @@ namespace BeaverBuddies.DevTools
                 case "modsetting":
                 {
                     // modsetting Name 0|1: one of BeaverBuddies' on/off settings set in this running copy, as the
-                    // settings screen does (a preference set from outside only counts at the next start). It's saved
-                    // over the player's own, as the screen saves it: only for settings the runner pins (BB_PINNED_SETTINGS),
-                    // which it puts back after the run
+                    // settings screen does (a preference set from outside only counts at the next start)
                     var setting = new object[] { Settings.You, Settings.Multiplayer, Settings.Hosting, Settings.Autosaves, Settings.Developer }
                         .Where(section => section != null)
                         .Select(section => section.GetType().GetField(a[1])?.GetValue(section))
@@ -1138,28 +1136,6 @@ namespace BeaverBuddies.DevTools
                     Plugin.Log($"[Test] modsetting {a[1]} {a[2]}: {setting.Value}");
                     break;
                 }
-                case "throttle":
-                {
-                    // throttle [population]: the scale the game plays its fast speeds at, with the setting in effect, now or
-                    // for that many characters (see Connect.SpeedThrottle); throttle set 0|1|2: this copy's own choice,
-                    // for the running copy alone
-                    if (a.Length > 2 && a[1] == "set")
-                    {
-                        Settings.SpeedThrottleForTests = I(a[2]);
-                        Plugin.Log($"[Test] {string.Join(" ", a)}: {Settings.OwnSpeedThrottle}");
-                        break;
-                    }
-                    var speed = Get<Timberborn.TimeSystem.SpeedManager>();
-                    float scale = a.Length > 1
-                        ? Connect.SpeedThrottle.Lifted(Get<Timberborn.Characters.GameSpeedThrottler>().PopulationToSpeedScale(I(a[1])))
-                        : speed._currentSpeedScale;
-                    Plugin.Log($"[Test] {string.Join(" ", a)}: {scale.ToString("F2", CultureInfo.InvariantCulture)} (setting {Settings.SpeedThrottleSetting}, time scale {Time.timeScale.ToString("F2", CultureInfo.InvariantCulture)})");
-                    break;
-                }
-                case "keepawake":
-                    // Whether this copy keeps the computer awake, and how (see Connect.KeepAwake)
-                    Plugin.Log($"[Test] keepawake: {Connect.KeepAwake.State}");
-                    break;
                 case "watersource":
                 {
                     // watersource list: every water source, its strength and contamination; watersource x y z strength|contamination

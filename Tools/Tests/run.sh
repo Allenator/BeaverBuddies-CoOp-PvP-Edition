@@ -248,7 +248,7 @@ mkdir -p "$BB_RUN_DIR/shots" "$BB_RUN_DIR/logs"
 
 # BeaverBuddies' on/off settings as the scenarios count on them (see the loop): the defaults, but no welcome dialog
 BB_PINNED_SETTINGS="${BB_PINNED_SETTINGS-FriendsCanJoinSteamGame=1 EnableSteamConnection=1 StrictBuildMatch=1 KeepPlayingInBackground=1 \
-PauseForHostSaves=1 ShowPlayerCursors=1 AlwaysTrace=0 ShowFirstTimerMessage=0 PlayOnAfterReload=0 KeepComputerAwake=1}"
+PauseForHostSaves=1 ShowPlayerCursors=1 AlwaysTrace=0 ShowFirstTimerMessage=0 PlayOnAfterReload=0}"
 START=$(date +%s)
 LAST_FILE=$(echo $FILES | awk '{print $NF}')
 for f in $FILES; do

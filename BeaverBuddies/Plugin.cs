@@ -40,7 +40,6 @@ namespace BeaverBuddies
             containerDefinition.Bind<BuildNotice>().AsSingleton();
             containerDefinition.Bind<BackgroundPlay>().AsSingleton();
             containerDefinition.Bind<PlayOn>().AsSingleton();
-            containerDefinition.Bind<SpeedThrottle>().AsSingleton();
             containerDefinition.Bind<PauseMenuInvite>().AsSingleton();
             if (Steam.SteamSupport.Installed)
             {

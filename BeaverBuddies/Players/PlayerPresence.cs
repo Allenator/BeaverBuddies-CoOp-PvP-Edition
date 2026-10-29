@@ -153,8 +153,6 @@ namespace BeaverBuddies.Players
             };
             // The host's choice of what pauses everyone, for every player (see Settings.PauseReductionSetting)
             if (io is ServerEventIO) presence["pauses"] = (int)Settings.PauseReductionSetting;
-            // ...and how much of the slowing of fast speeds it lifts (see Settings.SpeedThrottleSetting)
-            if (io is ServerEventIO) presence["throttle"] = Settings.SpeedThrottleSetting;
             io.SendTransientMessage(presence);
         }
 
