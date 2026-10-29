@@ -1,8 +1,9 @@
 // Ported from T3MP (More More More Performance!) by toropippi,
 // https://github.com/toropippi/Timberborn-More-More-More-Performance-Mod
 // Licensed under the Apache License 2.0 (see LICENSE-T3MP.txt).
-// Changed for BeaverBuddies: namespace, settings and logging; the
-// optimizations themselves are unchanged.
+// Changed for BeaverBuddies: namespace, settings and logging, and the hooks
+// on LoadAll's four steps also callable by Util.LoadProfiler, which runs
+// those steps itself; the optimizations themselves are unchanged.
 
 using System;
 using System.Collections.Generic;
@@ -23,7 +24,7 @@ internal static class LoadGcBudget
 {
     internal static bool Installed { get; private set; }
     private const BindingFlags All = LoadPatchBridge.All;
-    private const string Owner = "beaverbuddies.perf.load.gc-budget";
+    internal const string Owner = "beaverbuddies.perf.load.gc-budget";
     private const long HeapLimit = 12L << 30;
     private const ulong EntryReserve = 24UL << 30, ExitReserve = 8UL << 30;
     private static int _depth, _startGc;
@@ -87,6 +88,11 @@ internal static class LoadGcBudget
     }
 
     private static bool Reviewed() => LoadCompatibility.Reviewed(LoadBodies.GcBudget);
+
+    // Util.LoadProfiler runs LoadAll's four steps itself in a Co-op game, passing by what's patched onto them
+    // here: it calls these where the game's steps would have run them
+    internal static void BeforeLoadSteps(SingletonLifecycleService lifecycle) => BeforeSingletons(lifecycle);
+    internal static void AfterLoadStep() => Checkpoint();
 
     private static ulong AvailableMemory()
     {
