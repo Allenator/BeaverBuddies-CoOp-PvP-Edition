@@ -29,7 +29,9 @@ namespace BeaverBuddies.Connect
      * The Load game box's Load, in a co-op game: the game loads the save on this machine alone, under the connection
      * it has, and the others stay in the game left behind. A guest whose host did so stood still, waiting for ticks
      * the host's new game started again from 0, and no desync was reported (October 28, 2026). Until the host can load
-     * a save for everyone, Load says what to do instead: the host's Host in this box, or the main menu.
+     * a save for everyone, Load says what to do instead: the host's Host in this box, which hosts the save again for
+     * the others to join, or the main menu. A game played alone loads as ever, under the mod's IO for one player too
+     * (LocalEventIO: a mod's game against the computer, or the game behind a hosting box cancelled).
      */
     [HarmonyPatch(typeof(LoadGameBox), nameof(LoadGameBox.LoadGame))]
     public class LoadGameBoxLoadGamePatcher
@@ -37,7 +39,7 @@ namespace BeaverBuddies.Connect
         public static bool Prefix(LoadGameBox __instance, ref bool __result)
         {
             // The main menu's box, or a game alone
-            if (EventIO.IsNull || SingletonManager.GetSingleton<MultiplayerMenu>() != null) return true;
+            if (EventIO.Get() is not (ServerEventIO or ClientEventIO) || SingletonManager.GetSingleton<MultiplayerMenu>() != null) return true;
             Plugin.Log("Load in a co-op game: not loaded, as the others would stay in this one");
             __instance._dialogBoxShower.Create().SetLocalizedMessage("BeaverBuddies.Menu.LoadInCoop").Show();
             __result = false;
