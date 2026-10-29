@@ -379,6 +379,9 @@ namespace TimberNet
         }
 
         // Returns whether the other end said it was leaving (CLOSE_MARKER)
+        // A client has the game it joined: the host reads what it says from then on, and so can answer its goodbye
+        protected volatile bool receivedFirstMap;
+
         protected bool StartListening(ISocketStream client, bool isClient)
         {
             //Log("Client connected");
@@ -415,6 +418,7 @@ namespace TimberNet
 
                     ReceiveFile(client, messageLength);
                     messageCount++;
+                    receivedFirstMap = true;
                     continue;
                 }
 

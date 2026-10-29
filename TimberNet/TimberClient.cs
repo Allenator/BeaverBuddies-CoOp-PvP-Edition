@@ -86,8 +86,10 @@ namespace TimberNet
 
         public override void Close()
         {
-            // The host told this player is leaving, before what's queued goes out and the connection closes
-            if (client.Connected && !hostGone) QueueGoodbye(client);
+            // The host told this player is leaving, before what's queued goes out and the connection closes. Not before
+            // the game has come: nothing on the host reads a player waiting for it, so the goodbye would wait out its
+            // second unanswered (Cancel while joining, or no game coming)
+            if (client.Connected && !hostGone && receivedFirstMap) QueueGoodbye(client);
             base.Close();
             client.Close();
         }
