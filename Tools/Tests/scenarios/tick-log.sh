@@ -1,5 +1,5 @@
 # BB_EXPECT_DESYNC: this scenario resyncs the copies on purpose
-# A player's log has the tick's hash line every 100th tick, not every tick (13 MB of a night's 20 MB, October 25, 2026),
+# A player's log has the tick's hash line every 100th tick, not every tick (13 MB of an evening's 20 MB log),
 # and the last ticks' lines are written out, as they were, when a desync or a resync wants them. The copies log as a
 # player's game does (BB_TICKLOG_LIVE): after 250 ticks, the 100th and 200th are there and the 150th isn't; then the
 # guest desyncs, and its log has the ticks before, as does the host's at the resync

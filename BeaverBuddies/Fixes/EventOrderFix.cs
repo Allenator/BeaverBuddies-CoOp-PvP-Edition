@@ -11,10 +11,10 @@ namespace BeaverBuddies.Fixes
      * The game's event bus calls an event's handlers in the order of a Dictionary, where a handler that registers
      * takes the place the last one to go left. Some handlers are one player's alone, and come and go as that player
      * opens and closes things: the batch control window's tabs, an automation input picker. So a handler that
-     * registered after one of those had come and gone took a different place on each machine, and the handlers of
-     * an event that act on the game ran in a different order on each. A platform taken down with goods piles on it:
-     * each pile falls, moves, or merges into another and is deleted, so different piles were left on each machine,
-     * the haulers went to different ones, and the game desynced (October 26, 2026).
+     * registers after one of those has come and gone takes a different place on each machine, and the handlers of
+     * an event that act on the game run in a different order on each. A platform taken down with goods piles on it:
+     * each pile falls, moves, or merges into another and is deleted, so different piles are left on each machine,
+     * the haulers go to different ones, and the game desyncs.
      *
      * In a Co-op game an event's handlers are called in the order they registered, so the game's own run in the same
      * order on every machine, whatever else comes and goes between them.

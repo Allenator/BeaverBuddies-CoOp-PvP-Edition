@@ -1,6 +1,6 @@
 # A guest who waits a while in the lobby of a new game the host hasn't started plays it in sync: the game uses some of
 # its random state up while the guest waits, so the guest sets it again when the host's first events play, as the
-# host did when it started (upstream's fix of October 25, 2026). BB_LOBBY_WAIT: how long it waits (30 s)
+# host did when it started (upstream's e3e6fe6). BB_LOBBY_WAIT: how long it waits (30 s)
 bb_close
 bb_launch host || { fail "the host starts" "no main menu"; return; }
 bb_launch client || { fail "the guest starts" "no main menu"; return; }

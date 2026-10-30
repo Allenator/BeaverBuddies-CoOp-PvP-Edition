@@ -3,7 +3,7 @@
 # district of its own there as it's shown; in a Co-op game the placement comes back from the host while that preview
 # is still up, so the preview's district held the spot, and putting the tool away took it out of that copy's map.
 # The player who placed it could then place a second district center on roads joined to the first, and when those
-# roads joined in the game, every copy crashed at once (October 26, 2026).
+# roads joined in the game, every copy crashed at once.
 
 # tool_preview <instance> <x y z>: the District Center tool's preview there on that copy, as its log line says
 tool_preview() {

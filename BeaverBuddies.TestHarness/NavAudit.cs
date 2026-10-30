@@ -11,9 +11,9 @@ namespace BeaverBuddies.DevTools
      * For tests (BB_NAV_AUDIT=1): each path a walker's found before the game's first tick, with where it stood, where
      * it was going and whether it found one. A walker's reachability isn't saved: the load finds every walker's path again
      * (NavMeshObserver.PostLoadEntity), and one it finds none for drops its destination, which its executor fails on
-     * at the first tick. On October 28, 2026, a beaver walking into a Grill on the host had no reachable walk on an
-     * x86-64 guest at tick 1: its executor failed there, it decided again, drew other random numbers, and split at
-     * tick 3, now and then.
+     * at the first tick. A walker with a path on one machine and none on another (a beaver walking into a Grill, with
+     * no reachable walk on an x86-64 guest, say) fails at tick 1 on that one alone: it decides again there, draws
+     * other random numbers, and the game splits, now and then at tick 3.
      */
     static class NavAudit
     {

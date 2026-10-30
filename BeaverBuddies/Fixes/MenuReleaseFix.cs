@@ -5,8 +5,8 @@ namespace BeaverBuddies.Fixes
 {
     /**
      * Game Modes keeps its Customize dialog in a static property it sets in the main menu and never clears, and the
-     * dialog reaches everything the main menu's scene had: it stays in memory through every game played after it
-     * (October 27, 2026). A Co-op game loaded lets it go (ReplayService.PostLoad, which a game alone doesn't have: it
+     * dialog reaches everything the main menu's scene had: it stays in memory through every game played after it.
+     * A Co-op game loaded lets it go (ReplayService.PostLoad, which a game alone doesn't have: it
      * keeps the dialog, which is small). Game Modes makes a new dialog, and sets the property again, each time the
      * main menu opens, and uses it only there, as a mode is picked.
      */

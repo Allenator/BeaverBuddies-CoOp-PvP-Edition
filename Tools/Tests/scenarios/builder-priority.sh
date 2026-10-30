@@ -1,5 +1,5 @@
-# A player dragging the builders' priority tool over things that have that priority already, as the guest did before the
-# desync of October 24, 2026. Alone, the game sets each of them again anyway: a demolish job (a bush marked with the
+# A player dragging the builders' priority tool over things that have that priority already. Alone, the game sets
+# each of them again anyway: a demolish job (a bush marked with the
 # demolish resources tool, say) goes to the back of its priority's queue, the order builders look through, taking the
 # first of the jobs equally close. That has to happen on every copy alike, or a builder with two bushes equally close
 # walks to a different one on the copy that dragged. The guest marks the natural resources in a square near its start,

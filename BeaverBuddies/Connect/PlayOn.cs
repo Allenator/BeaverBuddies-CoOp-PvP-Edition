@@ -10,8 +10,8 @@ namespace BeaverBuddies.Connect
     /**
      * On the host, after everyone reloaded for a desync or a player joining: the game plays on at the speed it was at
      * once every player is back, or after a minute, with "Play on after a resync or a join" (Settings.PlayOnAfterReload).
-     * A reload leaves the game paused for the host to press play, and a game left running stayed paused until someone
-     * came back, six hours on October 25, 2026. A speed the host sets meanwhile is theirs, and the wait ends with it.
+     * A reload leaves the game paused for the host to press play, and a game left running would stay paused until
+     * someone came back, for hours. A speed the host sets meanwhile is theirs, and the wait ends with it.
      */
     public class PlayOn : IPostLoadableSingleton, IUpdatableSingleton
     {

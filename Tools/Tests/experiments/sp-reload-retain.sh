@@ -1,7 +1,7 @@
 # Whether a game loaded again from inside a game keeps the first alive with no co-op at all: one copy, alone, loads a
 # copy of the newest saved game from before the run (BB_LEAK_SAVE), marks it (scenes), loads it again from inside it,
 # plays 45 s, and a full collection says whether the first is alive (scenes, heap). BB_REPEAT (2) times. The host of a
-# saved game kept its first load every time on October 29, 2026 (double-load-retain); this tells the game's own from
+# saved game keeps its first load every time (double-load-retain); this tells the game's own from
 # co-op's; BB_VIA_MENU=1 goes back to the main menu between the loads. No profiling (BB_HITCH_MS unset), whose
 # leak finder keeps games itself
 unset BB_HITCH_MS

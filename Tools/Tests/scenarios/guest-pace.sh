@@ -1,5 +1,5 @@
 # A guest keeps close behind the host at speed 7 as at speeds 1 to 3: its own actions take about the cushion (100 ms)
-# beyond the way there and back, not the 0.6 s they took in the session of October 24, 2026, where at speed 7 a tick
+# beyond the way there and back, not the 0.6 s they took without the fix, where at speed 7 a tick
 # (86 ms) was shorter than the cushion, the guest saw its lead as never more than a tick, slowed itself, and settled 7
 # ticks behind. Its actions here are its speed set to the speed it is, a player's action that changes nothing, each a
 # [Latency] line in its log. And it keeps that pace without stopping for the host's ticks. With BeaverBuddies on its own

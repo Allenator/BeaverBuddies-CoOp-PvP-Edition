@@ -1,7 +1,7 @@
 # A guest's first batch of the host's events can hold the host's welcome, which marks the guest waiting in its lobby,
 # and an event of the host's after it: the guest sets its random state to the start's before that event (0bbb54f).
 # Checked once a batch, before the batch, the mark came too late, and a guest whose load had drawn random numbers split
-# at tick 0, "the random state differs from the host's at tick 0" (digest-cost, October 28, 2026). Here a copy of the
+# at tick 0, "the random state differs from the host's at tick 0". Here a copy of the
 # newest saved game from before the run (BB_LEAK_SAVE), big enough for its load to draw, is hosted in place (hostsave),
 # which sends the host's dev tools event, made as it loaded, right behind the welcome. The game stays paused, so the
 # batch plays at tick 0 and no tick follows: a split at tick 3, which a start in place has now and then for another

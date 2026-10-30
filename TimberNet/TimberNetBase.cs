@@ -197,7 +197,7 @@ namespace TimberNet
                 sender.WaitStopped(left());
             }
             // Handed out isn't heard: a connection that keeps what's written and drops it as it closes (a Steam session)
-            // lost the goodbye when it closed at once (October 25, 2026). Each one told answers once it has it
+            // loses the goodbye if it closes at once. Each one told answers once it has it
             var told = goodbyes.Keys.ToList();
             while (left() > 0 && told.Any(s => s.Connected && goodbyes[s] == 0)) Thread.Sleep(5);
             awaitingGoodbyes = false;

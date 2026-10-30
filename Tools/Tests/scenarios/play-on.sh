@@ -1,7 +1,7 @@
 # BB_EXPECT_DESYNC: this scenario resyncs the copies on purpose
 # After everyone reloads for a desync, the host's game plays on at the speed it was at once every player is back, with
 # "Play on after a resync or a join" on; off, it waits paused for the host, as it always did. A game left running
-# stayed paused for six hours after the resync of October 25, 2026
+# would otherwise stay paused until someone came back, for hours
 ticks() { grep -ac "Tick [0-9]* IO done" "$(bb_log "$1")"; }
 resync() {
     local n; n=$(grep -ac "Received the host's reload save" "$(bb_log client)")

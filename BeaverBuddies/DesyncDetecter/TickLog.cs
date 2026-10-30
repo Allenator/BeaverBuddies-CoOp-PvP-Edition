@@ -5,7 +5,7 @@ namespace BeaverBuddies.DesyncDetecter
 {
     /**
      * The tick's hash line, "Tick N IO done; Order hash …; Move hash …; Random s0 …": the first tick two machines' lines
-     * differ at is where a desync began. Every tick, it was 13 MB of a night's 20 MB log (October 25, 2026). It's logged
+     * differ at is where a desync began. Every tick, it would be 13 MB of an evening's 20 MB log. It's logged
      * every 100th tick, and every tick with tracing on and in test copies, whose scenarios and helpers read it; the
      * last 1000 ticks' are kept, nothing allocated, and written out in the same lines when they're wanted: at a desync,
      * at a resync, as a crash's report is made.

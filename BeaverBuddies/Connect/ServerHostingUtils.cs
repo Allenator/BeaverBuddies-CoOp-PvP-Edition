@@ -27,8 +27,8 @@ namespace BeaverBuddies.Connect
 
     /**
      * The Load game box's Load, in a co-op game: the game loads the save on this machine alone, under the connection
-     * it has, and the others stay in the game left behind. A guest whose host did so stood still, waiting for ticks
-     * the host's new game started again from 0, and no desync was reported (October 28, 2026). Until the host can load
+     * it has, and the others stay in the game left behind. A guest whose host did so would stand still, waiting for
+     * ticks the host's new game starts again from 0, and no desync would be reported. Until the host can load
      * a save for everyone, Load says what to do instead: the host's Host in this box, which hosts the save again for
      * the others to join, or the main menu. A game played alone loads as ever, under the mod's IO for one player too
      * (LocalEventIO: a mod's game against the computer, or the game behind a hosting box cancelled).

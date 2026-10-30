@@ -19,9 +19,9 @@ namespace BeaverBuddies.Steam
         // Steam keeps what's sent until it's gone out, and takes no more
         // once too much is waiting, so a write waits while more than this
         // is (see Write): a save goes as fast as the connection takes it,
-        // up to the rate below. At 1/8 of it, as it was, the saves of
-        // October 24, 2026 (0.5 to 0.8 MB) took 4 to 6 s to reach each
-        // player, and a late game's few MB would take half a minute
+        // up to the rate below. At 1/8 of it, a save of 0.5 to 0.8 MB
+        // takes 4 to 6 s to reach each player, and a late game's few MB
+        // half a minute
         const int BYTES_PER_SECOND = 1024 * 1024;
         const int MAX_QUEUED_BYTES = 256 * 1024;
         // Nothing taken for this long: the connection is gone
@@ -62,8 +62,8 @@ namespace BeaverBuddies.Steam
 
         /**
          * Steam says the session with a player failed: what was on its way is lost, and what comes after can't be read
-         * as the stream it was. The connection ends, as a dropped one does; a player can join again. Sessions failed only
-         * as players left or dropped in the October 25 and 26 logs, never during a game.
+         * as the stream it was. The connection ends, as a dropped one does; a player can join again. Sessions are seen
+         * to fail only as players leave or drop, never during a game.
          */
         public static void SessionFailed(CSteamID player)
         {

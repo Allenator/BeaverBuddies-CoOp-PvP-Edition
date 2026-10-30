@@ -10,7 +10,7 @@ namespace BeaverBuddies.DevTools
     /**
      * For tests: a connection that behaves as a Steam session does as it closes (BB_SIM_STEAM_CLOSE=1). What's written
      * is on its way for a while, 150 ms here, and closing drops what hasn't arrived, the goodbye with it. The test
-     * copies can't play over Steam, sharing one account, so the goodbyes lost on October 25, 2026 happen here over TCP.
+     * copies can't play over Steam, sharing one account, so the goodbyes a Steam session loses are lost here over TCP.
      */
     public class LossyCloseStream : ISocketStream
     {
@@ -78,8 +78,8 @@ namespace BeaverBuddies.DevTools
     }
 
     /**
-     * For tests: the host's first connection gets nothing the host sends (BB_SILENT_FIRST=1), as a Steam session that
-     * failed and lost the game on its way did on October 25, 2026, so the guest's wait for the game can be seen to end.
+     * For tests: the host's first connection gets nothing the host sends (BB_SILENT_FIRST=1), as when a Steam session
+     * fails and loses the game on its way, so the guest's wait for the game can be seen to end.
      * The connections after it are whole.
      */
     public class SilentFirstStream : ISocketStream

@@ -1,6 +1,6 @@
 # A guest that gets nothing at all from the host for 30 s while it waits for the game stops waiting and says so, and
-# joining again works. A rejoin over a stuck Steam session got nothing for 88 s on October 25, 2026, until the player
-# cancelled: here the host's first connection gets nothing the host sends (BB_SILENT_FIRST)
+# joining again works. A rejoin over a stuck Steam session gets nothing, and would otherwise wait until the player
+# cancels: here the host's first connection gets nothing the host sends (BB_SILENT_FIRST)
 export BB_SILENT_FIRST=1
 bb_close
 bb_launch host || { unset BB_SILENT_FIRST; fail "the host starts" "no main menu"; return; }

@@ -1,8 +1,8 @@
 # Whether a long frame alone can split the game: game logic that went by the frame's time rather than the tick's
 # would. The host's main thread, then the guest's, is held BB_STALL_MS (900) at a time, BB_STALLS (10) times each, as
 # a long collection or a save holds it, mostly between the parts of a tick (a tick is spread over frames), while a
-# copy of the newest saved game from before the run (BB_LEAK_SAVE) plays at speed 7. On October 29, 2026, the roots
-# walk held the host 875 ms mid-tick and the next tick split; this tells a long frame from the walk's own doing
+# copy of the newest saved game from before the run (BB_LEAK_SAVE) plays at speed 7. The roots walk can hold the host
+# most of a second mid-tick, and a tick has split right after it; this tells a long frame from the walk's own doing
 settlement="Harness Stall $(date +%Hh%M%S)"
 src=$(copy_save "$settlement" Stall) || { fail "a saved game to load" "none pinned at BB_BIG_SAVE, and no BB_LEAK_SAVE"; return; }
 bb_close

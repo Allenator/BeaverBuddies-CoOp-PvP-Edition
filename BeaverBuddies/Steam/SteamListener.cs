@@ -91,7 +91,7 @@ namespace BeaverBuddies.Steam
             if ((change & (uint)EChatMemberStateChange.k_EChatMemberStateChangeEntered) != 0)
             {
                 // A session from before, with no connection left to close (turned away for another build, say), can
-                // be stuck: one was on October 25, 2026, and the player's rejoin got nothing from it for 88 s
+                // be stuck, and the player's rejoin would get nothing from it
                 SteamNetworking.CloseP2PSessionWithUser(user);
                 var socket = new SteamSocket(user, true);
                 socket.RegisterSteamPacketListener(steamPacketListener);

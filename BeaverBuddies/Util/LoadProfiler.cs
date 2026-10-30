@@ -17,7 +17,7 @@ namespace BeaverBuddies.Util
      * game's load is the one copied here (LoadBodies.LoadProfile), and while
      * nothing but the load's GC budget is patched onto the four steps it runs
      * itself: that one's hooks it calls where the steps would have, so a
-     * Windows or Wine load keeps its budget (allenator.7 and .8 lost it).
+     * Windows or Wine load keeps its budget, which the copy alone would lose.
      */
     [ManualMethodOverwrite]
     /*

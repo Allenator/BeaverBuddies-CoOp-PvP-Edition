@@ -14,7 +14,7 @@ bb_launch host || { fail "the host starts" "no main menu"; return; }
 bb_launch client || { fail "the guest starts" "no main menu"; return; }
 bb_stack_windows
 # In place, on purpose: the double load keeps the host's first game alive every time, which would leave nothing for
-# this to measure but that. A start in place now and then splits at tick 3 (experiments of October 28), an extra
+# this to measure but that. A start in place now and then splits at tick 3, an extra
 # reload before the first one counted: run again
 send host "hostsave $settlement|Leak"
 wait_for_watch host "Server started listening" 180 || { fail "the host hosts the save" "no server"; return; }

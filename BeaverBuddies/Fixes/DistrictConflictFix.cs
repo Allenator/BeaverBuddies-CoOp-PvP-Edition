@@ -5,9 +5,9 @@ using Timberborn.Navigation;
 namespace BeaverBuddies.Fixes
 {
     /**
-     * Two districts' roads joined, with no District Crossing between them, and the game's district map threw as it
-     * gave each road to its district: in a tick, so the game stopped, and on every machine at once, as the district
-     * map is the same on all of them (the crash of October 26, 2026). The building tool keeps a player from joining
+     * Where two districts' roads join, with no District Crossing between them, the game's district map throws as it
+     * gives each road to its district: in a tick, so the game stops, and on every machine at once, as the district
+     * map is the same on all of them. The building tool keeps a player from joining
      * them (see DistrictPreviewFix), but a game that gets there anyway plays on in a Co-op game: a road both
      * districts reach stays with the district the map took first, the same one on every machine, as the map takes
      * them in the same order on all of them, and the log says which two districts are joined.

@@ -545,8 +545,8 @@ copy_save() {
 # host_saved_game <settlement> <save name> [guest's faction] [command]: the save hosted as the Load game box's Host
 # does, from the main menu, and joined: the host waits over it, loaded once (and is sent the command then, if one is
 # given), the guest waits in its lobby, and Start loads it again for the host, as for its guests. A saved game started
-# in place instead starts its guests from another state than the host's, and now and then splits at tick 3 (see the
-# experiments of October 28). What the game asks about the save first is confirmed. Returns 1, saying why in
+# in place instead starts its guests from another state than the host's, and now and then splits at tick 3. What the
+# game asks about the save first is confirmed. Returns 1, saying why in
 # HOSTED_WHY, if it doesn't get that far
 host_saved_game() {
     local loads i

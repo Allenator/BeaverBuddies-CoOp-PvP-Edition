@@ -1,7 +1,7 @@
 # A zipline tower takes no more connections than it has slots for in a Co-op game. The game checks only the tower a
 # connection is picked to, and its tool goes on from that tower, or is put away: the tower it came from is never
 # picked from again. Sending the connection skipped all of that, so the tool stayed on the first tower and each pick
-# connected that one again, past its limit (October 26, 2026). Here the guest and the host connect towers with the
+# connected that one again, past its limit. Here the guest and the host connect towers with the
 # tool as a player does (ziplineadd, ziplinepick), and a connection from a full tower sent as is (ziplineconnect) is
 # refused by every copy.
 

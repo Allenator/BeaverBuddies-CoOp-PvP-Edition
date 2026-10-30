@@ -1,5 +1,5 @@
-# The Rosetta run, for the desync of October 25, 09:27: the host's ARM64 copy against both x86-64 guests, during 20
-# minutes nobody played, a walker's position off by float rounding. Here the guest plays as an Intel Mac's game does,
+# The Rosetta run, for a desync between an ARM64 host and x86-64 guests while nobody plays, a walker's position off by
+# float rounding. Here the guest plays as an Intel Mac's game does,
 # under Rosetta (BB_ARCH_CLIENT, x86_64 by default; empty for the native control), on a game the size of a real one (a
 # copy of the newest saved game from before the run, BB_LEAK_SAVE), hosted and joined, and both play it with
 # nobody doing anything at speed BB_IDLE_SPEED (30) for BB_IDLE_MINUTES (60). Every tick's hashes are compared, as the
@@ -26,7 +26,7 @@ fi
 if [ -n "${BB_TRACE:-}" ]; then send host "templogging on"; send client "templogging on"; sleep 1; fi
 # Hosted as the Load game box's Host does, the save loaded again for the host at Start, as for its guests.
 # BB_HOST_FLOW=place starts it in place instead (the harness's hostsave, as a new game is): its guests start from
-# another state than the host's, and now and then split at tick 3, whatever the processor (experiments of October 28)
+# another state than the host's, and now and then split at tick 3, whatever the processor
 if [ "${BB_HOST_FLOW:-}" == place ]; then
     send host "hostsave $settlement|Idle"
     wait_for_watch host "Server started listening" 180 || { fail "the host hosts the save" "no server"; return; }

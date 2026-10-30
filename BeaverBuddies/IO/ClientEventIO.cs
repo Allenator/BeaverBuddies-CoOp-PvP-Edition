@@ -57,8 +57,8 @@ namespace BeaverBuddies.IO
         private bool _gaveUp;
 
         // The host sends its game first of all, as a player connects or once it's saved for them: nothing at all from it
-        // for this long, the game not in, and it isn't coming. A rejoin over a stuck Steam session waited 88 s on
-        // October 25, 2026, until the player cancelled; joining again works
+        // for this long, the game not in, and it isn't coming. A rejoin over a stuck Steam session would otherwise
+        // wait until the player cancels; joining again works
         private void CheckMapComing()
         {
             if (_mapReceived || _gaveUp || FailedToConnect || NetBase == null || !_socket.Connected) return;

@@ -11,7 +11,7 @@ bb_launch host || { fail "the host starts" "no main menu"; return; }
 bb_launch client || { fail "the guest starts" "no main menu"; return; }
 bb_stack_windows
 # In place, on purpose: hosted with the double load, the host would keep its first load alive the whole run and its
-# memory figures would count it. A start in place now and then splits at tick 3 (experiments of October 28): run again
+# memory figures would count it. A start in place now and then splits at tick 3: run again
 send host "hostsave $settlement|Cost"
 wait_for_watch host "Server started listening" 180 || { fail "the host hosts the save" "no server"; return; }
 send client "joinmatch Folktails"

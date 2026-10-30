@@ -2,7 +2,7 @@
 # A guest whose state parts from the host's in walker positions alone, with tracing off as players play: the guest
 # checks its order, move and clock hashes against those the host's heartbeat brings every tick, and has everyone
 # resynced within a few ticks, saying what differed, where only the random state was checked before, which can take
-# hundreds of ticks to part (290 in the desync of October 24, 2026). With BeaverBuddies on its own.
+# hundreds of ticks to part (290 in a real game's desync). With BeaverBuddies on its own.
 if mod_installed TimberEmpires; then mod_disable TimberEmpires; fi
 pref_set ModSetting.beaverbuddies.Settings.AlwaysTrace 0
 bb_close

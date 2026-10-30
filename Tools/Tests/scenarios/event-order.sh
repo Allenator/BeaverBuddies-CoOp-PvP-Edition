@@ -2,7 +2,7 @@
 # panels did in the meantime. It kept them in a Dictionary, where a handler that registers takes the place the last
 # one to go left, and some handlers are one player's alone (the batch control window's tabs), so the goods piles on
 # a platform registered in a different order on each machine, and taking the platform down moved, merged and
-# deleted them in a different order on each: the desyncs of October 26, 2026. Here the guest's own handlers come and
+# deleted them in a different order on each, and the copies desynced. Here the guest's own handlers come and
 # go (eventchurn) before the piles are made, and the piles' handlers of a deletion have to be in the same order on
 # both copies.
 

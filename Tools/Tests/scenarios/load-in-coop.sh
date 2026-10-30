@@ -1,6 +1,6 @@
 # The Load game box's Load, in a co-op game, loads nothing and says what to do instead. The game would load the save
-# on that machine alone, under the connection it has: when the host did, its guest stood still, waiting for ticks the
-# host's new game started again from 0, and no desync was reported (October 28, 2026). Here the host and then the guest
+# on that machine alone, under the connection it has: if the host did, its guest would stand still, waiting for ticks
+# the host's new game starts again from 0, and no desync would be reported. Here the host and then the guest
 # press Load on a save of the host's, with the game menu's Load game as a player opens it: neither loads, the box
 # says why, and both copies play on in sync. Then a game alone, which runs under the mod's IO for one player
 # (LocalEventIO) once a hosting box over it is cancelled, loads as ever: the guard is for games hosted or joined

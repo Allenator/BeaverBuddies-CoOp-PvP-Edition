@@ -9,10 +9,10 @@ namespace BeaverBuddies.Fixes
      * its own in that map as it's shown (PreviewDistrictAdder) and takes it out as it goes. Alone, the building is
      * placed on the click and its preview goes with it, before the district center's own district reaches the map.
      * In a Co-op game the placement comes back from the host while the preview is still up: the preview's district
-     * held the spot, adding the real one threw (swallowed, see DistrictBuildingsFix), and taking the preview's out
-     * took the spot out. Until the game was loaded again, the player who placed it had no district center there in
-     * that map, and could place a second one on roads that joined the first: when they joined in the game, every
-     * copy's district map threw, and the game crashed on every machine (October 26, 2026).
+     * holds the spot, adding the real one throws (swallowed, see DistrictBuildingsFix), and taking the preview's out
+     * takes the spot out. Until the game is loaded again, the player who placed it has no district center there in
+     * that map, and can place a second one on roads that join the first: when they join in the game, every copy's
+     * district map throws, and the game crashes on every machine.
      *
      * In the preview district map, a district added where one is already takes its place, and a district taken out
      * after it was replaced leaves the spot to the one that replaced it.

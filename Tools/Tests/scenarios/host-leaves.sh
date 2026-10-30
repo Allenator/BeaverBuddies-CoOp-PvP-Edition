@@ -3,7 +3,7 @@
 # guest waiting on a host gone quiet): the guest saves its own copy of the game as far as it got, as the game does on
 # leaving, and is told the host left. The guest's saves go in the Multiplayer folder, which the runner puts back as it was.
 # Each goodbye is answered, and the side leaving closes once it is, or after a second: with BB_SIM_STEAM_CLOSE=1 the
-# connections drop what's on its way as they close, as a Steam session does, which lost both goodbyes on October 25, 2026
+# connections drop what's on its way as they close, as a Steam session does: unanswered, both goodbyes are lost
 saves="$BB_SAVES/Multiplayer"
 
 # A guest leaves
