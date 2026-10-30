@@ -1,3 +1,16 @@
+# BeaverBuddies Co-Op/PvP Edition: Allenator's fork
+
+This is a fork of [FezVrasta/BeaverBuddies-CoOp-PvP-Edition](https://github.com/FezVrasta/BeaverBuddies-CoOp-PvP-Edition), built on its releases, with desync and connection fixes and a scenario test suite on top. Upstream's README follows the line below, unchanged; where it links to upstream's downloads or repository, use this fork's instead.
+
+- **Downloads:** [this fork's releases](https://github.com/Allenator/BeaverBuddies-CoOp-PvP-Edition/releases). Each zip holds `BeaverBuddies` and the Game Modes mod it was built and tested with: unzip both into `Documents/Timberborn/Mods`, replacing the old ones, and keep Harmony and Mod Settings from the Steam Workshop. Each release's notes say what changed.
+- **Compatibility:** everyone in a game needs the same build of this fork. A player on upstream's Steam Workshop or mod.io build can't join a game hosted on this fork's, or the other way around.
+- **What's different from upstream:** each release's entry in `BeaverBuddies/changelog.txt`, which the game shows too.
+- **Building:** as in upstream's instructions below, cloning this repository instead. BeaverBuddies builds against the Game Modes mod: build [timberborn-game-modes](https://github.com/FezVrasta/timberborn-game-modes) at the version the latest release names, or point the `GameModesDll` build property at its DLL (in `BeaverBuddies/env.props`, or `-p:GameModesDll=...`).
+- **Tests:** [`Tools/Tests/README.md`](Tools/Tests/README.md) covers the scenario suite, which plays two copies of the game on one machine, and the fast checks, `Tools/Tests/fast.sh`.
+- **Releasing:** [`RELEASING.md`](RELEASING.md).
+
+---
+
 # BeaverBuddies Co-Op/PvP Edition
 
 [![Last commit](https://img.shields.io/github/last-commit/FezVrasta/BeaverBuddies-CoOp-PvP-Edition?label=Last%20commit&color=lightgray)](https://github.com/FezVrasta/BeaverBuddies-CoOp-PvP-Edition/commits)
