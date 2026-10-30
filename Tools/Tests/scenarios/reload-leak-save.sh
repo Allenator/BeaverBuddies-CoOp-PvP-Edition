@@ -1,7 +1,7 @@
 # BB_EXPECT_DESYNC: this scenario resyncs the copies on purpose
-# reload-leak on a game the size of a real one: a copy of a saved game (BB_LEAK_SAVE, the newest in Multiplayer from
-# before the run by default) hosted from a settlement of the harness's own, joined, and reloaded for everyone
-# BB_RELOADS times (3), with both copies' heap after a full collection (heap) after each. The heap a game keeps alive is
+# reload-leak on a game the size of a real one: a copy of a saved game (BB_LEAK_SAVE, the pinned big save by default)
+# hosted from a settlement of the harness's own as players host one, loaded for the lobby and again at Start, joined,
+# and reloaded for everyone BB_RELOADS times (3), with both copies' heap after a full collection (heap) after each. The heap a game keeps alive is
 # about the game's size, so an earlier game left behind shows here as a heap that climbs by a whole game every reload;
 # a small new game's can hide in the noise.
 # These read the logging, so it is on, whatever this Mac has it at
@@ -13,19 +13,9 @@ bb_close
 bb_launch host || { fail "the host starts" "no main menu"; return; }
 bb_launch client || { fail "the guest starts" "no main menu"; return; }
 bb_stack_windows
-# In place, on purpose: the double load keeps the host's first game alive every time, which would leave nothing for
-# this to measure but that. A start in place now and then splits at tick 3, an extra
-# reload before the first one counted: run again
-send host "hostsave $settlement|Leak"
-wait_for_watch host "Server started listening" 180 || { fail "the host hosts the save" "no server"; return; }
-send client "joinmatch Folktails"
-for ((i = 0; i < 300; i++)); do
-    sed -n '/Registering Co-op/,$p' "$(bb_log client)" | grep -aq "Load time" \
-        && [ "$(sed -n '/Registering Co-op/,$p' "$(bb_log host)" | grep -ac "Load time")" -ge 1 ] && break
-    e=$(bb_load_error) && { fail "the guest joins" "load error: $e"; return; }
-    sleep 1
-done
-[ $i -lt 300 ] || { fail "the guest joins" "never loaded"; return; }
+# The host's lobby game, the load before Start, is marked (scenes) as it waits over it, so the host's earlier games are
+# that one and the game before each reload
+host_saved_game "$settlement" Leak Folktails scenes || { fail "the guest joins the saved game" "$HOSTED_WHY"; return; }
 pass "the guest joins the saved game"
 sleep 5
 send host dismiss; send client dismiss; sleep 2
@@ -87,13 +77,14 @@ if [ -n "${BB_ROOTS:-}" ]; then
 fi
 # The heap figures are reported, not checked: Mono's used size under its collector (Boehm) counts the free room in blocks
 # partly in use, and swings by a game's size with nothing left behind. Whether the earlier games are gone is the check.
-# A copy may keep one earlier game alive, the first it loaded: a known retention that no change has freed yet, kept by
-# nearly every second load in a run of the game, single-player too. More than that fails. BB_KNOWN_KEPT=0 checks that
-# none is kept, as a fix for it would
-known=${BB_KNOWN_KEPT:-1}
+# The host may keep one earlier game alive, the first it loaded: a known retention no change has freed yet, which a
+# second load in a run of the game often leaves, single-player too. The guest keeps none: guests are the machines short
+# on memory, and a game kept there costs its whole size. More than that fails. BB_KNOWN_KEPT_HOST and
+# BB_KNOWN_KEPT_GUEST set the limits (1 and 0); 0 for both checks for none, as a fix for the host's would
 for inst in host client; do
+    if [ $inst == host ]; then known=${BB_KNOWN_KEPT_HOST:-1}; else known=${BB_KNOWN_KEPT_GUEST:-0}; fi
     left=$(said $inst scenes)
     kept=$(echo "$left" | sed -nE 's/^([0-9]+) of.*/\1/p')
-    if [ -n "$kept" ] && [ "$kept" -le "$known" ]; then pass "$inst: at most $known earlier game left alive ($left)"
-    else fail "$inst: at most $known earlier game left alive" "${left:-no answer}"; fi
+    if [ -n "$kept" ] && [ "$kept" -le "$known" ]; then pass "$inst: keeps at most $known of its earlier games ($left)"
+    else fail "$inst: keeps at most $known of its earlier games" "${left:-no answer}"; fi
 done
