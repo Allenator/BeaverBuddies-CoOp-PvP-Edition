@@ -150,7 +150,7 @@ namespace BeaverBuddies.Events
                     string folder = System.IO.Path.GetDirectoryName(UnityEngine.Application.consoleLogPath);
                     string file = System.IO.Path.Combine(folder, $"BeaverBuddies-desync-{desyncID}.txt");
                     string why = reason == null ? "" : $"Out of sync: {reason}\n";
-                    System.IO.File.WriteAllText(file, $"BeaverBuddies: {Plugin.Version} (build {InitializeClientEvent.ModBuild}); Timberborn: {GameVersions.CurrentVersion}\n{why}\n{desyncTrace}");
+                    System.IO.File.WriteAllText(file, $"BeaverBuddies: {Plugin.Version} (commit {Plugin.Commit}, build {InitializeClientEvent.ModBuild}); Timberborn: {GameVersions.CurrentVersion}\n{why}\n{desyncTrace}");
                     Plugin.Log($"Desync trace saved to {file}");
                 }
                 catch (Exception e)

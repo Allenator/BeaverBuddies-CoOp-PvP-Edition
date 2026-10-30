@@ -592,7 +592,7 @@ namespace BeaverBuddies.DesyncDetecter
         private static void AppendSummary(StringBuilder sb, int tick, int errorIndex, List<Trace> mine, List<Trace> other, int[] otherHashes)
         {
             sb.AppendLine("========== Summary ==========");
-            sb.AppendLine($"BeaverBuddies {Plugin.Version} (build {Events.InitializeClientEvent.ModBuild}); Timberborn {GameVersions.CurrentVersion}; {ReplayHooks.AddOnList}");
+            sb.AppendLine($"BeaverBuddies {Plugin.Version} (commit {Plugin.Commit}, build {Events.InitializeClientEvent.ModBuild}); Timberborn {GameVersions.CurrentVersion}; {ReplayHooks.AddOnList}");
             if (firstHashSplit >= 0) sb.AppendLine($"The {firstHashSplitWhat} hash first differed at tick {firstHashSplit}, {tick - firstHashSplit} ticks before this one");
             sb.AppendLine($"The traces agree for {errorIndex} lines of tick {tick}, then:");
             sb.AppendLine("  mine:  " + (errorIndex < mine.Count ? FirstLine(mine[errorIndex].message) : "(nothing more)"));

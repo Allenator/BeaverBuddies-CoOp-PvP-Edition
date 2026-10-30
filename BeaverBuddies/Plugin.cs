@@ -167,14 +167,29 @@ namespace BeaverBuddies
         // stops at the dash, the same 1.1.0.0 for every release, so players on different ones looked alike
         public static readonly string Version = ReadVersion();
 
+        // The commit it was built from, which the SDK appends to the informational version (1.1.0-1.8.3+<sha>),
+        // shortened, or "unknown" for a build made outside git. For people reading a log or a desync report:
+        // players are matched by Version and the build ID (see Connect.BuildIdentity), not by this
+        public static readonly string Commit = ReadCommit();
+
+        private static string InformationalVersion() =>
+            Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+
         private static string ReadVersion()
         {
-            Assembly assembly = Assembly.GetExecutingAssembly();
-            string version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
-            if (string.IsNullOrEmpty(version)) return assembly.GetName().Version.ToString();
-            // Without the commit it was built from: the build ID tells builds apart (see Connect.BuildIdentity)
+            string version = InformationalVersion();
+            if (string.IsNullOrEmpty(version)) return Assembly.GetExecutingAssembly().GetName().Version.ToString();
             int commit = version.IndexOf('+');
             return commit < 0 ? version : version.Substring(0, commit);
+        }
+
+        private static string ReadCommit()
+        {
+            string version = InformationalVersion() ?? "";
+            int commit = version.IndexOf('+');
+            if (commit < 0 || commit == version.Length - 1) return "unknown";
+            string sha = version.Substring(commit + 1);
+            return sha.Length > 12 ? sha.Substring(0, 12) : sha;
         }
         public const string Name = "BeaverBuddies";
         public const string ID = "beaverbuddies";
@@ -185,7 +200,7 @@ namespace BeaverBuddies
         {
             logger = new UnityLogger();
 
-            Log($"{Name} v{Version} is loaded!");
+            Log($"{Name} v{Version} (commit {Commit}) is loaded!");
             BeaverBuddies.WebRtc.Libraries.Install(modEnvironment.ModPath);
             GuidPatcher.UnityThread = System.Threading.Thread.CurrentThread;
             BeaverBuddies.Util.ModSounds.ModPath = modEnvironment.ModPath;
