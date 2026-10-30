@@ -154,9 +154,7 @@ namespace BeaverBuddies.Events
                     Plugin.LogError($"Couldn't save the desync trace: {e.Message}");
                 }
             }
-            // Test copies don't open browser tabs on the Mac they run on
-            if (DevTools.TestHarness.Active) Plugin.Log($"Would open {MultiplayerMenu.DiscordUrl}");
-            else context.GetSingleton<UrlOpener>()?.OpenUrl(MultiplayerMenu.DiscordUrl);
+            context.GetSingleton<UrlOpener>()?.OpenUrl(MultiplayerMenu.DiscordUrl);
             callback(Settings.Debug ? "BeaverBuddies.ClientDesynced.TraceSaved" : "BeaverBuddies.ClientDesynced.PostLogs");
         }
 

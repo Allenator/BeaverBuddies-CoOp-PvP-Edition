@@ -15,6 +15,8 @@ wait_for client "Nothing from the host in 30 s, and no game: not waiting any lon
     || { fail "the guest stops waiting after 30 s" "no such line"; return; }
 sleep 2
 send client "dismiss"; sleep 2
+# OK on the failed join's dialog opens the troubleshooting page: a test copy only logs it
+expect_log "the dialog's link is logged, not opened" client "Would open https://github.com/.*#troubleshooting"
 send client "joinmatch Folktails"
 wait_for client "waiting in its lobby" 120 && pass "joining again gets the game" || fail "joining again gets the game" "the guest never got in"
 expect_no_errors "no errors"

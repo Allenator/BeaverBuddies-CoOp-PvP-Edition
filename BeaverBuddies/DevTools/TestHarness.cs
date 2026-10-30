@@ -2084,6 +2084,20 @@ namespace BeaverBuddies.DevTools
         static void Prefix() => ToolHoverPatcher.Held = null;
     }
 
+    // Test copies don't open browser tabs on the Mac they run on: a link a dialog's OK or a button would open (the
+    // troubleshooting page of a failed join, Discord for a desync report) is logged instead
+    [HarmonyLib.HarmonyPatch(typeof(Timberborn.WebNavigation.UrlOpener), nameof(Timberborn.WebNavigation.UrlOpener.OpenUrl))]
+    static class UrlOpenerPatcher
+    {
+        static bool Prepare() => TestHarness.Active;
+
+        static bool Prefix(string url)
+        {
+            Plugin.Log($"Would open {url}");
+            return false;
+        }
+    }
+
     // A harness command played on every machine, like a player's action: on the harness's copies only. A player's game
     // that gets one from a test copy plays nothing (making goods piles from nothing, say), and the two fall out of sync
     [Serializable]
