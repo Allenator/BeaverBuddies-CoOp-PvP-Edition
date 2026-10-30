@@ -25,6 +25,8 @@ for arg in "$@"; do
     esac
 done
 DIRS=${BB_SCENARIOS:-"$HERE/scenarios"}
+# The experiments (measurements, and checks of something not yet fixed or too long for every run) only run by name
+[ ${#NAMES[@]} -gt 0 ] && [ -z "${BB_SCENARIOS:-}" ] && DIRS="$DIRS:$HERE/experiments"
 
 scenario_files() {
     local d f n ok
