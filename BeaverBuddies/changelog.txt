@@ -1,3 +1,15 @@
+v1.1.0-1.10.0-allenator.8
+1.1.0-1.10.0-allenator.8
+* Built on 1.1.0-1.10.0, below. Install the Game Modes that comes with this build (1.1.0-1.5.0), not the Steam Workshop's.
+* In a co-op game, Load in the Load game box no longer loads a save for you alone, leaving the others behind: it says what to do instead (the host can host the save with Host game, or anyone can load it from the main menu). In a game alone it loads as ever.
+* A new Hosting setting, "Play on after a resync or a join" (off by default): when the game reloads for everyone, it plays on at the speed it was at once everyone is back, or after a minute, instead of waiting paused for the host.
+* Fixed a guest desyncing at the start when they joined a lobby as its host was starting.
+* Guests hear at once when the host leaves over Steam, and a player who cancels while joining no longer waits a second.
+* Rejoining over Steam no longer hangs on a stuck connection, and a guest who gets nothing from the host for 30 seconds while waiting for the game is told so.
+* In dev mode, a water source's Strength and Contamination change for everyone.
+* Much smaller logs: the tick's line every 100th tick, with the last 1000 written out at a desync, a resync or a crash. A desync's report names the beaver or bot that went its own way, without tracing.
+* Co-op games on Windows load with the load-time memory tuning that allenator.7 lost by mistake.
+
 v1.1.0-1.10.0
 1.1.0-1.10.0
 * The Trading Post works like Archipelago's Trade Post: each half sets what it buys and sells and what each good is worth, and goods cross as far as both halves agree.
