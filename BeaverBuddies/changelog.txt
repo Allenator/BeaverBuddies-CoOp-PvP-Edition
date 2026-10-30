@@ -1,3 +1,9 @@
+v1.1.0-1.10.0-allenator.9
+1.1.0-1.10.0-allenator.9
+* The mod no longer carries its test tools: the build you play is the one the tests run, with nothing test-only in it.
+* The mod manager now says when Game Modes is older than 1.1.0-1.5.0, which this mod needs since allenator.8, instead of hosting and joining failing.
+* Logs and desync reports name the exact code a build was made from, for bug reports.
+
 v1.1.0-1.10.0-allenator.8
 1.1.0-1.10.0-allenator.8
 * Built on 1.1.0-1.10.0, below. Install the Game Modes that comes with this build (1.1.0-1.5.0), not the Steam Workshop's.
