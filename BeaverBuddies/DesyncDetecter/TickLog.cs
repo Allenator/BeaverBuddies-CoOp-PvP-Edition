@@ -21,9 +21,9 @@ namespace BeaverBuddies.DesyncDetecter
         private static readonly uint[] _random = new uint[Kept];
         private static int _next, _count;
 
-        // A test copy logs as a player's game does with BB_TICKLOG_LIVE
-        private static readonly bool LiveInTests = Environment.GetEnvironmentVariable("BB_TICKLOG_LIVE") == "1";
-        private static bool EveryTick => Settings.Debug || DevTools.TestHarness.Active && !LiveInTests;
+        // Test copies log every tick, unless told to log as a player's game does (BB_TICKLOG_LIVE, which the test
+        // harness reads)
+        private static bool EveryTick => Settings.Debug || DevTools.HarnessFlags.EveryTickLogged;
 
         public static void Record(int tick, uint order, uint move, uint random)
         {

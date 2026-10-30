@@ -1,3 +1,4 @@
+using HarmonyLib;
 using System.Linq;
 using UnityEngine;
 
@@ -24,6 +25,14 @@ namespace BeaverBuddies.Util
                 .Take(10)
                 .Select(g => $"{g.Key} {g.Count()}");
             Plugin.Log($"Materials {when}: {string.Join(", ", materials)}");
+        }
+
+        // After every load of a Co-op game in a test copy (reload-leak compares them), before the leak finder's lines
+        [HarmonyPatch(typeof(ReplayService), nameof(ReplayService.PostLoad))]
+        static class AfterLoading
+        {
+            [HarmonyPriority(Priority.High)]
+            static void Postfix() => Log("after loading");
         }
     }
 }

@@ -137,14 +137,8 @@ namespace BeaverBuddies.Connect
                     TakeReloadReason();
                     return;
                 }
-                // For tests (BB_SLOW_JOIN_SAVE, in ms): a join's save that takes a while, for the player joining to
-                // leave as it's made
-                if (joinOnly && DevTools.TestHarness.Active && int.TryParse(Environment.GetEnvironmentVariable("BB_SLOW_JOIN_SAVE"), out int slow))
-                {
-                    Plugin.Log($"[Test] The join's save takes {slow} ms longer");
-                    System.Threading.Thread.Sleep(slow);
-                }
-                // The one who asked to join dropped while it saved, and nobody else needs the reload
+                // The one who asked to join dropped while it saved, and nobody else needs the reload (tests make the save
+                // slow for them to leave as it's made: BB_SLOW_JOIN_SAVE, see the test harness's Switches)
                 if (joinOnly && server.CancelJoinIfGone())
                 {
                     Plugin.Log("The player joining left before the game was saved: not reloading");

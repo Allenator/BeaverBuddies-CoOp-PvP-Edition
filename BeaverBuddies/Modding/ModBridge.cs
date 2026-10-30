@@ -223,7 +223,7 @@ namespace BeaverBuddies.Modding
             if (Connect.NewGameHosting.SettingUp) return true;
             // Hosted now: the game is the one played
             if (EventIO.Get() is ServerEventIO) return false;
-            if (Connect.NewGameHosting.Pending || DevTools.TestHarness.HostsMatch) return true;
+            if (Connect.NewGameHosting.Pending || DevTools.HarnessFlags.HostsMatch) return true;
 #if IS_STEAM
             if (MatchmakingSession.HostsNewGame) return true;
 #endif

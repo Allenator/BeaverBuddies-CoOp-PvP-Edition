@@ -1,6 +1,6 @@
 # A measurement, not a check: where a save's time goes on a game the size of a real one (a copy of the newest saved
 # game from before the run, BB_LEAK_SAVE), hosted and joined, played a while at speed 3, then saved
-# BB_SAVES (5) times by the host and by the guest (BB_SAVE_TIMING, DevTools/SaveTiming.cs): finishing the tick,
+# BB_SAVES (5) times by the host and by the guest (BB_SAVE_TIMING, BeaverBuddies.TestHarness/SaveTiming.cs): finishing the tick,
 # collecting the world on the main thread, writing its JSON, the other entries, compressing and copying to the file
 export BB_SAVE_TIMING=1
 settlement="Harness Saves $(date +%Hh%M%S)"

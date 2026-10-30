@@ -51,11 +51,8 @@ namespace BeaverBuddies
         public static int Port => Multiplayer?.DefaultPort.Value ?? 25565;
         public static bool EnableSteam => Multiplayer?.EnableSteamConnection.Value ?? true;
         public static bool LobbyJoinable => Hosting?.FriendsCanJoinSteamGame.Value ?? true;
-        // Two test copies share these settings: each can be told otherwise (BB_STRICT, see DevTools.TestHarness)
-        public static bool StrictBuild =>
-            DevTools.TestHarness.Active && System.Environment.GetEnvironmentVariable("BB_STRICT") is string strict && strict != ""
-                ? strict != "0"
-                : Multiplayer?.StrictBuildMatch.Value ?? true;
+        // Two test copies share these settings: each can be told otherwise (BB_STRICT, see the test harness's Switches)
+        public static bool StrictBuild => Multiplayer?.StrictBuildMatch.Value ?? true;
         public static bool PlayInBackground => Multiplayer?.KeepPlayingInBackground.Value ?? true;
         public static bool PlayOnAfterReload => Hosting?.PlayOnAfterReload.Value ?? false;
 
@@ -77,14 +74,12 @@ namespace BeaverBuddies
         public static PauseReductionLevel PauseReductionSetting =>
             IO.EventIO.Get() is IO.ClientEventIO { HostPauses: int host } ? (PauseReductionLevel)host : OwnPauseReduction;
 
-        // This player's own choice. Test copies share these settings: each can be told otherwise (BB_PAUSES)
+        // This player's own choice. Test copies share these settings: each can be told otherwise (BB_PAUSES, see the test
+        // harness's Switches)
         public static PauseReductionLevel OwnPauseReduction
         {
             get
             {
-                if (DevTools.TestHarness.Active && int.TryParse(System.Environment.GetEnvironmentVariable("BB_PAUSES"), out int told))
-                    return (PauseReductionLevel)told;
-
                 if (Hosting?.PauseReduction?.Value == null)
                     return PauseReductionLevel.Off;
 
@@ -106,10 +101,9 @@ namespace BeaverBuddies
         public const string DefaultPingPlayerName = "Player";
         public static string PingDisplayName => You?.PingPlayerName.Value ?? DefaultPingPlayerName;
 
-        // Two test copies share these settings: the second prefers red (see DevTools.TestHarness)
+        // Two test copies share these settings: the second prefers red (see the test harness's Switches)
         public static int PreferredColorIndex =>
-            DevTools.TestHarness.Active && DevTools.TestHarness.Instance != "host" ? 1
-            : int.TryParse(You?.PreferredColor?.Value, out int index) ? index : 0;
+            int.TryParse(You?.PreferredColor?.Value, out int index) ? index : 0;
 
         public static UnityEngine.Color PingColorValue =>
             Players.PlayerColors.Palette[Players.PlayerPresence.LocalColorIndex()].Color;

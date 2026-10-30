@@ -65,7 +65,7 @@ namespace BeaverBuddies.Matchmaking
         private static List<OpenMatch> fromSteam, fromWorker;
         private static int waiting;
 
-        // Made-up matches the test harness shows instead (see DevTools.TestHarness): no refresh replaces them while the list is open
+        // Made-up matches the test harness shows instead (its mockmatches): no refresh replaces them while the list is open
         internal static bool Mocked { get; set; }
 
         internal static void ShowMock(List<OpenMatch> matches)
@@ -110,8 +110,8 @@ namespace BeaverBuddies.Matchmaking
          */
         private static OpenMatch Read(ulong id, ulong owner, Func<string, string> raw, bool fromSteamLobby)
         {
-            // Two test copies list theirs side by side (see DevTools.TestHarness)
-            if (owner == Lobbies.Me && !DevTools.TestHarness.Active) return null;
+            // Two test copies list theirs side by side
+            if (owner == Lobbies.Me && !DevTools.HarnessFlags.Active) return null;
             string Data(string key) => raw(key) is string value && value != "" ? value : null;
             MatchPicks picks = MatchPicks.FromJson(Data(MatchKeys.Picks));
             if (picks == null) return null;

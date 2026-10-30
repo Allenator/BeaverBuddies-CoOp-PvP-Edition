@@ -1,0 +1,75 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The test harness (Tools/Tests/README.md): what drives BeaverBuddies' copies of the game in a test run, a DLL of
+       its own built against BeaverBuddies and installed beside it by test runs only. The BeaverBuddies.dll players get
+       is the one the scenarios test, with none of this in it -->
+
+  <!-- This machine's paths, as BeaverBuddies' own build has them -->
+  <Import Project="..\BeaverBuddies\env.props" Condition="Exists('..\BeaverBuddies\env.props')" />
+  <Import Project="..\BeaverBuddies\env.props.windows-template" Condition="!Exists('..\BeaverBuddies\env.props') AND '$(OS)' != 'Unix'" />
+  <Import Project="..\BeaverBuddies\env.props.unix-template" Condition="!Exists('..\BeaverBuddies\env.props') AND '$(OS)' == 'Unix'" />
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AssemblyName>BeaverBuddies.TestHarness</AssemblyName>
+    <RootNamespace>BeaverBuddies.DevTools</RootNamespace>
+    <Description>BeaverBuddies' test harness</Description>
+    <LangVersion>latest</LangVersion>
+    <Configurations>Debug;Release;Debug Steam;Release Steam</Configurations>
+    <TimberbornTargetVersion>1.1</TimberbornTargetVersion>
+    <VersionOutputPath>$(DocumentsPath)Timberborn\Mods\BeaverBuddies\version-$(TimberbornTargetVersion)\</VersionOutputPath>
+    <TimberbornDataPath Condition="'$(TimberbornDataPath)' == ''">$(TimberbornPath)Timberborn_Data\</TimberbornDataPath>
+    <TimberbornManagedPath>$(TimberbornDataPath)Managed\</TimberbornManagedPath>
+    <ModSettingsPath>$(ModSettingsBasePath)version-$(TimberbornTargetVersion)\Scripts\</ModSettingsPath>
+    <GameModesDll Condition="'$(GameModesDll)' == ''">$(DocumentsPath)Timberborn/Mods/GameModes/version-1.1/GameModes.dll</GameModesDll>
+  </PropertyGroup>
+
+  <!-- With Steam or without, as BeaverBuddies is built (-p:Steam=false): its Steam-only types are the harness's too -->
+  <PropertyGroup>
+    <Steam Condition="'$(Steam)' == ''">true</Steam>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Steam)' == 'true'">
+    <DefineConstants>$(DefineConstants);IS_STEAM</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.3" ExcludeAssets="runtime">
+      <PrivateAssets>all</PrivateAssets>
+      <PublicizeCompilerGenerated>false</PublicizeCompilerGenerated>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <!-- Everything it uses is loaded already, from the game or a mod's folder: nothing is copied with it, since a second
+       copy of any of these DLLs in the mod's folder would be loaded a second time. BeaverBuddies is built first, and
+       installed by its own build -->
+  <ItemGroup>
+    <ProjectReference Include="..\BeaverBuddies\BeaverBuddies.csproj" Private="false" />
+    <ProjectReference Include="..\TimberNet\TimberNet.csproj" Private="false" />
+    <Reference Include="$(GameModesDll)" Private="false" />
+    <Reference Include="$(HarmonyPath)0Harmony.dll" Private="false" />
+    <Reference Include="$(TimberbornManagedPath)com.rlabrecque.steamworks.net.dll" Private="false" />
+    <Reference Include="$(TimberbornManagedPath)Bindito.Core.dll" Publicize="true" Private="false" />
+    <Reference Include="$(TimberbornManagedPath)Bindito.Unity.dll" Private="false" />
+    <Reference Include="$(TimberbornManagedPath)UnityEngine.*.dll" Publicize="true" Private="false" />
+    <Reference Include="$(TimberbornManagedPath)Unity.InputSystem.dll" Publicize="true" Private="false" />
+    <Reference Include="$(TimberbornManagedPath)Timberborn.*.dll" Publicize="true" Private="false" />
+    <Reference Include="$(ModSettingsPath)ModSettings.*.dll" Private="false" />
+  </ItemGroup>
+
+  <!-- Installed only when asked, -p:InstallTestHarness=true, as Tools/Tests/run.sh asks: a build that isn't (the
+       solution's, say) leaves the Mods folder alone. Into the folder BeaverBuddies' build has just installed, which it
+       empties first, so the harness always goes in after it: the two are built and installed together, as a harness
+       built against another BeaverBuddies.dll can keep the game from starting. Not while a test run holds the Mods
+       folder, as with BeaverBuddies' own install -->
+  <PropertyGroup>
+    <BBTestLock>$([System.IO.Path]::GetTempPath())bb-run-lock</BBTestLock>
+    <InstallBlockedByTests Condition="Exists('$(BBTestLock)') AND '$(BB_HOLDS_LOCK)' != '1'">true</InstallBlockedByTests>
+  </PropertyGroup>
+  <Target Name="InstallTestHarness" AfterTargets="Build" Condition="'$(InstallTestHarness)' == 'true' AND '$(InstallBlockedByTests)' != 'true'">
+    <Error Text="BeaverBuddies isn't installed in $(VersionOutputPath): the test harness goes in beside it" Condition="!Exists('$(VersionOutputPath)BeaverBuddies.dll')" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(VersionOutputPath)" />
+    <Message Importance="High" Text="$(TargetFileName) -&gt; $(VersionOutputPath)" />
+  </Target>
+
+</Project>

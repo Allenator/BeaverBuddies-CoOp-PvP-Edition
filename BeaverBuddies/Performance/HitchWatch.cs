@@ -22,11 +22,9 @@ namespace BeaverBuddies.Performance
      */
     public static class HitchWatch
     {
-        // Tests profiling stutters set it lower, with BB_HITCH_MS
-        internal static readonly bool Profiling =
-            double.TryParse(Environment.GetEnvironmentVariable("BB_HITCH_MS"), out _profilingMs);
-        private static double _profilingMs;
-        private static double HitchMs => Profiling ? _profilingMs : 250;
+        // Tests profiling stutters set it lower, with BB_HITCH_MS, which the test harness reads
+        internal static bool Profiling => DevTools.HarnessFlags.HitchMs != null;
+        private static double HitchMs => DevTools.HarnessFlags.HitchMs ?? 250;
 
         // Profiling only: frame pacing over the last stretch
         private static long _statsStart;
@@ -165,9 +163,9 @@ namespace BeaverBuddies.Performance
 
         // Every Co-op game, focused or not: how its frames and ticks went over the last ten minutes, and its memory,
         // so a session's logs say what each player's game did (a guest's frame rate, collections, the speed it got)
-        // Tests take it shorter, with BB_PACE_SECONDS (in the harness's copies only: a stray 0 would log every frame)
-        private static readonly double LivePaceSeconds =
-            DevTools.TestHarness.Active && double.TryParse(Environment.GetEnvironmentVariable("BB_PACE_SECONDS"), out double paceSeconds) ? paceSeconds : 600;
+        // Tests take it shorter, with BB_PACE_SECONDS (read by the test harness, so in its copies only: a stray 0 would
+        // log every frame)
+        private static double LivePaceSeconds => DevTools.HarnessFlags.PaceSeconds ?? 600;
         private static long _liveStart;
         private static int _liveFrames, _liveUnfocused, _liveGcs, _liveTicks;
         private static double _liveSum, _liveMax;
@@ -245,7 +243,6 @@ namespace BeaverBuddies.Performance
         static bool Prefix(SingletonLifecycleService __instance)
         {
             HitchWatch.FrameStarted();
-            if (HitchWatch.Profiling) Util.LeakFinder.Updating(__instance);
             var singletons = __instance._updatableSingletons;
             for (int i = 0; i < singletons.Length; i++)
             {

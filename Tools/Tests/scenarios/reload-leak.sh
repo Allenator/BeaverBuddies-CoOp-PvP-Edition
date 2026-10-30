@@ -45,7 +45,7 @@ for inst in host client; do
     echo "  $inst: $(said $inst loadorder)"
 done
 # With BB_HITCH_MS (profiling), each copy's heap after each load, collected, and whether an earlier game is still alive
-# (Util/LeakFinder.cs; BB_LEAK_WALK for the path that keeps one)
+# (BeaverBuddies.TestHarness/LeakFinder.cs; BB_LEAK_WALK for the path that keeps one)
 if [ -n "${BB_HITCH_MS:-}" ]; then
     for inst in host client; do
         grep -aE "\[Pace\] heap after loading|\[Leak\] [0-9]+ of [0-9]+ scenes|\[Leak\] kept by|\[Leak\] scene [0-9]+:" "$(bb_log $inst)" | sed "s/^/  $inst: /" | cut -c1-300

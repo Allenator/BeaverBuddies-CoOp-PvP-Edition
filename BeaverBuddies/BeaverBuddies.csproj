@@ -75,6 +75,12 @@
     <PackageReference Include="Microsoft.Build.Utilities.Core" Version="16.*" />
   </ItemGroup>
 
+  <!-- The test harness, a DLL of its own that only test runs install (../BeaverBuddies.TestHarness, Tools/Tests/README.md),
+       drives the mod from inside: it may use what's internal here -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="BeaverBuddies.TestHarness" />
+  </ItemGroup>
+
   <!-- Outside Project -->
   <ItemGroup>
     <ProjectReference Include="..\TimberNet\TimberNet.csproj" />

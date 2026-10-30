@@ -109,12 +109,9 @@ namespace BeaverBuddies.DesyncDetecter
         /** The tick about to be played, which the entities it ticks are kept under. */
         public static void StartTick(int tick) => tickNow = tick;
 
-        // Tests measuring what the record costs turn it off (BB_DIGEST_OFF)
-        private static readonly bool OffForTests = DevTools.TestHarness.Active && Environment.GetEnvironmentVariable("BB_DIGEST_OFF") == "1";
-
+        // Tests measuring what the record costs turn it off (BB_DIGEST_OFF, see the test harness's Switches)
         public static void Add(Guid id, Timberborn.EntitySystem.EntityComponent entity, bool hasPosition, Vector3 position)
         {
-            if (OffForTests) return;
             if (tickNow != currentTick)
             {
                 if (current != null) Finish();

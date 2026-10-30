@@ -21,10 +21,9 @@ namespace BeaverBuddies.Connect
         public const string RefusedOtherBuild = "build", RefusedSilent = "silent";
 
         // This exact build: two builds of one version can still play differently. A test copy can be told
-        // it's another (BB_FAKE_BUILD), as two copies of one build on one Mac couldn't otherwise be
-        public static string Build =>
-            DevTools.TestHarness.Active && Environment.GetEnvironmentVariable("BB_FAKE_BUILD") is string fake && fake != ""
-                ? fake : InitializeClientEvent.ModBuild;
+        // it's another (BB_FAKE_BUILD, which the test harness reads), as two copies of one build on one Mac
+        // couldn't otherwise be
+        public static string Build => DevTools.HarnessFlags.FakeBuild ?? InitializeClientEvent.ModBuild;
 
         // The game's version, this build, the add-on mods and the factions
         public static string CompatParts =>

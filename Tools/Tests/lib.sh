@@ -1,9 +1,9 @@
 #!/bin/bash
 # Library for the game scenarios (see README.md): starts two windowed copies of
 # Timberborn on this Mac, drives them through BeaverBuddies' test harness (a
-# command file each, DevTools/TestHarness.cs), reads their logs and records
-# what a scenario expects. Sourced by run.sh and the scenarios; works on the
-# macOS bash (3.2).
+# command file each, BeaverBuddies.TestHarness/TestHarness.cs), reads their
+# logs and records what a scenario expects. Sourced by run.sh and the
+# scenarios; works on the macOS bash (3.2).
 
 BB_GAME=${BB_GAME:-"$HOME/Library/Application Support/Steam/steamapps/common/Timberborn/Timberborn.app"}
 BB_TEST_DIR=${BB_TEST_DIR:-"${TMPDIR:-/tmp}/bb-tests"}
@@ -393,7 +393,7 @@ bb_open() {
     prefs_windowed
     # One copy told it's another build, or strict about builds or not, or its own choice of what pauses everyone, where
     # both share the player's settings: BB_FAKE_BUILD_HOST, BB_STRICT_CLIENT, BB_PAUSES_HOST and so on, by the copy's name.
-    # BB_HIDE_CUSTOM_CLIENT=1 has that copy see none of the custom sounds and images both share (DevTools/HideCustomFiles.cs),
+    # BB_HIDE_CUSTOM_CLIENT=1 has that copy see none of the custom sounds and images both share (BeaverBuddies.TestHarness/HideCustomFiles.cs),
     # and BB_ARCH_CLIENT=x86_64 has that copy play as an Intel Mac's does, under Rosetta (the game is built for both)
     local upper fake strict pauses hide arch
     upper=$(echo "$inst" | tr '[:lower:]' '[:upper:]')

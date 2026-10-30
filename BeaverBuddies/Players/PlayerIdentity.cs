@@ -20,13 +20,9 @@ namespace BeaverBuddies.Players
         {
             get
             {
+                // Two copies of the game on one machine share its prefs: the test harness gives each of its copies an ID
+                // of its own (see its Switches)
                 if (_localID != null) return _localID;
-                // Two copies of the game on one machine share its prefs (see DevTools.TestHarness)
-                if (DevTools.TestHarness.Active)
-                {
-                    using var md5 = System.Security.Cryptography.MD5.Create();
-                    return _localID = new Guid(md5.ComputeHash(System.Text.Encoding.UTF8.GetBytes(DevTools.TestHarness.Instance))).ToString();
-                }
                 try
                 {
                     _localID = PlayerPrefs.GetString(PlayerIDKey, null);

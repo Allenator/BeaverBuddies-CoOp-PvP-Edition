@@ -64,7 +64,7 @@ both=$(join -t '|' \
     <(hosted_ticks client | grep -aEo "Tick [0-9]+" | grep -oE "[0-9]+" | sort -u) | wc -l | tr -d ' ')
 echo "  ticks both played: $both, in $(( ($(date +%s) - start) / 60 )) min"
 grep -aE "Out of sync|Resyncing everyone|walker" "$(bb_log host)" | head -5 | cut -c1-300 | sed 's/^/  host: /'
-# BB_NAV_AUDIT=1: the walkers each copy's load found no path for (DevTools/NavAudit.cs)
+# BB_NAV_AUDIT=1: the walkers each copy's load found no path for (BeaverBuddies.TestHarness/NavAudit.cs)
 if grep -aq "\[NavAudit\]" "$(bb_log host)"; then
     for inst in host client; do grep -a "\[NavAudit\] before" "$(bb_log $inst)" | sed -E 's/^\[[0-9-]+\.[0-9]+\] //' | sed "s/^/  $inst: /"; done
     # The last load's: a host that loads the save again logs its first load's too

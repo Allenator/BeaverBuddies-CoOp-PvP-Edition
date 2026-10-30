@@ -54,7 +54,7 @@ namespace BeaverBuddies.Help
             Plugin.Log("Post Load");
             // Don't show the changelog if they're already seeing the first timer message,
             // nor to test copies, which nobody reads it in and would have it over every menu
-            if (Settings.ShouldShowFirstTimerMessage || DevTools.TestHarness.Active || !ShouldShowChangeLog())
+            if (Settings.ShouldShowFirstTimerMessage || DevTools.HarnessFlags.Active || !ShouldShowChangeLog())
             {
                 return;
             }

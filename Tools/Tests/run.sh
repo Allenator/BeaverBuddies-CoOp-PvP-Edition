@@ -167,10 +167,12 @@ fi
 # A run that didn't finish may have left a mod off
 mod_enable_all
 # Run from here rather than from a mod built on BeaverBuddies (see Timber Empires' run.sh, which sets its own):
-# it builds BeaverBuddies, so a run never plays an older build than the code it's testing
+# it builds BeaverBuddies, so a run never plays an older build than the code it's testing. Through the test harness's
+# project, which builds BeaverBuddies first (installed by its own build, the one a release ships) and then installs
+# the harness's DLL beside it (see README.md): the two are always built and installed together
 if [ -z "${BB_BUILD:-}" ]; then
-    export BB_BUILD_SOURCES="$ROOT/BeaverBuddies:$ROOT/TimberNet"
-    export BB_BUILD="(cd '$ROOT/BeaverBuddies' && dotnet build -c Release -nologo -v q -p:DocumentsPath='$BB_HOME/Documents/' 2>&1 | tail -3)"
+    export BB_BUILD_SOURCES="$ROOT/BeaverBuddies:$ROOT/TimberNet:$ROOT/BeaverBuddies.TestHarness"
+    export BB_BUILD="(cd '$ROOT/BeaverBuddies.TestHarness' && dotnet build -c Release -nologo -v q -p:DocumentsPath='$BB_HOME/Documents/' -p:InstallTestHarness=true 2>&1 | tail -3)"
     # Game Modes, which BeaverBuddies is built against and won't load without: built into the run's home from the
     # parent repo's submodule, the version a release ships, as fast.sh builds it; without that checkout, the
     # player's own is linked in. The player's other mods (Timber Empires among them) are linked in as ever
@@ -229,6 +231,7 @@ stale_install() {
     for d in "${dirs[@]}"; do
         case "$(basename "$d")" in
             BeaverBuddies|TimberNet) dll=$(ls "$(bb_mods_dir)"/BeaverBuddies/version-*/BeaverBuddies.dll 2>/dev/null | head -1) ;;
+            BeaverBuddies.TestHarness) dll=$(ls "$(bb_mods_dir)"/BeaverBuddies/version-*/BeaverBuddies.TestHarness.dll 2>/dev/null | head -1) ;;
             *) dll=$(ls "$(bb_mods_dir)/$(basename "$d")"/version-*/"$(basename "$d")".dll 2>/dev/null | head -1) ;;
         esac
         [ -n "$dll" ] || { echo "$(basename "$d") isn't installed"; return 0; }
@@ -240,6 +243,13 @@ stale_install() {
 if why=$(stale_install); then
     echo "The installed mod is older than its code ($why): this run would test old code."
     [ $BUILD -eq 0 ] && echo "Run without --no-build to build it first." || echo "The build didn't install it: is the test lock held by another run?"
+    exit 1
+fi
+# The copies take their commands through the test harness, a DLL of its own beside BeaverBuddies': whatever built the
+# mod (a runner's own BB_BUILD too) has to install it, or nothing a scenario sends is run
+if [ -z "$(ls "$(bb_mods_dir)"/BeaverBuddies/version-*/BeaverBuddies.TestHarness.dll 2>/dev/null)" ]; then
+    echo "The test harness isn't installed beside BeaverBuddies ($(bb_mods_dir)/BeaverBuddies): the copies would take no commands."
+    echo "Build it as this runner's BB_BUILD does: BeaverBuddies.TestHarness, with -p:InstallTestHarness=true (see README.md)."
     exit 1
 fi
 prefs_save

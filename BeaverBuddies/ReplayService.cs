@@ -287,13 +287,6 @@ namespace BeaverBuddies
             Fixes.DeferredDestroyFix.Reset();
             Fixes.MenuReleaseFix.GameLoaded();
             DesyncDetecter.TickLog.Forget();
-            if (DevTools.TestHarness.Active) Util.ObjectCensus.Log("after loading");
-            if (HitchWatch.Profiling)
-            {
-                Util.LeakFinder.Loaded();
-                Plugin.LogWarning($"[Pace] heap after loading, collected: {GC.GetTotalMemory(true) >> 20} MB, " +
-                    $"Mono used {UnityEngine.Profiling.Profiler.GetMonoUsedSizeLong() >> 20} MB of {UnityEngine.Profiling.Profiler.GetMonoHeapSizeLong() >> 20} MB");
-            }
             Performance.ActionLatency.Hook();
             _determinismService.UnityThread = Thread.CurrentThread;
             // Tracing carried into this game, always on or turned on before a reload: said on screen, as it stutters
@@ -587,7 +580,7 @@ namespace BeaverBuddies
             if (IsDesynced) return;
             DesyncDetecter.TickLog.Dump("at this machine's desync");
             // The test harness can keep a desynced game as it is, to look at what differs
-            if (DevTools.TestHarness.Active && DevTools.TestHarness.NoResync)
+            if (DevTools.HarnessFlags.NoResync)
             {
                 if (!_desyncKept)
                 {

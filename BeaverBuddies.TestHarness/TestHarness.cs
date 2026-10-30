@@ -55,14 +55,14 @@ namespace BeaverBuddies.DevTools
      * probe that never matched); "until off" drops the watch (logging "until
      * stopped: last answer").
      * And anywhere, "dismiss" presses OK on the dialogs showing.
-     * Does nothing unless BB_INSTANCE is set.
+     * Does nothing unless BB_INSTANCE is set. It's in a DLL of its own,
+     * BeaverBuddies.TestHarness, which only a test run installs beside
+     * BeaverBuddies' (see HarnessStarter).
      */
     public class TestHarness : IUpdatableSingleton, IUnloadableSingleton
     {
         public static readonly string Instance = Environment.GetEnvironmentVariable("BB_INSTANCE");
         public static bool Active => !string.IsNullOrEmpty(Instance);
-        // This machine hosts a match's new game, started here rather than by matchmaking
-        public static bool HostsMatch { get; private set; }
 
         private static string Flag => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "Library", "Caches", "BeaverBuddies-test-" + Instance);
 
@@ -85,9 +85,6 @@ namespace BeaverBuddies.DevTools
             _gameSceneLoader = gameSceneLoader;
             _clientConnectionService = clientConnectionService;
         }
-
-        // A desync is kept as it is, not resynced, to look at what differs
-        internal static bool NoResync { get; private set; }
 
         // The commands read and not yet run, in order, kept across scenes: a click waits at their head (see Waits)
         private static readonly List<string> Commands = new List<string>();
@@ -341,7 +338,7 @@ namespace BeaverBuddies.DevTools
                 {
                     var modes = _gameModeSpecService ?? throw new Exception("not at the main menu");
                     string map = a[1], faction = a[2];
-                    HostsMatch = true;
+                    HarnessFlags.HostsMatch = true;
                     MatchHooks.RaiseStarting(faction, true, true);
                     var mode = new MultiplayerNewGameModeSpec(PickedMode(modes), 2);
                     string settlement = "Test " + DateTime.Now.ToString("yyyy-MM-dd HH'h'mm", CultureInfo.InvariantCulture);
@@ -599,7 +596,7 @@ namespace BeaverBuddies.DevTools
                     string[] names = string.Join(" ", a.Skip(1)).Split('|');
                     var saves = Get<Timberborn.GameSaveRepositorySystem.GameSaveRepository>();
                     var settlement = new Timberborn.GameSaveRepositorySystem.SettlementReference(names[0], saves.DefaultSaveDirectory);
-                    HostsMatch = true;
+                    HarnessFlags.HostsMatch = true;
                     NewGameHosting.Pending = true;
                     NewGameHosting.PrepareServer();
                     _gameSceneLoader.StartSaveGame(new Timberborn.GameSaveRepositorySystem.SaveReference(names[1], settlement));
@@ -727,7 +724,14 @@ namespace BeaverBuddies.DevTools
                     // fakecursor id x y z [height]: another player's cursor held on that tile, height above the tile's floor
                     float h = a.Length > 5 ? float.Parse(a[5], CultureInfo.InvariantCulture) : 0f;
                     Vector3 world = CoordinateSystem.GridToWorld(new Vector3(I(a[2]) + 0.5f, I(a[3]) + 0.5f, I(a[4]) + h));
-                    Get<Cursors.PlayerCursorService>().AddTestCursor(a[1], world);
+                    Get<Cursors.PlayerCursorService>()._cursors[a[1]] = new Cursors.RemoteCursor
+                    {
+                        DisplayedPosition = world,
+                        TargetPosition = world,
+                        Color = Color.red,
+                        Visible = true,
+                        LastMessageTime = float.PositiveInfinity,
+                    };
                     Plugin.Log($"[Test] Fake cursor {a[1]} at {world}");
                     break;
                 }
@@ -1708,7 +1712,7 @@ namespace BeaverBuddies.DevTools
                     Chaos.Start(a);
                     break;
                 case "noresync":
-                    NoResync = a.Length < 2 || a[1] != "off";
+                    HarnessFlags.NoResync = a.Length < 2 || a[1] != "off";
                     break;
                 case "orders":
                 {
@@ -2150,20 +2154,5 @@ namespace BeaverBuddies.DevTools
             Plugin.Log($"Would open {url}");
             return false;
         }
-    }
-
-    // A harness command played on every machine, like a player's action: on the harness's copies only. A player's game
-    // that gets one from a test copy plays nothing (making goods piles from nothing, say), and the two fall out of sync
-    [Serializable]
-    class HarnessEvent : ReplayEvent
-    {
-        public string command;
-
-        public override void Replay(IReplayContext context)
-        {
-            if (TestHarness.Active) TestHarness.RunReplayed(context, command);
-        }
-
-        public override string ToActionString() => $"Harness: {command}";
     }
 }

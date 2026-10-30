@@ -164,8 +164,8 @@ namespace BeaverBuddies.Connect
                     yield break;
                 }
 #endif
-                // So does a test match (see DevTools.TestHarness)
-                if (DevTools.TestHarness.HostsMatch && clients.Count > 0)
+                // So does a test match (see the test harness's hostmatch)
+                if (DevTools.HarnessFlags.HostsMatch && clients.Count > 0)
                 {
                     box.Close();
                     start();

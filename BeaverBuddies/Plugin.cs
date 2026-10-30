@@ -67,7 +67,6 @@ namespace BeaverBuddies
             containerDefinition.Bind<NewGameHosting>().AsSingleton();
             // A saved game's host waits in its box over the game, loaded again when it starts
             containerDefinition.Bind<SavedGameHosting>().AsSingleton();
-            if (DevTools.TestHarness.Active) containerDefinition.Bind<DevTools.TestHarness>().AsSingleton();
 #if IS_STEAM
             // Matchmaking works without Steam too (see Matchmaking.Lobbies)
             containerDefinition.Bind<Matchmaking.MatchHosting>().AsSingleton();
@@ -123,7 +122,6 @@ namespace BeaverBuddies
             containerDefinition.Bind<BuildNotice>().AsSingleton();
             containerDefinition.Bind<BackgroundPlay>().AsSingleton();
             containerDefinition.Bind<Matchmaking.FriendsOnlyPanel>().AsSingleton();
-            if (DevTools.TestHarness.Active) containerDefinition.Bind<DevTools.TestHarness>().AsSingleton();
             containerDefinition.Bind<FirstTimerService>().AsSingleton();
             containerDefinition.Bind<ChangeLogService>().AsSingleton();
             containerDefinition.Bind<RegisteredLocalizationService>().AsSingleton();
@@ -223,8 +221,8 @@ namespace BeaverBuddies
             // apply all harmony patches automatically.
             Harmony harmony = new Harmony(ID);
             PatchAll(harmony);
-            // A test copy's host connections too (see DevTools.LossyCloseStream)
-            TimberNet.TCPListenerWrapper.Wrap = stream => DevTools.LossyCloseStream.Wrap(DevTools.SilentFirstStream.Wrap(stream));
+            // The test harness, in test runs only, over the patches above
+            StartTestHarness();
             AutomationEvent.ApplyAutomationPatches(harmony);
 
             // apply each advanced monomod patch manually.
@@ -258,6 +256,25 @@ namespace BeaverBuddies
                 {
                     Log($"Skipped {type.Name}: no Steam in this copy of the game");
                 }
+            }
+        }
+
+        // The test harness: a DLL of its own, BeaverBuddies.TestHarness, that only test runs install beside this one
+        // (Tools/Tests/README.md). The game has loaded it with every DLL in the mod's folder, before any mod starts;
+        // started from here, it always comes after this mod's own patches. It binds its own singletons, in
+        // configurators the game finds in every DLL loaded
+        private static void StartTestHarness()
+        {
+            Assembly harness = Array.Find(AppDomain.CurrentDomain.GetAssemblies(), a => a.GetName().Name == "BeaverBuddies.TestHarness");
+            if (harness == null) return;
+            try
+            {
+                var starter = (DevTools.IHarnessStarter)Activator.CreateInstance(harness.GetType("BeaverBuddies.DevTools.HarnessStarter", true));
+                starter.Start();
+            }
+            catch (Exception e)
+            {
+                LogError($"The test harness didn't start: {e}");
             }
         }
 

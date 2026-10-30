@@ -1,3 +1,5 @@
+using BeaverBuddies.Performance;
+using HarmonyLib;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -15,6 +17,31 @@ namespace BeaverBuddies.Util
      */
     public static class LeakFinder
     {
+        // Each scene's singletons, as they update every frame
+        [HarmonyPatch(typeof(Timberborn.SingletonSystem.SingletonLifecycleService), nameof(Timberborn.SingletonSystem.SingletonLifecycleService.UpdateSingletons))]
+        static class UpdatingPatcher
+        {
+            static bool Prepare() => HitchWatch.Profiling;
+
+            // Before HitchWatch's, which updates them itself
+            [HarmonyPriority(Priority.First)]
+            static void Prefix(Timberborn.SingletonSystem.SingletonLifecycleService __instance) => Updating(__instance);
+        }
+
+        // A Co-op game loaded: the leak finder's look, and the heap after it
+        [HarmonyPatch(typeof(ReplayService), nameof(ReplayService.PostLoad))]
+        static class LoadedPatcher
+        {
+            static bool Prepare() => HitchWatch.Profiling;
+
+            static void Postfix()
+            {
+                Loaded();
+                Plugin.LogWarning($"[Pace] heap after loading, collected: {GC.GetTotalMemory(true) >> 20} MB, " +
+                    $"Mono used {UnityEngine.Profiling.Profiler.GetMonoUsedSizeLong() >> 20} MB of {UnityEngine.Profiling.Profiler.GetMonoHeapSizeLong() >> 20} MB");
+            }
+        }
+
         // Every scene's singleton lifecycle, and the frame it last updated
         private static readonly List<(WeakReference scene, int frame)> Scenes = new List<(WeakReference, int)>();
 

@@ -19,8 +19,8 @@ namespace BeaverBuddies.WebRtc
 
         public static string New()
         {
-            // Test copies agree on a code ahead of time (see DevTools.TestHarness)
-            string forced = Environment.GetEnvironmentVariable("BB_RTC_CODE");
+            // Test copies agree on a code ahead of time (BB_RTC_CODE, which the test harness reads)
+            string forced = DevTools.HarnessFlags.JoinCode;
             if (!string.IsNullOrEmpty(forced)) return Current = forced.ToUpperInvariant();
             return Current = new string(RandomBytes(6).Select(b => Alphabet[b % Alphabet.Length]).ToArray());
         }

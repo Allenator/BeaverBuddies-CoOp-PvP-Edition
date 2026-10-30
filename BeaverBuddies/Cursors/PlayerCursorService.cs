@@ -48,7 +48,8 @@ namespace BeaverBuddies.Cursors
         private readonly TerrainPicker _terrainPicker;
         private readonly LoadingScreen _loadingScreen;
 
-        private readonly Dictionary<string, RemoteCursor> _cursors = new();
+        // Internal for the test harness's fakecursor, a made-up player's
+        internal readonly Dictionary<string, RemoteCursor> _cursors = new();
 
         private GameObject _overlayHost;
         private float _lastSendTime = float.NegativeInfinity;
@@ -68,21 +69,6 @@ namespace BeaverBuddies.Cursors
         }
 
         public IEnumerable<RemoteCursor> Cursors => _cursors.Values;
-
-        // For the test harness: a cursor of a made-up player that stays put
-        public RemoteCursor AddTestCursor(string playerID, Vector3 worldPosition)
-        {
-            var cursor = new RemoteCursor
-            {
-                DisplayedPosition = worldPosition,
-                TargetPosition = worldPosition,
-                Color = Color.red,
-                Visible = true,
-                LastMessageTime = float.PositiveInfinity,
-            };
-            _cursors[playerID] = cursor;
-            return cursor;
-        }
 
         public void PostLoad()
         {

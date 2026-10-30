@@ -52,7 +52,7 @@ for ((n = 1; n <= ${BB_RELOADS:-3}; n++)); do
     echo "                   client $c; $(said client scenes)"
     host_heaps="$host_heaps $(heap_mb "$h")"; client_heaps="$client_heaps $(heap_mb "$c")"
 done
-# With BB_HITCH_MS, what the leak finder (Util/LeakFinder.cs) says of the games before each one, 30 s into it
+# With BB_HITCH_MS, what the leak finder (BeaverBuddies.TestHarness/LeakFinder.cs) says of the games before each one, 30 s into it
 if [ -n "${BB_HITCH_MS:-}" ]; then
     for inst in host client; do
         grep -aE "\[Leak\] 30 s in" "$(bb_log $inst)" | sed "s/^/  $inst: /" | cut -c1-200

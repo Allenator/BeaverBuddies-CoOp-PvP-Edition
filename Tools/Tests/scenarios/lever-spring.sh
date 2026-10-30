@@ -5,7 +5,7 @@
 # meanwhile, as the pinned levers do when the pointer leaves one, does nothing. The button is one, shared:
 # held by the host and the guest, and then by the guest and a third player (Tools/FakePlayer), a lever
 # stays on until the last of them lets go, two clicks at once switch it once, and a lever a player holds
-# as they leave is let go of for them. Each copy logs the lever tick by tick (DevTools/LeverWatch.cs),
+# as they leave is let go of for them. Each copy logs the lever tick by tick (BeaverBuddies.TestHarness/LeverWatch.cs),
 # alone first for what the game does, then in the match. With BeaverBuddies on its own.
 if mod_installed TimberEmpires; then mod_disable TimberEmpires; fi
 

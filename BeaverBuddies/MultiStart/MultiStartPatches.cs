@@ -110,7 +110,7 @@ namespace BeaverBuddies.MultiStart
 			{
 				if (Matchmaking.MatchHooks.NewGamePlaces) return true;
 #if IS_STEAM
-				return (Matchmaking.MatchmakingSession.HostsNewGame || DevTools.TestHarness.HostsMatch) && Matchmaking.MatchHooks.PlaceStart;
+				return (Matchmaking.MatchmakingSession.HostsNewGame || DevTools.HarnessFlags.HostsMatch) && Matchmaking.MatchHooks.PlaceStart;
 #else
 				return false;
 #endif

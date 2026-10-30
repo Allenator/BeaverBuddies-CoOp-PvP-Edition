@@ -51,7 +51,7 @@ namespace BeaverBuddies.Util
         [HarmonyPriority(Priority.Last)]
         static bool Prefix(SingletonLifecycleService __instance)
         {
-            if (!DevTools.TestHarness.Active && IO.EventIO.IsNull) return true;
+            if (!DevTools.HarnessFlags.Active && IO.EventIO.IsNull) return true;
             // Only while the game loads as the copy below does: a game update that changes it has the game's own
             // load run, and the log say so, not this copy of the old one
             if (!Performance.LoadCompatibility.Reviewed(Performance.LoadBodies.LoadProfile)) return true;
