@@ -17,7 +17,7 @@ wait_for_watch host "Load time" 180 || { bail "the game to save loads" "never di
 sleep 3
 send host "save"
 wait_for host "\[Test\] saved" 60 || { bail "the game is saved" "never was"; return; }
-save=$(ls -t "$HOME/Documents/Timberborn/Saves"/*/*.timber | head -1)
+save=$(ls -t "$BB_SAVES"/*/*.timber | head -1)
 settlement=$(basename "$(dirname "$save")")
 name=$(basename "$save" .timber)
 if [ "${BB_FROM:-menu}" == menu ]; then

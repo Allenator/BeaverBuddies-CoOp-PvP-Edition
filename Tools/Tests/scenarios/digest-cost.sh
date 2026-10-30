@@ -3,7 +3,7 @@
 # profiling (BB_HITCH_MS), and each copy's pace lines printed: the memory allocated in each 10 s with no collection,
 # and the ticking time. BB_DIGEST_OFF=1 turns the record off to compare. A measurement, not a check
 settlement="Harness Cost $(date +%Hh%M%S)"
-src=$(copy_save "$settlement" Cost) || { fail "a saved game to load" "none in Multiplayer, and no BB_LEAK_SAVE"; return; }
+src=$(copy_save "$settlement" Cost) || { fail "a saved game to load" "none pinned at BB_BIG_SAVE, and no BB_LEAK_SAVE"; return; }
 echo "  the save: $src; the record $([ -n "${BB_DIGEST_OFF:-}" ] && echo off || echo on)"
 export BB_HITCH_MS=${BB_HITCH_MS:-1000}
 bb_close

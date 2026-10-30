@@ -6,7 +6,7 @@
 # leak finder keeps games itself
 unset BB_HITCH_MS
 settlement="Harness Alone $(date +%Hh%M%S)"
-src=$(copy_save "$settlement" Alone) || { fail "a saved game to load" "none in Multiplayer, and no BB_LEAK_SAVE"; return; }
+src=$(copy_save "$settlement" Alone) || { fail "a saved game to load" "none pinned at BB_BIG_SAVE, and no BB_LEAK_SAVE"; return; }
 echo "  the save: $src"
 kept=0
 # A save the game asks about first (its mods' versions, say) waits on it: confirmed if no load has begun in 20 s

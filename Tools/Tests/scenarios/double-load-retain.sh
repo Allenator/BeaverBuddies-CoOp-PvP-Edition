@@ -6,7 +6,7 @@
 # whether it's alive, with each copy's collected heap (heap). BB_ROOTS=1: the walk to what keeps it, if it's kept
 unset BB_HITCH_MS
 settlement="Harness Retain $(date +%Hh%M%S)"
-src=$(copy_save "$settlement" Retain) || { fail "a saved game to load" "none in Multiplayer, and no BB_LEAK_SAVE"; return; }
+src=$(copy_save "$settlement" Retain) || { fail "a saved game to load" "none pinned at BB_BIG_SAVE, and no BB_LEAK_SAVE"; return; }
 echo "  the save: $src"
 mb() { grep -a "\[Test\] heap:" "$(bb_log "$1")" | tail -1 | sed -E 's/.*collected ([0-9]+) MB.*/\1/'; }
 kept=0

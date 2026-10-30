@@ -7,7 +7,7 @@
 # batch plays at tick 0 and no tick follows: a split at tick 3, which a start in place has now and then for another
 # reason, can't come. Without the fix it failed every time, "Random state mismatch" as the host's event played
 settlement="Harness Welcome $(date +%Hh%M%S)"
-src=$(copy_save "$settlement" Welcome) || { fail "a saved game to load" "none in Multiplayer, and no BB_LEAK_SAVE"; return; }
+src=$(copy_save "$settlement" Welcome) || { fail "a saved game to load" "none pinned at BB_BIG_SAVE, and no BB_LEAK_SAVE"; return; }
 echo "  the save: $src"
 bb_close
 bb_launch host || { fail "the host starts" "no main menu"; return; }

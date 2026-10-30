@@ -4,7 +4,7 @@
 # copy of the newest saved game from before the run (BB_LEAK_SAVE) plays at speed 7. On October 29, 2026, the roots
 # walk held the host 875 ms mid-tick and the next tick split; this tells a long frame from the walk's own doing
 settlement="Harness Stall $(date +%Hh%M%S)"
-src=$(copy_save "$settlement" Stall) || { fail "a saved game to load" "none in Multiplayer, and no BB_LEAK_SAVE"; return; }
+src=$(copy_save "$settlement" Stall) || { fail "a saved game to load" "none pinned at BB_BIG_SAVE, and no BB_LEAK_SAVE"; return; }
 bb_close
 bb_launch host || { fail "the host starts" "no main menu"; return; }
 bb_launch client || { fail "the guest starts" "no main menu"; return; }

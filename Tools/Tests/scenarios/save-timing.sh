@@ -4,7 +4,7 @@
 # collecting the world on the main thread, writing its JSON, the other entries, compressing and copying to the file
 export BB_SAVE_TIMING=1
 settlement="Harness Saves $(date +%Hh%M%S)"
-src=$(copy_save "$settlement" Saves) || { fail "a saved game to load" "none in Multiplayer, and no BB_LEAK_SAVE"; unset BB_SAVE_TIMING; return; }
+src=$(copy_save "$settlement" Saves) || { fail "a saved game to load" "none pinned at BB_BIG_SAVE, and no BB_LEAK_SAVE"; unset BB_SAVE_TIMING; return; }
 echo "  the save: $src"
 bb_close
 bb_launch host || { fail "the host starts" "no main menu"; unset BB_SAVE_TIMING; return; }

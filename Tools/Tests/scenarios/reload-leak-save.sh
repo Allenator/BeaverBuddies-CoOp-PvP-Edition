@@ -7,7 +7,7 @@
 # These read the logging, so it is on, whatever this Mac has it at
 pref_set ModSetting.beaverbuddies.Settings.AlwaysTrace 1
 settlement="Harness Leak $(date +%Hh%M%S)"
-src=$(copy_save "$settlement" Leak) || { fail "a saved game to load" "none in Multiplayer, and no BB_LEAK_SAVE"; return; }
+src=$(copy_save "$settlement" Leak) || { fail "a saved game to load" "none pinned at BB_BIG_SAVE, and no BB_LEAK_SAVE"; return; }
 echo "  the save: $src"
 bb_close
 bb_launch host || { fail "the host starts" "no main menu"; return; }

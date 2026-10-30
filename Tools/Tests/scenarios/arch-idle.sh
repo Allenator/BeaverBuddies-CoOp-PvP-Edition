@@ -10,7 +10,7 @@ export BB_ARCH_CLIENT=${BB_ARCH_CLIENT-x86_64}
 # Each copy's tick lines of the hosted game, up to a reload: a resync starts the ticks again from 0
 hosted_ticks() { sed -n '/Registering Co-op/,$p' "$(bb_log "$1")" | sed -E '/Reloading the game for everyone|reload save/q' | grep -aE "Tick [0-9]+ IO done"; }
 settlement="Harness Idle $(date +%Hh%M%S)"
-src=$(copy_save "$settlement" Idle) || { fail "a saved game to load" "none in Multiplayer, and no BB_LEAK_SAVE"; return; }
+src=$(copy_save "$settlement" Idle) || { fail "a saved game to load" "none pinned at BB_BIG_SAVE, and no BB_LEAK_SAVE"; return; }
 echo "  the save: $src; the guest ${BB_ARCH_CLIENT:-native}"
 bb_close
 bb_launch host || { fail "the host starts" "no main menu"; return; }

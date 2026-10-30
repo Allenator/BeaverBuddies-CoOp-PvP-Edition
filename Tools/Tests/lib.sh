@@ -13,10 +13,12 @@ BB_PREFS_DOMAIN=com.mechanistry.timberborn
 # The harness reads <this>-<instance> twice a second
 BB_CMD_PREFIX="$HOME/Library/Caches/BeaverBuddies-test"
 # The home the copies play in, a checkout's own (BB_HOME_NAME, its folder's name): everything in it links
-# to the player's home but Documents/Timberborn/Mods, so a run builds its mods there and plays them,
-# whatever the player's Mods folder holds, and another checkout's run never swaps them. The game finds
+# to the player's home but Documents/Timberborn/Mods and Saves, so a run builds its mods there and plays them,
+# whatever the player's Mods folder holds, another checkout's run never swaps them, and its saves stay its own. The game finds
 # its user folder from HOME. BB_HOME=$HOME plays from the player's own Mods folder as before
 export BB_HOME=${BB_HOME:-"$HOME/Library/Caches/TimberbornHomes/${BB_HOME_NAME:-BeaverBuddies}"}
+# The copies' saves: the home's own folder, not a link to the player's (see bb_home_prepare)
+export BB_SAVES="$BB_HOME/Documents/Timberborn/Saves"
 # How fast the copies play while a scenario waits on the game: 30x, as fast as two copies keep up on one Mac
 BB_SPEED=${BB_SPEED:-30}
 mkdir -p "$BB_TEST_DIR/shots"
@@ -143,12 +145,16 @@ _bb_link_all() {
     return 0
 }
 
-# bb_home_prepare: the run's home laid out, a link for everything of the player's but its own Mods folder
+# bb_home_prepare: the run's home laid out, a link for everything of the player's but its own Mods and Saves folders.
+# With saves of its own, nothing a run saves lands among the player's, and Steam Cloud, which syncs only the player's
+# own folder, never gets it. A home made before linked the player's Saves: that link goes
 bb_home_prepare() {
     [ "$BB_HOME" == "$HOME" ] && return 0
     _bb_link_all "$HOME" "$BB_HOME" Documents
     _bb_link_all "$HOME/Documents" "$BB_HOME/Documents" Timberborn
-    _bb_link_all "$HOME/Documents/Timberborn" "$BB_HOME/Documents/Timberborn" Mods
+    _bb_link_all "$HOME/Documents/Timberborn" "$BB_HOME/Documents/Timberborn" Mods Saves
+    if [ -L "${BB_SAVES:?}" ]; then rm -f "$BB_SAVES"; fi
+    mkdir -p "$BB_SAVES"
     # shellcheck disable=SC2086
     _bb_link_all "$HOME/Documents/Timberborn/Mods" "$BB_HOME/Documents/Timberborn/Mods" $BB_OWN_MODS
 }
@@ -520,25 +526,20 @@ place_starts() {
 
 # ---- A game the size of a real one -------------------------------------------------
 
-# newest_save: BB_LEAK_SAVE, or the newest saved game in Multiplayer from before this run (the group's, usually: a
-# guest's copy saved by a scenario before this one is newer, and a small test game)
-newest_save() {
-    local f
-    [ -n "${BB_LEAK_SAVE:-}" ] && { echo "$BB_LEAK_SAVE"; return; }
-    ls -t "$HOME/Documents/Timberborn/Saves/Multiplayer"/*.timber 2>/dev/null | while read -r f; do
-        [ -n "${RUN_START:-}" ] && [ "$f" -nt "$RUN_START" ] && continue
-        echo "$f"; break
-    done
-}
+# big_save: the saved game the scenarios that need one the size of a real game play, BB_LEAK_SAVE or the one pinned at
+# BB_BIG_SAVE (TimberbornHomes/fixtures/big-game.timber): the same file run after run, so their measurements compare.
+# Pin one by copying a save there (README.md)
+export BB_BIG_SAVE=${BB_BIG_SAVE:-"$HOME/Library/Caches/TimberbornHomes/fixtures/big-game.timber"}
+big_save() { echo "${BB_LEAK_SAVE:-$BB_BIG_SAVE}"; }
 
 # copy_save <settlement> <save name>: that save copied into a settlement of its own, named "Harness ..." so the run
-# takes it away as it ends. Prints the save it copied; returns 1 if there's none
+# takes it away as it ends. Prints the save it copied and the start of its SHA-256; returns 1 if there's none
 copy_save() {
-    local src; src=$(newest_save)
+    local src; src=$(big_save)
     [ -f "$src" ] || return 1
-    mkdir -p "$HOME/Documents/Timberborn/Saves/$1"
-    cp "$src" "$HOME/Documents/Timberborn/Saves/$1/$2.timber"
-    echo "$src"
+    mkdir -p "$BB_SAVES/$1"
+    cp "$src" "$BB_SAVES/$1/$2.timber"
+    echo "$src (sha256 $(shasum -a 256 "$src" | cut -c1-12))"
 }
 
 # host_saved_game <settlement> <save name> [guest's faction] [command]: the save hosted as the Load game box's Host

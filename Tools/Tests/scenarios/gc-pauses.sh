@@ -5,7 +5,7 @@
 # copy of the app with gc-max-time-slice in its boot.config, for incremental collection; BB_GC_MODE=Manual leaves
 # collecting to GC.Collect alone, as collecting only at autosaves would, and times one full collection at the end
 settlement="Harness GC $(date +%Hh%M%S)"
-src=$(copy_save "$settlement" GC) || { fail "a saved game to load" "none in Multiplayer, and no BB_LEAK_SAVE"; return; }
+src=$(copy_save "$settlement" GC) || { fail "a saved game to load" "none pinned at BB_BIG_SAVE, and no BB_LEAK_SAVE"; return; }
 echo "  the save: $src; the game: $BB_GAME; GC mode ${BB_GC_MODE:-as it is}"
 export BB_HITCH_MS=${BB_HITCH_MS:-50}
 bb_close

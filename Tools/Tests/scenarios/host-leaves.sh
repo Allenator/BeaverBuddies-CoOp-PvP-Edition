@@ -4,7 +4,7 @@
 # leaving, and is told the host left. The guest's saves go in the Multiplayer folder, which the runner puts back as it was.
 # Each goodbye is answered, and the side leaving closes once it is, or after a second: with BB_SIM_STEAM_CLOSE=1 the
 # connections drop what's on its way as they close, as a Steam session does, which lost both goodbyes on October 25, 2026
-saves="$HOME/Documents/Timberborn/Saves/Multiplayer"
+saves="$BB_SAVES/Multiplayer"
 
 # A guest leaves
 start_match Folktails Folktails || { fail "a match starts" "never got into the game"; return; }

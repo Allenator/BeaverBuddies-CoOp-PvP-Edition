@@ -11,7 +11,7 @@ place_starts Folktails Folktails
 send host "speed 1"; sleep 3
 send host "save"
 wait_for host "\[Test\] saved" 60 || { fail "the host saves" "never did"; return; }
-save=$(ls -t "$HOME/Documents/Timberborn/Saves"/*/*.timber | head -1)
+save=$(ls -t "$BB_SAVES"/*/*.timber | head -1)
 settlement=$(basename "$(dirname "$save")")
 name=$(basename "$save" .timber)
 run_ticks 30
@@ -39,7 +39,7 @@ wait_for_watch host "Load time" 180 || { fail "a game alone loads" "never did"; 
 sleep 3; send host dismiss; sleep 1
 send host "save"
 wait_for host "\[Test\] saved" 60 || { fail "the game alone is saved" "never was"; return; }
-save=$(ls -t "$HOME/Documents/Timberborn/Saves"/*/*.timber | head -1)
+save=$(ls -t "$BB_SAVES"/*/*.timber | head -1)
 settlement=$(basename "$(dirname "$save")")
 name=$(basename "$save" .timber)
 # Hosted again over itself, and the box cancelled: the game plays on alone

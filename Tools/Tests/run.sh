@@ -83,18 +83,20 @@ while true; do
 done
 echo $$ > "$LOCK/pid"
 rm -f "$TICKET"
-# The saves this run's games make go once it ends: the settlements made during it under the names the harness, Host
-# new game and Quick match give them ("Test ...", "Harness ...", "Co-op ...", "Match ..."), and what the guests save in
-# Multiplayer. A settlement of the player's own a test only saved into stays. A guest's save in Multiplayer replaces the
-# player's own of the same name, so theirs are kept aside first and put back; kept from a run that didn't finish, they
-# stay as they were
-SAVES="$HOME/Documents/Timberborn/Saves"
+# The saves this run's games make, in its home's own Saves folder (bb_home_prepare, here before anything looks at it),
+# go once it ends: the settlements made during it under the names the harness, Host new game and Quick match give them
+# ("Test ...", "Harness ...", "Co-op ...", "Match ..."), and what the guests save in Multiplayer. A settlement a test
+# only saved into stays. A guest's save in Multiplayer replaces one of the same name, so those from before are kept
+# aside first and put back; kept from a run that didn't finish, they stay as they were. With BB_HOME=$HOME all of this
+# is the player's own saves
+bb_home_prepare
+SAVES="$BB_SAVES"
 RUN_START="$BB_TEST_DIR/.run-start"
 touch "$RUN_START"
 MULTIPLAYER_KEPT="$BB_TEST_DIR/multiplayer-kept"
 [ -d "$MULTIPLAYER_KEPT" ] || { [ -d "$SAVES/Multiplayer" ] && cp -Rp "$SAVES/Multiplayer" "$MULTIPLAYER_KEPT"; }
 
-# Steam Cloud has what the copies saved, uploaded whenever none had run for a few seconds, and drops a file only in a
+# With BB_HOME=$HOME, Steam Cloud has what the copies saved, uploaded whenever none had run for a few seconds, and drops a file only in a
 # sync after the file is gone, or puts it back the next time it syncs in full. Steam syncs a few seconds after the last
 # copy closes, usually after the saves went; if it synced before, one more copy started and closed has it sync again
 STEAM_CLOUD_LOG="$HOME/Library/Application Support/Steam/logs/cloud_log.txt"
@@ -138,7 +140,8 @@ cleanup() {
         if [ -d "$MULTIPLAYER_KEPT" ]; then cp -Rpn "$MULTIPLAYER_KEPT/" "$SAVES/Multiplayer/"; else rmdir "$SAVES/Multiplayer" 2>/dev/null; fi
     fi
     rm -rf "$MULTIPLAYER_KEPT"
-    [ $removed -eq 1 ] && steam_forget
+    # Steam Cloud syncs only the player's own saves, which a run's home has only with BB_HOME=$HOME
+    [ $removed -eq 1 ] && [ "$BB_HOME" == "$HOME" ] && steam_forget
     mod_enable_all
     prefs_restore_overrides
     prefs_restore
