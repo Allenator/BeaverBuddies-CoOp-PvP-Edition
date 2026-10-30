@@ -41,6 +41,10 @@ done
 case "$part" in patch|minor|major) ;; *) sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'; exit 1 ;; esac
 
 die() { echo "$*" >&2; exit 1; }
+
+# This fork's versions (<upstream's>-allenator.N) go out by hand, as RELEASING.md says: this script bumps
+# upstream's semver, pushes to upstream's remote and zips without Game Modes
+grep -q -- '-allenator\.' "$csproj" && die "This is the fork's version ($(sed -nE 's|.*<Version>([^<]+)</Version>.*|\1|p' "$csproj" | head -1)): release it as RELEASING.md says, not with this script"
 [ "$(git branch --show-current)" = "$branch" ] || die "not on $branch"
 [ -z "$(git status --porcelain --untracked-files=no)" ] || die "uncommitted changes: commit or stash them first"
 git fetch -q "$remote"
