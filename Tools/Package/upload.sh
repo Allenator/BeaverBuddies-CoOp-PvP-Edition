@@ -9,7 +9,8 @@
 # upload at the main menu and closes the game again if it was the one to start
 # it. Steam has to be running and signed in. The same request uploads the
 # release zip to mod.io when there's a token for it. It refuses when the
-# installed version isn't the one the changelog's newest entry is for: run
+# installed version (version.txt, the manifest only has x.y.0) isn't the one the
+# changelog's newest entry is for: run
 # release.sh first.
 set -euo pipefail
 
@@ -41,7 +42,7 @@ die() { echo "$*" >&2; exit 1; }
 version=$(sed -n '1s/^v//p' "$changelog")
 note=$(sed -n '2,/^$/p' "$changelog" | sed '/^$/d')
 [ -n "$version" ] && [ -n "$note" ] || die "no entry at the top of $changelog"
-have=$(sed -nE 's/.*"Version": *"([^"]+)".*/\1/p' "$installed" | head -1)
+have=$(head -1 "$(dirname "$installed")/version.txt" 2>/dev/null | tr -d '[:space:]')
 [ "$have" = "$version" ] || die "Mods has $id ${have:-nothing}, the changelog is at $version: run release.sh first"
 
 echo "uploading $id $version with:"

@@ -55,7 +55,7 @@ namespace BeaverBuddies.Events
             bool isDistrictCenter = prefabName != null && prefabName.StartsWith("DistrictCenter.");
             bool valid = isDistrictCenter
                 ? context.GetSingleton<BlockValidator>().BlocksValid(blockObjectSpec, placement)
-                    && PlacementHooks.AllowOn(Footprint(blockObjectSpec, placement), playerID)
+                    && PlacementHooks.AllowOn(Footprint(blockObjectSpec, placement), playerID, buildingSpec)
                 : IsPlacementValid(context, placement, buildingSpec, playerID);
             // Each machine's verdict and what it saw on the tiles, to set beside the others when they differ
             if (Settings.Debug && !isDistrictCenter) Plugin.Log($"[Placement] {prefabName} at {coordinates} {orientation}: {(valid ? "valid" : "invalid")}; on its tiles: {ThereAtLastCheck}");
@@ -181,7 +181,7 @@ namespace BeaverBuddies.Events
                 string there = Settings.Debug ? WhatIsThere(context, blockObject) : "";
                 InvalidBecause = isValid ? "" : "the game's block check failed; there: " + there;
                 ThereAtLastCheck = there;
-                if (isValid && !PlacementHooks.AllowOn(blockObject.PositionedBlocks.GetAllCoordinates(), playerID))
+                if (isValid && !PlacementHooks.AllowOn(blockObject.PositionedBlocks.GetAllCoordinates(), playerID, spec))
                 {
                     Plugin.LogWarning($"Placement refused for {playerID}");
                     InvalidBecause = "refused by a mod's rule (land claims)";

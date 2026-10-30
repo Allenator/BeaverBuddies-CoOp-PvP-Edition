@@ -22,10 +22,10 @@ using BeaverBuddies.Util;
 namespace BeaverBuddies.Trading
 {
     /**
-     * A settlement panel tab, next to Distribution, with every Trading Post
-     * deal and Power Exchange price in one place, like the District
-     * Crossing's distribution settings. Follows the panel's district
-     * selection: a pair shows if either of its halves is in the district.
+     * A settlement panel tab, next to Distribution, with every trade post's
+     * rules and Power Exchange price in one place, like the District
+     * Crossing's distribution settings. With Archipelago on, its trade
+     * posts show here too. Follows the panel's district selection.
      */
     public class TradesBatchControlTab : BatchControlTab
     {
@@ -35,20 +35,26 @@ namespace BeaverBuddies.Trading
         private readonly BatchControlDistrict _batchControlDistrict;
         private readonly BatchControlRowGroupFactory _rowGroupFactory;
         private readonly TradesUi _ui;
+        private readonly TradeGroups _groups;
 
-        private readonly List<DistrictTrade> _trades = new();
+        private List<ITradeSite> _sites = new();
         private readonly List<PowerExchange> _exchanges = new();
         private readonly List<TollStation> _tolls = new();
         private string _layoutKey;
 
         public TradesBatchControlTab(VisualElementLoader visualElementLoader, BatchControlDistrict batchControlDistrict,
-            EventBus eventBus, BatchControlRowGroupFactory rowGroupFactory, TradesUi ui)
+            EventBus eventBus, BatchControlRowGroupFactory rowGroupFactory, TradesUi ui, TradeGroups groups)
             : base(visualElementLoader, batchControlDistrict, eventBus)
         {
             _batchControlDistrict = batchControlDistrict;
             _rowGroupFactory = rowGroupFactory;
             _ui = ui;
+            _groups = groups;
         }
+
+        // The post opened from its panel, shown first whoever's it is
+        public Guid Focus { get; set; }
+        private int _frames;
 
         public override string TabNameLocKey => "BeaverBuddies.Trades.Tab";
         public override string TabImage => "BeaverBuddiesTrades";
@@ -57,42 +63,48 @@ namespace BeaverBuddies.Trading
 
         public override IEnumerable<BatchControlRowGroup> GetRowGroups(IEnumerable<EntityComponent> entities)
         {
-            _trades.Clear();
             _exchanges.Clear();
             _tolls.Clear();
             foreach (EntityComponent entity in entities)
             {
                 // Deleted since the panel last looked
                 if (!entity) continue;
-                // One group per pair: the Trading Post's side A, and the
-                // Power Exchange half with the lower entity ID
-                DistrictTrade trade = entity.GetComponent<DistrictTrade>();
-                if (trade && trade.Linked != null && trade.SideA == trade) _trades.Add(trade);
+                // One group per pair: the Power Exchange half with the lower entity ID
                 PowerExchange exchange = entity.GetComponent<PowerExchange>();
                 if (exchange && exchange.Linked != null && IsFirstHalf(exchange)) _exchanges.Add(exchange);
                 TollStation toll = entity.GetComponent<TollStation>();
                 if (toll && toll.NetworkDistrict != null) _tolls.Add(toll);
             }
+            _sites = Sites();
             _layoutKey = LayoutKey();
-            foreach (DistrictTrade trade in _trades) yield return new TradeGroup(this, trade).Group;
+            foreach (ITradeSite site in _sites) yield return _groups.Group(site);
             foreach (PowerExchange exchange in _exchanges) yield return new ExchangeGroup(this, exchange).Group;
             foreach (TollStation toll in _tolls) yield return new TollGroup(this, toll).Group;
         }
 
         public override void Update()
         {
-            // Rebuild when deals or prices come and go, also from the other player
+            // Rebuild when posts or prices come and go, also from the other player
+            if (++_frames % 20 == 0) _sites = Sites();
             if (LayoutKey() != _layoutKey) IsDirty = true;
         }
+
+        // Closed, it forgets the post it was opened on
+        public override void Hide()
+        {
+            if (Focus == Guid.Empty) return;
+            Focus = Guid.Empty;
+            IsDirty = true;
+        }
+
+        // Trade posts in the selected district, this mod's and Archipelago's, and the one opened from its panel
+        private List<ITradeSite> Sites() =>
+            TradeGroups.Pick(TradeHub.Sites().Where(s => s.Id == Focus || Touches(s.District)), Focus);
 
         private string LayoutKey()
         {
             var parts = new List<string>();
-            foreach (DistrictTrade trade in _trades)
-            {
-                if (!trade) continue;
-                parts.Add($"T{trade.GetHashCode()}:{TradeGroup.ActingSide(trade)}:{string.Join(",", trade.Deals.Select(d => d.id))}");
-            }
+            parts.Add("T" + TradeGroups.LayoutKey(_sites));
             foreach (PowerExchange exchange in _exchanges)
             {
                 if (!exchange) continue;
@@ -122,155 +134,6 @@ namespace BeaverBuddies.Trading
         {
             string name = district ? district.DistrictName : null;
             return string.IsNullOrEmpty(name) ? T("BeaverBuddies.Trading.UnknownDistrict") : name;
-        }
-
-        /**
-         * A Trading Post pair: its deals, seen from the side this player
-         * acts for.
-         */
-        private class TradeGroup
-        {
-            public BatchControlRowGroup Group { get; }
-
-            private readonly TradesBatchControlTab _tab;
-            private readonly DistrictTrade _trade;
-
-            public TradeGroup(TradesBatchControlTab tab, DistrictTrade trade)
-            {
-                _tab = tab;
-                _trade = trade;
-                TradesUi ui = tab._ui;
-                Func<bool> visible = () => _trade && _tab.Touches(_trade.District, _trade.Linked?.District);
-
-                var header = new BatchControlRow(ui.Header(() => string.Format(T("BeaverBuddies.Trades.TradingPostHeader"),
-                    DistrictName(_trade.District), DistrictName(_trade.Linked?.District))));
-                Group = tab._rowGroupFactory.CreateUnsorted(header);
-
-                TradeSide? acting = ActingSide(trade);
-                bool editable = acting != null;
-                foreach (TradeDeal deal in trade.Deals)
-                {
-                    int id = deal.id;
-                    // One deal in three short rows, so the dropdowns keep
-                    // their width in every language
-                    Group.AddRow(new BatchControlRow(ui.Row(), null, visible,
-                        ui.Dropdown("BeaverBuddies.Trading.YouGive", editable, ui.GoodsWithNothing,
-                            () => Deal(id)?.Gives(ViewSide) ?? TradesUi.NoGood, v => Edit(id, gives: v), ui.DescribeGoodOrNothing, ui.GoodIcon),
-                        ui.Dropdown("BeaverBuddies.Trading.Amount", editable, TradesUi.Amounts,
-                            () => Deal(id)?.GivesAmount(ViewSide).ToString(), v => Edit(id, givesAmount: int.Parse(v)), v => v)));
-                    Group.AddRow(new BatchControlRow(ui.Row(), null, visible,
-                        ui.Dropdown("BeaverBuddies.Trading.YouGet", editable, ui.GoodsWithNothing,
-                            () => Deal(id)?.Gets(ViewSide) ?? TradesUi.NoGood, v => Edit(id, gets: v), ui.DescribeGoodOrNothing, ui.GoodIcon),
-                        ui.Dropdown("BeaverBuddies.Trading.Amount", editable, TradesUi.Amounts,
-                            () => Deal(id)?.GetsAmount(ViewSide).ToString(), v => Edit(id, getsAmount: int.Parse(v)), v => v)));
-                    var items = new List<IBatchControlRowItem> { ui.Text(() => DealState(id)) };
-                    if (editable)
-                    {
-                        items.Add(ui.Button("BeaverBuddies.Trading.Approve", () => Send(DealAction.Approve, id, Deal(id)),
-                            () => Deal(id) is TradeDeal d && d.IsConfigured && !d.Approved(ViewSide)));
-                        items.Add(ui.Button("BeaverBuddies.Trading.Remove", () => Send(DealAction.Remove, id)));
-                    }
-                    Group.AddRow(new BatchControlRow(ui.Row(), null, visible, items.ToArray()));
-                }
-
-                if (editable)
-                {
-                    Group.AddRow(new BatchControlRow(ui.Row(), null, visible,
-                        ui.Button("BeaverBuddies.Trading.AddDeal", () => Send(DealAction.Add),
-                            () => _trade.Deals.Count < DistrictTrade.MaxDeals)));
-                }
-                else
-                {
-                    Group.AddRow(new BatchControlRow(ui.Row(), null, visible, ui.Text(() => string.Format(
-                        T("BeaverBuddies.Trading.OnlyOwnerCanEdit"), DistrictOwners.PlayerName(_trade.Owner)))));
-                }
-            }
-
-            /**
-             * The side this player can act for, or null if neither.
-             */
-            public static TradeSide? ActingSide(DistrictTrade trade)
-            {
-                string local = PlayerIdentity.LocalID;
-                if (trade.CanEdit(local)) return trade.Side;
-                DistrictTrade linked = trade.Linked;
-                if (linked != null && linked.CanEdit(local)) return linked.Side;
-                return null;
-            }
-
-            private TradeSide ViewSide => ActingSide(_trade) ?? _trade.Side;
-
-            private TradeDeal Deal(int id) => _trade ? _trade.FindDeal(id) : null;
-
-            private string DealState(int id)
-            {
-                TradeDeal deal = Deal(id);
-                if (deal == null) return "";
-                TradeSide view = ViewSide;
-                TradeSide other = TradeDeal.Other(view);
-                TradeStatus status = FromSide(_trade.GetStatus(deal), view);
-                string approvals = Approval(deal, view) + "\n" + Approval(deal, other);
-                return status == TradeStatus.AwaitingApproval ? approvals
-                    : approvals + "\n" + T("BeaverBuddies.Trading.Status." + status);
-            }
-
-            private string Approval(TradeDeal deal, TradeSide side)
-            {
-                string key = deal.Approved(side) ? "BeaverBuddies.Trading.ApprovedBy" : "BeaverBuddies.Trading.WaitingFor";
-                return string.Format(T(key), DistrictName(_trade.GetHalf(side)?.District));
-            }
-
-            /**
-             * Statuses are worked out on side A, so "here" and "there" swap
-             * when looking from side B.
-             */
-            private static TradeStatus FromSide(TradeStatus status, TradeSide side)
-            {
-                if (side == TradeSide.A) return status;
-                return status switch
-                {
-                    TradeStatus.MissingGoodsHere => TradeStatus.MissingGoodsThere,
-                    TradeStatus.MissingGoodsThere => TradeStatus.MissingGoodsHere,
-                    TradeStatus.NoSpaceHere => TradeStatus.NoSpaceThere,
-                    TradeStatus.NoSpaceThere => TradeStatus.NoSpaceHere,
-                    _ => status,
-                };
-            }
-
-            private void Send(DealAction action, int dealId = 0, TradeDeal terms = null)
-            {
-                TradeSide? acting = ActingSide(_trade);
-                if (!_trade || acting == null) return;
-                TradeSide side = acting.Value;
-                DistrictDealEvent.Send(_trade, new DistrictDealEvent()
-                {
-                    side = side,
-                    action = action,
-                    dealId = dealId,
-                    gives = terms?.Gives(side),
-                    givesAmount = terms?.GivesAmount(side) ?? TradeDeal.DefaultAmount,
-                    gets = terms?.Gets(side),
-                    getsAmount = terms?.GetsAmount(side) ?? TradeDeal.DefaultAmount,
-                });
-            }
-
-            private void Edit(int dealId, string gives = null, int? givesAmount = null, string gets = null, int? getsAmount = null)
-            {
-                TradeDeal deal = Deal(dealId);
-                TradeSide? acting = ActingSide(_trade);
-                if (deal == null || acting == null) return;
-                TradeSide side = acting.Value;
-                var terms = new TradeDeal();
-                terms.SetTerms(side,
-                    gives ?? deal.Gives(side),
-                    givesAmount ?? deal.GivesAmount(side),
-                    gets ?? deal.Gets(side),
-                    getsAmount ?? deal.GetsAmount(side));
-                // An empty good clears it
-                if (gives == TradesUi.NoGood) terms.SetTerms(side, null, terms.GivesAmount(side), terms.Gets(side), terms.GetsAmount(side));
-                if (gets == TradesUi.NoGood) terms.SetTerms(side, terms.Gives(side), terms.GivesAmount(side), null, terms.GetsAmount(side));
-                Send(DealAction.Edit, dealId, terms);
-            }
         }
 
         /**
@@ -487,6 +350,17 @@ namespace BeaverBuddies.Trading
             _batchControlDistrict.SetDistrict(district);
             int index = _tabController.GetTabIndex(_tab);
             if (index >= 0) _batchControlBox.OpenTab(index);
+        }
+
+        /** Opens it on a trade post, shown first. */
+        public void Open(Timberborn.BaseComponentSystem.BaseComponent entity)
+        {
+            int index = _tabController.GetTabIndex(_tab);
+            if (index < 0) return;
+            // Opened first: switching tabs hides this one, which forgets the post
+            _batchControlBox.OpenTab(index);
+            _tab.Focus = entity ? entity.GetComponent<EntityComponent>().EntityId : Guid.Empty;
+            _tab.IsDirty = true;
         }
     }
 

@@ -1,3 +1,12 @@
+v1.1.0-1.10.0
+1.1.0-1.10.0
+* The Trading Post works like Archipelago's Trade Post: each half sets what it buys and sells and what each good is worth, and goods cross as far as both halves agree.
+* The Trades tab can multiply every price at once, for all goods or only those sold or bought.
+* A trading post half only trades with workers inside it.
+* A player who drops while joining no longer makes everyone reload the game.
+* Guests in a host's lobby see the loading picture of the host's world.
+* Several multiplayer stability fixes.
+
 v1.1.0-1.9.4-allenator.7
 1.1.0-1.9.4-allenator.7
 * Built on 1.1.0-1.9.4, below. Install the Game Modes that comes with this build, not the Steam Workshop's.

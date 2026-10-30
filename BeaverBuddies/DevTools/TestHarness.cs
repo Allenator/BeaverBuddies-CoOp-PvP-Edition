@@ -115,6 +115,12 @@ namespace BeaverBuddies.DevTools
         // click name [n]: the nth of the buttons by that name on the panel on top, the first by default
         private UnityEngine.UIElements.Button FindButton(string[] a)
         {
+            // With no panel open, the entity panel and the rest of the screen: the shown buttons of every UI document
+            if (_panelStack._stack.Count == 0)
+                return UnityEngine.Object.FindObjectsOfType<UnityEngine.UIElements.UIDocument>().Select(d => d.rootVisualElement).Where(r => r != null)
+                    .SelectMany(r => UnityEngine.UIElements.UQueryExtensions.Query<UnityEngine.UIElements.Button>(r, a[1]).ToList())
+                    .Where(b => b.resolvedStyle.display != UnityEngine.UIElements.DisplayStyle.None && b.panel != null)
+                    .ElementAtOrDefault(a.Length > 2 ? I(a[2]) : 0);
             var panel = _panelStack._stack.Peek().PanelController.GetPanel();
             return UnityEngine.UIElements.UQueryExtensions.Query<UnityEngine.UIElements.Button>(panel, a[1]).ToList().ElementAtOrDefault(a.Length > 2 ? I(a[2]) : 0);
         }
@@ -492,6 +498,13 @@ namespace BeaverBuddies.DevTools
                 {
                     // setfield Name value: a number field of the panel on top, as typing it would set it
                     var panel = _panelStack._stack.Peek().PanelController.GetPanel();
+                    // A decimal one takes fractions
+                    var number = UnityEngine.UIElements.UQueryExtensions.Q<UnityEngine.UIElements.FloatField>(panel, a[1]);
+                    if (number != null)
+                    {
+                        number.value = float.Parse(a[2], System.Globalization.CultureInfo.InvariantCulture);
+                        break;
+                    }
                     var field = UnityEngine.UIElements.UQueryExtensions.Q<UnityEngine.UIElements.IntegerField>(panel, a[1]) ?? throw new Exception($"no field {a[1]}");
                     field.value = int.Parse(a[2]);
                     break;
@@ -1248,6 +1261,47 @@ namespace BeaverBuddies.DevTools
                         .OfType<Timberborn.BlockObjectTools.BlockObjectTool>()
                         .Any(t => t.Template.GetSpec<Timberborn.TemplateSystem.TemplateSpec>().TemplateName == a[1]);
                     Plugin.Log($"[Test] Has tool {a[1]}: {has}");
+                    break;
+                }
+                case "traderule":
+                {
+                    // traderule X Y Z GOOD Off|Buy|Sell VALUE LIMIT: sets a trading post half's rule, as the Trades tab does
+                    var half = Get<IBlockService>().GetObjectsAt(new Vector3Int(I(a[1]), I(a[2]), I(a[3])))
+                        .Select(o => o.GetComponent<Trading.DistrictTrade>()).FirstOrDefault(t => t) ?? throw new Exception("no trading post there");
+                    var mode = (Trading.TradeMode)Enum.Parse(typeof(Trading.TradeMode), a[5]);
+                    half.SendRule(a[4], (int)mode, I(a[6]), I(a[7]));
+                    Plugin.Log($"[Test] Trade rule {a[4]} {mode} {a[6]} {a[7]} at {a[1]} {a[2]} {a[3]}");
+                    break;
+                }
+                case "tradetab":
+                {
+                    // tradetab X Y Z: the Trade tab opened on the trade post there, either mod's, as its panel's button does
+                    var post = Get<IBlockService>().GetObjectsAt(new Vector3Int(I(a[1]), I(a[2]), I(a[3]))).FirstOrDefault(o => o) ?? throw new Exception("nothing there");
+                    Trading.TradeHub.Open(post);
+                    break;
+                }
+                case "beavers":
+                {
+                    // beavers N X Y Z: N adults at the door of the District Center of the building there
+                    var at = Get<IBlockService>().GetObjectsAt(new Vector3Int(I(a[2]), I(a[3]), I(a[4]))).FirstOrDefault(o => o) ?? throw new Exception("nothing there");
+                    var center = at.GetComponent<Timberborn.GameDistricts.DistrictCenter>() ?? at.GetComponent<Timberborn.GameDistricts.DistrictBuilding>()?.District
+                        ?? throw new Exception("no district there");
+                    Vector3 door = Timberborn.Coordinates.CoordinateSystem.GridToWorldCentered(center.GetComponent<BlockObject>().PositionedEntrance.Coordinates);
+                    for (int i = 0; i < I(a[1]); i++) Get<Timberborn.Beavers.BeaverFactory>().CreateAdult(door, 0.3f);
+                    Plugin.Log($"[Test] {a[1]} beavers at {center.DistrictName}");
+                    break;
+                }
+                case "tradestate":
+                {
+                    // tradestate X Y Z: a trading post half's district, rules and stock, and its other half's
+                    var half = Get<IBlockService>().GetObjectsAt(new Vector3Int(I(a[1]), I(a[2]), I(a[3])))
+                        .Select(o => o.GetComponent<Trading.DistrictTrade>()).FirstOrDefault(t => t) ?? throw new Exception("no trading post there");
+                    foreach (var h in new[] { half, half.Linked }.Where(h => h))
+                    {
+                        string rules = string.Join(",", h.Rules.Select(r => $"{r.Key}:{r.Value.Mode}:{r.Value.Value}:{r.Value.Limit}"));
+                        string stock = h.Inventory == null ? "" : string.Join(",", h.Inventory.Stock.Select(g => $"{g.GoodId}:{g.Amount}"));
+                        Plugin.Log($"[Test] Trading post half {h.Side} district={h.District?.DistrictName} owner={h.Owner} finished={h.Finished} rules=[{rules}] stock=[{stock}]");
+                    }
                     break;
                 }
                 case "plantables":

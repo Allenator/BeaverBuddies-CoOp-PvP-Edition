@@ -1,3 +1,4 @@
+using System.Linq;
 using Bindito.Core;
 using Timberborn.BatchControl;
 using Timberborn.EntityPanelSystem;
@@ -38,19 +39,19 @@ namespace BeaverBuddies.Trading
 
         private class EntityPanelModuleProvider : IProvider<EntityPanelModule>
         {
-            private readonly DistrictTradeFragment _districtTradeFragment;
+            private readonly TradeSiteFragment _siteFragment;
             private readonly TradingPostInventoryFragment _inventoryFragment;
 
-            public EntityPanelModuleProvider(DistrictTradeFragment districtTradeFragment, TradingPostInventoryFragment inventoryFragment)
+            public EntityPanelModuleProvider(TradeSiteFragment siteFragment, TradingPostInventoryFragment inventoryFragment)
             {
-                _districtTradeFragment = districtTradeFragment;
+                _siteFragment = siteFragment;
                 _inventoryFragment = inventoryFragment;
             }
 
             public EntityPanelModule Get()
             {
                 EntityPanelModule.Builder builder = new EntityPanelModule.Builder();
-                builder.AddMiddleFragment(_districtTradeFragment);
+                builder.AddMiddleFragment(_siteFragment);
                 builder.AddBottomFragment(_inventoryFragment);
                 return builder.Build();
             }
@@ -79,7 +80,9 @@ namespace BeaverBuddies.Trading
             containerDefinition.Bind<DistrictTradeWorkplaceBehavior>().AsTransient();
             containerDefinition.Bind<DistrictTradeInventoryInitializer>().AsSingleton();
             containerDefinition.Bind<TradingPostInventoryFragment>().AsSingleton();
-            containerDefinition.Bind<DistrictTradeFragment>().AsSingleton();
+            containerDefinition.Bind<TradeSiteFragment>().AsSingleton();
+            containerDefinition.Bind<TradeGroups>().AsSingleton();
+            containerDefinition.Bind<TradeHubLink>().AsSingleton();
             containerDefinition.Bind<TradesUi>().AsSingleton();
             containerDefinition.Bind<TradesBatchControlTab>().AsSingleton();
             containerDefinition.Bind<TradesTabOpener>().AsSingleton();
@@ -87,5 +90,26 @@ namespace BeaverBuddies.Trading
             containerDefinition.MultiBind<TemplateModule>().ToProvider<TemplateModuleProvider>().AsSingleton();
             containerDefinition.MultiBind<EntityPanelModule>().ToProvider<EntityPanelModuleProvider>().AsSingleton();
         }
+    }
+
+    /** Hands this mod's trading posts to the shared Trade tab, and opens it on one. */
+    public class TradeHubLink : Timberborn.SingletonSystem.ILoadableSingleton, Timberborn.SingletonSystem.IUnloadableSingleton
+    {
+        private readonly Timberborn.EntitySystem.EntityComponentRegistry _registry;
+        private readonly TradesTabOpener _opener;
+
+        public TradeHubLink(Timberborn.EntitySystem.EntityComponentRegistry registry, TradesTabOpener opener)
+        {
+            _registry = registry;
+            _opener = opener;
+        }
+
+        public void Load()
+        {
+            TradeSiteFragment.SiteOf = entity => entity.GetComponent<DistrictTrade>();
+            TradeHub.Register(() => _registry.GetEnabled<DistrictTrade>().Where(t => t), _opener.Open);
+        }
+
+        public void Unload() => TradeHub.Unregister();
     }
 }
